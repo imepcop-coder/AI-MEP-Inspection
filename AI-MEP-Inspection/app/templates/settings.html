@@ -1,0 +1,68 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Settings{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="page-header-section">
+        <div>
+            <span class="page-kicker">Workspace</span>
+            <h1>Settings</h1>
+            <p>Manage your profile, company details, and workspace preferences.</p>
+        </div>
+        <div class="page-actions">
+            <a href="/dashboard" class="btn btn-outline-primary">Back to Dashboard</a>
+        </div>
+    </div>
+
+    <div class="settings-shell">
+        <aside class="settings-sidebar">
+            <div class="settings-nav">
+                <a href="#" class="nav-link active">Profile</a>
+                <a href="#" class="nav-link">Security</a>
+                <a href="#" class="nav-link">Notifications</a>
+                <a href="#" class="nav-link">Integrations</a>
+            </div>
+        </aside>
+
+        <div class="settings-content">
+            <div class="section-card settings-panel">
+                <h4 class="card-title">Profile Settings</h4>
+                <form method="post" action="/settings">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Full Name</label>
+                            <input class="form-control" type="text" name="full_name" value="{{ user.full_name }}">
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Phone</label>
+                            <input class="form-control" type="text" name="phone" value="{{ user.phone }}">
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Company</label>
+                            <input class="form-control" type="text" name="company_name" value="{{ user.company_name or '' }}">
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        <button class="btn btn-primary" type="submit">Save Changes</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="section-card settings-panel">
+                <h4 class="card-title">Workspace Plan</h4>
+                <div class="row g-3 align-items-center">
+                    <div class="col-md-6">
+                        <div class="text-muted">Current plan</div>
+                        <h4 class="mb-0">{{ user.subscription_plan }}</h4>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted">AI usage this month</div>
+                        <h4 class="mb-0">{{ user.ai_usage_count }}</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

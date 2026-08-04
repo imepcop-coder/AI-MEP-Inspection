@@ -1,0 +1,31 @@
+{% extends "layouts/base.html" %}
+{% block title %}Plumbing Calculators{% endblock %}
+{% block content %}
+{% set card_category = 'Plumbing' %}
+{% set card_category_slug = 'plumbing' %}
+{% set card_items = [
+  {'name': 'Water Demand Calculator', 'icon': 'bi-water', 'description': 'Estimate total domestic and process water demand for a project.', 'url': '/plumbing/water-demand-page'},
+  {'name': 'Pipe Size Calculator', 'icon': 'bi-bezier2', 'description': 'Calculate pipe diameter from flow rate and allowable velocity.', 'url': '/plumbing/pipe-size-page'},
+  {'name': 'Drainage Pipe Calculator', 'icon': 'bi-droplet-half', 'description': 'Recommend drainage pipe size based on fixture units and slope.', 'url': '/plumbing/drainage-page'},
+  {'name': 'Rainwater Pipe Calculator', 'icon': 'bi-cloud-drizzle', 'description': 'Size rainwater pipes using roof area and rainfall intensity.', 'url': '/plumbing/rainwater-page'},
+  {'name': 'Water Tank Calculator', 'icon': 'bi-houses', 'description': 'Estimate storage capacity from occupancy and usage.', 'url': '/plumbing/tank-page'},
+  {'name': 'Sump Tank Calculator', 'icon': 'bi-droplet', 'description': 'Size sump tanks for daily demand and storage days.', 'url': '/plumbing/sump-page'},
+  {'name': 'Pump Selection Calculator', 'icon': 'bi-pump', 'description': 'Calculate pump power from flow, head, and efficiency.', 'url': '/plumbing/pump-page'},
+  {'name': 'Fixture Unit Calculator', 'icon': 'bi-list-ol', 'description': 'Estimate total fixture units for plumbing load design.', 'url': '/plumbing/fixture-units-page'}
+] %}
+<div class="container-fluid">
+  <div class="page-header">
+    <h1><i class="bi bi-droplet-half"></i> Plumbing Engineering Suite</h1>
+    <p>Professional calculators for water demand, pipe sizing, pressure loss, pump head, and drainage planning in accordance with UAE / GCC plumbing practice, ASHRAE guidance, and local authority review requirements.</p>
+  </div>
+  <div class="calculator-grid">
+    {% for item in card_items %}
+    <div class="calculator-grid__cell">
+      <div class="h-100">
+        {% include 'components/calculator-card.html' %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

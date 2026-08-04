@@ -1,0 +1,17 @@
+venv/
+__pycache__/
+*.pyc
+
+.env
+
+uploads/*
+reports/*
+
+*.xlsx
+*.xlsm
+
+.vscode/
+
+.idea/
+
+.DS_Store

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>Uploaded Images</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <h1>Images Uploaded Successfully ✅</h1>
+
+    <h3>Uploaded Files</h3>
+
+    <ul>
+
+        {% for image in uploaded %}
+
+        <li>{{ image }}</li>
+
+        {% endfor %}
+
+    </ul>
+
+    <br>
+
+    <a href="/">
+        <button>
+            Upload More
+        </button>
+    </a>
+
+</div>
+
+</body>
+
+</html>

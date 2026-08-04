@@ -1,0 +1,2359 @@
+﻿/* ==========================================================
+   AI MEP ENGINEERING SUITE
+   calculators.css
+   Version 2.0
+========================================================== */
+
+/* ==========================================================
+   VARIABLES
+========================================================== */
+
+/* Design tokens (colors, radii, shadows) are centralized in app/static/css/style.css :root. */
+/* calculators.css references those tokens using var(...) and intentionally does not redeclare them here to avoid conflicting overrides. */
+
+/* ==========================================================
+   PAGE
+========================================================== */
+
+.calculator-page{
+
+    max-width:1700px;
+
+    margin:0 auto;
+
+    padding:32px;
+
+    background:transparent;
+
+}
+
+/* ==========================================================
+   HEADER
+========================================================== */
+
+.page-header{
+
+    margin-bottom:32px;
+
+}
+
+.page-header h1{
+
+    font-size:38px;
+
+    font-weight:700;
+
+    color:var(--heading);
+
+    margin-bottom:10px;
+
+}
+
+.page-header p{
+
+    max-width:900px;
+
+    color:var(--text);
+
+    line-height:1.8;
+
+    font-size:15px;
+
+}
+
+/* ==========================================================
+   MAIN LAYOUT
+========================================================== */
+
+.calculator-detail{
+
+    display:grid;
+
+    grid-template-columns:420px 1fr;
+
+    gap:30px;
+
+    align-items:start;
+
+}
+
+/* ==========================================================
+   LEFT PANEL
+========================================================== */
+
+.calculator-panel{
+
+    background:var(--surface);
+
+    border:1px solid var(--border);
+
+    border-radius:var(--radius-lg);
+
+    box-shadow:var(--shadow);
+
+    padding:28px;
+
+    position:sticky;
+
+    top:24px;
+
+}
+
+/* ==========================================================
+   RIGHT PANEL
+========================================================== */
+
+.calculator-result-card{
+
+    background:var(--surface);
+
+    border:1px solid var(--border);
+
+    border-radius:var(--radius-lg);
+
+    box-shadow:var(--shadow);
+
+    padding:28px;
+
+}
+
+/* ==========================================================
+   CARD HEADER
+========================================================== */
+
+.card-header{
+
+    background:transparent !important;
+
+    border:none !important;
+
+    padding:0 0 20px 0;
+
+}
+
+.card-header h2,
+.card-header h3,
+.card-header h4,
+.card-header h5{
+
+    margin:0;
+
+    font-weight:700;
+
+    color:var(--heading);
+
+}
+
+/* ==========================================================
+   PANEL TITLE
+========================================================== */
+
+.panel-title{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    margin-bottom:22px;
+
+}
+
+.panel-title i{
+
+    color:var(--primary);
+
+    font-size:24px;
+
+}
+
+.panel-title h3{
+
+    margin:0;
+
+    font-size:24px;
+
+    font-weight:700;
+
+}
+
+/* ==========================================================
+   SECTION
+========================================================== */
+
+.section{
+
+    margin-top:30px;
+
+}
+
+.section:first-child{
+
+    margin-top:0;
+
+}
+
+/* ==========================================================
+   DIVIDER
+========================================================== */
+
+.section-divider{
+
+    height:1px;
+
+    background:var(--border);
+
+    margin:28px 0;
+
+}
+
+/* ==========================================================
+   RESULT PLACEHOLDER
+========================================================== */
+
+.result-placeholder{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:center;
+
+    justify-content:center;
+
+    text-align:center;
+
+    min-height:260px;
+
+    border:2px dashed var(--border);
+
+    border-radius:18px;
+
+    background:#fafcff;
+
+}
+
+.result-placeholder i{
+
+    font-size:52px;
+
+    color:var(--primary);
+
+    margin-bottom:18px;
+
+}
+
+.result-placeholder h4{
+
+    color:var(--heading);
+
+    margin-bottom:10px;
+
+}
+
+.result-placeholder p{
+
+    color:var(--muted);
+
+    max-width:420px;
+
+}
+
+/* ==========================================================
+   PROFESSIONAL CALCULATOR UI
+========================================================= */
+
+.professional-card {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 18px;
+    box-shadow: 0 10px 35px rgba(15, 23, 42, 0.08);
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.professional-header {
+    background: linear-gradient(135deg, #0f172a, #1d4ed8);
+    color: white;
+    padding: 1.5rem 1.75rem;
+}
+
+.professional-header h3,
+.professional-header h4,
+.professional-header h5 {
+    margin: 0;
+    font-weight: 700;
+}
+
+.page-subtitle {
+    color: rgba(255, 255, 255, 0.8);
+    margin: 0.5rem 0 0;
+}
+
+.badge-standard {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #dbeafe;
+    color: #1d4ed8;
+    border-radius: 999px;
+    padding: 0.65rem 1rem;
+    font-weight: 700;
+}
+
+.section-label {
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #64748b;
+    font-weight: 700;
+    margin-bottom: 0.75rem;
+}
+
+.metric-card {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 14px;
+    padding: 1rem;
+    text-align: center;
+    height: 100%;
+}
+
+.metric-title {
+    color: #64748b;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #0f172a;
+    line-height: 1.1;
+}
+
+.metric-unit {
+    color: #64748b;
+    font-size: 0.8rem;
+}
+
+.result-table th,
+.result-table td {
+    vertical-align: middle;
+    padding: 0.75rem 1rem;
+}
+
+.result-table thead th {
+    background: #0f172a;
+    color: #fff;
+}
+
+.result-table tbody tr.table-primary th,
+.result-table tbody tr.table-primary td {
+    background: #e0e7ff;
+}
+
+@media (max-width: 991.98px) {
+    .professional-header { padding: 1.2rem 1.25rem; }
+}
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media(max-width:1200px){
+
+    .calculator-detail{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .calculator-panel{
+
+        position:relative;
+
+        top:auto;
+
+    }
+
+}
+
+@media(max-width:768px){
+
+    .calculator-page{
+
+        padding:18px;
+
+    }
+
+    .page-header h1{
+
+        font-size:30px;
+
+    }
+
+}
+/* ==========================================================
+   PART 2
+   FORM CONTROLS
+========================================================== */
+
+/* ==========================================================
+   FORM
+========================================================== */
+
+.calculator-form{
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:22px;
+
+}
+
+/* ==========================================================
+   FIELD
+========================================================== */
+
+.form-group{
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.form-label{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    margin-bottom:8px;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    color:var(--heading);
+
+}
+
+.form-label .required{
+
+    color:var(--danger);
+
+}
+
+/* ==========================================================
+   INPUT
+========================================================== */
+
+.form-control,
+.form-select{
+
+    width:100%;
+
+    height:54px;
+
+    padding:0 18px;
+
+    border:1px solid var(--border);
+
+    border-radius:14px;
+
+    background:#fff;
+
+    color:var(--heading);
+
+    font-size:15px;
+
+    transition:all .25s ease;
+
+}
+
+textarea.form-control{
+
+    min-height:140px;
+
+    resize:vertical;
+
+    padding:16px 18px;
+
+}
+
+/* ==========================================================
+   PLACEHOLDER
+========================================================== */
+
+.form-control::placeholder{
+
+    color:#94a3b8;
+
+}
+
+/* ==========================================================
+   FOCUS
+========================================================== */
+
+.form-control:focus,
+.form-select:focus{
+
+    outline:none;
+
+    border-color:var(--primary);
+
+    box-shadow:
+        0 0 0 4px rgba(37,99,235,.12);
+
+}
+
+/* ==========================================================
+   INVALID
+========================================================== */
+
+.form-control.is-invalid,
+.form-select.is-invalid{
+
+    border-color:var(--danger);
+
+    box-shadow:
+        0 0 0 4px rgba(220,38,38,.12);
+
+}
+
+.invalid-feedback{
+
+    display:block;
+
+    margin-top:8px;
+
+    font-size:13px;
+
+    color:var(--danger);
+
+}
+
+/* ==========================================================
+   HELP TEXT
+========================================================== */
+
+.form-text{
+
+    margin-top:6px;
+
+    color:var(--muted);
+
+    font-size:13px;
+
+}
+
+/* ==========================================================
+   BUTTON GROUP
+========================================================== */
+
+.button-group{
+
+    display:flex;
+
+    gap:14px;
+
+    margin-top:28px;
+
+}
+
+.button-group .btn{
+
+    flex:1;
+
+    height:54px;
+
+    border-radius:14px;
+
+    font-weight:700;
+
+    font-size:15px;
+
+    transition:all .25s ease;
+
+}
+
+/* ==========================================================
+   PRIMARY BUTTON
+========================================================== */
+
+.btn-primary{
+
+    background:linear-gradient(
+        135deg,
+        var(--primary),
+        var(--primary-dark)
+    );
+
+    border:none;
+
+    color:#fff;
+
+}
+
+.btn-primary:hover{
+
+    transform:translateY(-2px);
+
+    box-shadow:
+        0 14px 32px rgba(37,99,235,.25);
+
+}
+
+/* ==========================================================
+   SECONDARY BUTTON
+========================================================== */
+
+.btn-outline-secondary{
+
+    background:#fff;
+
+    color:var(--heading);
+
+    border:1px solid var(--border);
+
+}
+
+.btn-outline-secondary:hover{
+
+    background:#f8fafc;
+
+}
+
+/* ==========================================================
+   FORMULA CARD
+========================================================== */
+
+.formula-card{
+
+    margin-top:30px;
+
+    border:1px solid var(--border);
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+    background:#fff;
+
+    box-shadow:var(--shadow-sm);
+
+}
+
+.formula-card-header{
+
+    padding:16px 20px;
+
+    background:var(--primary-light);
+
+    border-bottom:1px solid var(--border);
+
+    font-weight:700;
+
+    color:var(--primary);
+
+}
+
+.formula-card-body{
+
+    padding:20px;
+
+}
+
+.formula-card code{
+
+    display:block;
+
+    white-space:pre-wrap;
+
+    line-height:1.8;
+
+    color:#1e3a8a;
+
+    font-size:14px;
+
+}
+
+/* ==========================================================
+   ENGINEERING REFERENCE
+========================================================== */
+
+.reference-card{
+
+    margin-top:24px;
+
+    padding:22px;
+
+    background:#fff;
+
+    border-left:5px solid var(--primary);
+
+    border-radius:18px;
+
+    box-shadow:var(--shadow-sm);
+
+}
+
+.reference-card h5{
+
+    margin-bottom:12px;
+
+    color:var(--heading);
+
+    font-weight:700;
+
+}
+
+.reference-card p{
+
+    margin:0;
+
+    line-height:1.8;
+
+    color:var(--text);
+
+}
+
+/* ==========================================================
+   ALERTS
+========================================================== */
+
+.alert{
+
+    border:none;
+
+    border-radius:16px;
+
+    padding:18px 22px;
+
+    margin-bottom:20px;
+
+}
+
+.alert-success{
+
+    background:#ecfdf5;
+
+    color:#065f46;
+
+}
+
+.alert-danger{
+
+    background:#fef2f2;
+
+    color:#991b1b;
+
+}
+
+.alert-info{
+
+    background:#eff6ff;
+
+    color:#1d4ed8;
+
+}
+/* ==========================================================
+   PART 3
+   RESULTS PANEL
+========================================================== */
+
+/* ==========================================================
+   RESULT HEADER
+========================================================== */
+
+.result-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:28px;
+
+}
+
+.result-header h3{
+
+    margin:0;
+
+    font-size:28px;
+
+    font-weight:700;
+
+    color:var(--heading);
+
+}
+
+.result-status{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    padding:8px 16px;
+
+    border-radius:999px;
+
+    background:#ecfdf5;
+
+    color:#16a34a;
+
+    font-weight:600;
+
+    font-size:13px;
+
+}
+
+/* ==========================================================
+   MAIN RESULT
+========================================================== */
+
+.result-card{
+
+    text-align:center;
+
+    padding:36px;
+
+    border-radius:22px;
+
+    background:linear-gradient(
+        135deg,
+        #eff6ff,
+        #ffffff
+    );
+
+    border:1px solid var(--border);
+
+    margin-bottom:30px;
+
+}
+
+.result-value{
+
+    font-size:64px;
+
+    font-weight:800;
+
+    color:var(--primary);
+
+    line-height:1;
+
+    margin-bottom:10px;
+
+}
+
+.result-unit{
+
+    font-size:22px;
+
+    color:var(--muted);
+
+    font-weight:600;
+
+}
+
+.result-title{
+
+    margin-top:14px;
+
+    font-size:16px;
+
+    font-weight:600;
+
+    color:var(--text);
+
+}
+
+/* ==========================================================
+   KPI GRID
+========================================================== */
+
+.result-grid{
+
+    display:grid;
+
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+
+    gap:18px;
+
+    margin-bottom:30px;
+
+}
+
+.result-item{
+
+    background:#ffffff;
+
+    border:1px solid var(--border);
+
+    border-radius:18px;
+
+    padding:22px;
+
+    box-shadow:var(--shadow-sm);
+
+    transition:.25s;
+
+}
+
+.result-item:hover{
+
+    transform:translateY(-3px);
+
+    box-shadow:var(--shadow);
+
+}
+
+.result-item-label{
+
+    color:var(--muted);
+
+    font-size:13px;
+
+    margin-bottom:8px;
+
+    text-transform:uppercase;
+
+    letter-spacing:.05em;
+
+}
+
+.result-item-value{
+
+    font-size:26px;
+
+    font-weight:700;
+
+    color:var(--heading);
+
+}
+
+/* ==========================================================
+   RESULT TABLE
+========================================================== */
+
+.result-table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    margin-bottom:30px;
+
+    background:#fff;
+
+    border-radius:18px;
+
+    overflow:hidden;
+
+}
+
+.result-table thead{
+
+    background:#eff6ff;
+
+}
+
+.result-table th{
+
+    padding:16px;
+
+    text-align:left;
+
+    color:var(--heading);
+
+    font-weight:700;
+
+}
+
+.result-table td{
+
+    padding:15px 16px;
+
+    border-top:1px solid var(--border);
+
+}
+
+.result-table tbody tr:hover{
+
+    background:#f8fafc;
+
+}
+
+/* ==========================================================
+   ENGINEERING SUMMARY
+========================================================== */
+
+.summary-card{
+
+    background:#ffffff;
+
+    border-left:5px solid var(--primary);
+
+    border-radius:18px;
+
+    padding:24px;
+
+    box-shadow:var(--shadow-sm);
+
+    margin-bottom:30px;
+
+}
+
+.summary-card h4{
+
+    margin-bottom:16px;
+
+    color:var(--heading);
+
+    font-size:20px;
+
+}
+
+.summary-card ul{
+
+    margin:0;
+
+    padding-left:20px;
+
+}
+
+.summary-card li{
+
+    margin-bottom:10px;
+
+    color:var(--text);
+
+    line-height:1.7;
+
+}
+
+/* ==========================================================
+   ENGINEERING NOTES
+========================================================== */
+
+.engineering-note{
+
+    padding:20px;
+
+    border-radius:18px;
+
+    background:#f8fafc;
+
+    border:1px solid var(--border);
+
+    margin-bottom:25px;
+
+}
+
+.engineering-note strong{
+
+    display:block;
+
+    margin-bottom:8px;
+
+    color:var(--heading);
+
+}
+
+.engineering-note p{
+
+    margin:0;
+
+    color:var(--text);
+
+    line-height:1.8;
+
+}
+
+/* ==========================================================
+   RESULT PLACEHOLDER
+========================================================== */
+
+.result-placeholder{
+
+    display:flex;
+
+    flex-direction:column;
+
+    justify-content:center;
+
+    align-items:center;
+
+    text-align:center;
+
+    min-height:320px;
+
+    border:2px dashed var(--border);
+
+    border-radius:20px;
+
+    background:#fafcff;
+
+}
+
+.result-placeholder i{
+
+    font-size:56px;
+
+    color:var(--primary);
+
+    margin-bottom:18px;
+
+}
+
+.result-placeholder h4{
+
+    margin-bottom:10px;
+
+    color:var(--heading);
+
+}
+
+.result-placeholder p{
+
+    max-width:420px;
+
+    color:var(--muted);
+
+    line-height:1.7;
+
+}
+/* ==========================================================
+   PART 4
+   ENGINEERING TABLES & CALCULATION DIAGRAM
+========================================================== */
+
+/* ==========================================================
+   SECTION TITLE
+========================================================== */
+
+.section-heading{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+    margin:35px 0 20px;
+
+}
+
+.section-heading i{
+
+    color:var(--primary);
+
+    font-size:22px;
+
+}
+
+.section-heading h3{
+
+    margin:0;
+
+    font-size:24px;
+
+    font-weight:700;
+
+    color:var(--heading);
+
+}
+
+/* ==========================================================
+   ENGINEERING TABLE
+========================================================== */
+
+.engineering-table{
+
+    width:100%;
+
+    border-collapse:collapse;
+
+    overflow:hidden;
+
+    border-radius:18px;
+
+    background:#fff;
+
+    box-shadow:var(--shadow-sm);
+
+}
+
+.engineering-table thead{
+
+    background:linear-gradient(
+        90deg,
+        var(--primary),
+        var(--primary-dark)
+    );
+
+}
+
+.engineering-table thead th{
+
+    color:#fff;
+
+    padding:18px;
+
+    font-weight:700;
+
+}
+
+.engineering-table tbody td{
+
+    padding:16px;
+
+    border-bottom:1px solid var(--border);
+
+}
+
+.engineering-table tbody tr:nth-child(even){
+
+    background:#f8fafc;
+
+}
+
+.engineering-table tbody tr:hover{
+
+    background:#eef4ff;
+
+}
+
+/* ==========================================================
+   PARAMETER CARD
+========================================================== */
+
+.parameter-card{
+
+    background:#fff;
+
+    border:1px solid var(--border);
+
+    border-radius:18px;
+
+    padding:22px;
+
+    box-shadow:var(--shadow-sm);
+
+    transition:.25s;
+
+}
+
+.parameter-card:hover{
+
+    transform:translateY(-4px);
+
+    box-shadow:var(--shadow);
+
+}
+
+.parameter-label{
+
+    color:var(--muted);
+
+    font-size:13px;
+
+    margin-bottom:8px;
+
+}
+
+.parameter-value{
+
+    font-size:30px;
+
+    font-weight:700;
+
+    color:var(--heading);
+
+}
+
+/* ==========================================================
+   CALCULATION FLOW
+========================================================== */
+
+.calculation-flow{
+
+    display:grid;
+
+    grid-template-columns:1fr 100px 1fr;
+
+    gap:25px;
+
+    align-items:center;
+
+    margin:35px 0;
+
+}
+
+.flow-box{
+
+    background:#fff;
+
+    border:1px solid var(--border);
+
+    border-radius:20px;
+
+    padding:25px;
+
+    text-align:center;
+
+    box-shadow:var(--shadow-sm);
+
+}
+
+.flow-box h5{
+
+    margin-bottom:15px;
+
+    color:var(--heading);
+
+}
+
+.flow-box ul{
+
+    list-style:none;
+
+    padding:0;
+
+    margin:0;
+
+}
+
+.flow-box li{
+
+    margin-bottom:8px;
+
+    color:var(--text);
+
+}
+
+.flow-arrow{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+}
+
+.flow-arrow i{
+
+    font-size:54px;
+
+    color:var(--primary);
+
+}
+
+/* ==========================================================
+   ENGINEERING REPORT
+========================================================== */
+
+.engineering-report{
+
+    margin-top:35px;
+
+    background:#fff;
+
+    border-left:6px solid var(--primary);
+
+    border-radius:20px;
+
+    padding:28px;
+
+    box-shadow:var(--shadow-sm);
+
+}
+
+.engineering-report h4{
+
+    margin-bottom:18px;
+
+    color:var(--heading);
+
+}
+
+.engineering-report p{
+
+    line-height:1.8;
+
+    color:var(--text);
+
+}
+
+.engineering-report ul{
+
+    margin-top:15px;
+
+    padding-left:20px;
+
+}
+
+.engineering-report li{
+
+    margin-bottom:10px;
+
+}
+
+/* ==========================================================
+   FORMULA BOX
+========================================================== */
+
+.formula-box{
+
+    background:#0f172a;
+
+    color:#fff;
+
+    border-radius:18px;
+
+    padding:24px;
+
+    margin:30px 0;
+
+    overflow:auto;
+
+}
+
+.formula-box code{
+
+    color:#38bdf8;
+
+    font-size:15px;
+
+    white-space:pre-wrap;
+
+    line-height:1.8;
+
+}
+
+/* ==========================================================
+   DESIGN STANDARD
+========================================================== */
+
+.design-standard{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:16px;
+
+    padding:20px;
+
+    background:#eff6ff;
+
+    border-radius:18px;
+
+    border:1px solid #bfdbfe;
+
+    margin-top:25px;
+
+}
+
+.design-standard i{
+
+    font-size:30px;
+
+    color:var(--primary);
+
+}
+
+.design-standard strong{
+
+    display:block;
+
+    color:var(--heading);
+
+    margin-bottom:5px;
+
+}
+
+.design-standard span{
+
+    color:var(--text);
+
+}
+
+/* ==========================================================
+   CALCULATION BADGES
+========================================================== */
+
+.result-badge{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:8px;
+
+    padding:8px 14px;
+
+    border-radius:999px;
+
+    background:#eef4ff;
+
+    color:var(--primary);
+
+    font-size:13px;
+
+    font-weight:700;
+
+    margin:5px;
+
+}
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media(max-width:992px){
+
+    .calculation-flow{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .flow-arrow{
+
+        transform:rotate(90deg);
+
+    }
+
+}
+/* ==========================================================
+   PART 5
+   EXPORT • REPORT • ACTIONS
+========================================================== */
+
+/* ==========================================================
+   ACTION TOOLBAR
+========================================================== */
+
+.action-toolbar{
+
+    display:flex;
+
+    flex-wrap:wrap;
+
+    gap:16px;
+
+    margin:35px 0;
+
+}
+
+.action-toolbar .btn{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    gap:10px;
+
+    min-width:180px;
+
+    height:52px;
+
+    border-radius:14px;
+
+    font-weight:700;
+
+    transition:all .25s ease;
+
+}
+
+/* ==========================================================
+   PDF
+========================================================== */
+
+.btn-pdf{
+
+    background:#dc2626;
+
+    color:#fff;
+
+    border:none;
+
+}
+
+.btn-pdf:hover{
+
+    background:#b91c1c;
+
+    transform:translateY(-3px);
+
+}
+
+/* ==========================================================
+   EXCEL
+========================================================== */
+
+.btn-excel{
+
+    background:#16a34a;
+
+    color:#fff;
+
+    border:none;
+
+}
+
+.btn-excel:hover{
+
+    background:#15803d;
+
+    transform:translateY(-3px);
+
+}
+
+/* ==========================================================
+   PRINT
+========================================================== */
+
+.btn-print{
+
+    background:#0f172a;
+
+    color:#fff;
+
+    border:none;
+
+}
+
+.btn-print:hover{
+
+    background:#020617;
+
+    transform:translateY(-3px);
+
+}
+
+/* ==========================================================
+   SHARE
+========================================================== */
+
+.btn-share{
+
+    background:#2563eb;
+
+    color:#fff;
+
+    border:none;
+
+}
+
+.btn-share:hover{
+
+    background:#1d4ed8;
+
+}
+
+/* ==========================================================
+   AI REPORT
+========================================================== */
+
+.ai-report{
+
+    margin-top:35px;
+
+    background:linear-gradient(
+        135deg,
+        #ffffff,
+        #f8fbff
+    );
+
+    border:1px solid var(--border);
+
+    border-radius:22px;
+
+    padding:30px;
+
+    box-shadow:var(--shadow);
+
+}
+
+.ai-report-header{
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:space-between;
+
+    margin-bottom:25px;
+
+}
+
+.ai-report-title{
+
+    display:flex;
+
+    align-items:center;
+
+    gap:12px;
+
+}
+
+.ai-report-title i{
+
+    font-size:30px;
+
+    color:var(--primary);
+
+}
+
+.ai-report-title h3{
+
+    margin:0;
+
+    font-size:26px;
+
+    color:var(--heading);
+
+}
+
+.ai-report-body{
+
+    line-height:1.9;
+
+    color:var(--text);
+
+}
+
+/* ==========================================================
+   REPORT STATUS
+========================================================== */
+
+.report-status{
+
+    display:inline-flex;
+
+    align-items:center;
+
+    gap:10px;
+
+    padding:8px 18px;
+
+    border-radius:999px;
+
+    background:#ecfdf5;
+
+    color:#16a34a;
+
+    font-size:13px;
+
+    font-weight:700;
+
+}
+
+/* ==========================================================
+   EXPORT PROGRESS
+========================================================== */
+
+.export-progress{
+
+    margin-top:25px;
+
+}
+
+.export-progress .progress{
+
+    height:10px;
+
+    border-radius:999px;
+
+    overflow:hidden;
+
+    background:#e2e8f0;
+
+}
+
+.export-progress .progress-bar{
+
+    background:linear-gradient(
+        90deg,
+        var(--primary),
+        #60a5fa
+    );
+
+}
+
+/* ==========================================================
+   LOADING
+========================================================== */
+
+.loading-overlay{
+
+    position:absolute;
+
+    inset:0;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    background:rgba(255,255,255,.85);
+
+    border-radius:22px;
+
+    z-index:20;
+
+}
+
+.loading-spinner{
+
+    width:60px;
+
+    height:60px;
+
+    border:6px solid #dbeafe;
+
+    border-top-color:var(--primary);
+
+    border-radius:50%;
+
+    animation:spin .9s linear infinite;
+
+}
+
+@keyframes spin{
+
+    from{
+
+        transform:rotate(0deg);
+
+    }
+
+    to{
+
+        transform:rotate(360deg);
+
+    }
+
+}
+
+/* ==========================================================
+   REPORT FOOTER
+========================================================== */
+
+.report-footer{
+
+    margin-top:35px;
+
+    padding-top:20px;
+
+    border-top:1px solid var(--border);
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    flex-wrap:wrap;
+
+    gap:10px;
+
+    color:var(--muted);
+
+    font-size:14px;
+
+}
+
+/* ==========================================================
+   SUCCESS MESSAGE
+========================================================== */
+
+.export-success{
+
+    margin-top:20px;
+
+    padding:18px;
+
+    border-radius:16px;
+
+    background:#ecfdf5;
+
+    color:#166534;
+
+    border-left:5px solid #16a34a;
+
+}
+
+/* ==========================================================
+   ERROR MESSAGE
+========================================================== */
+
+.export-error{
+
+    margin-top:20px;
+
+    padding:18px;
+
+    border-radius:16px;
+
+    background:#fef2f2;
+
+    color:#991b1b;
+
+    border-left:5px solid #dc2626;
+
+}
+
+/* ==========================================================
+   RESPONSIVE
+========================================================== */
+
+@media(max-width:768px){
+
+    .action-toolbar{
+
+        flex-direction:column;
+
+    }
+
+    .action-toolbar .btn{
+
+        width:100%;
+
+    }
+
+    .ai-report-header{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+        gap:15px;
+
+    }
+
+    .report-footer{
+
+        flex-direction:column;
+
+        align-items:flex-start;
+
+    }
+
+}
+/* ==========================================================
+   PART 6
+   RESPONSIVE • PRINT • ANIMATIONS • UTILITIES
+========================================================== */
+
+/* ==========================================================
+   FADE IN ANIMATION
+========================================================== */
+
+@keyframes fadeInUp{
+
+    from{
+
+        opacity:0;
+
+        transform:translateY(20px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:translateY(0);
+
+    }
+
+}
+
+@keyframes fadeIn{
+
+    from{
+
+        opacity:0;
+
+    }
+
+    to{
+
+        opacity:1;
+
+    }
+
+}
+
+.calculator-panel,
+.calculator-result-card,
+.result-card,
+.summary-card,
+.parameter-card,
+.engineering-report,
+.reference-card{
+
+    animation:fadeInUp .45s ease;
+
+}
+
+/* ==========================================================
+   HOVER EFFECTS
+========================================================== */
+
+.card,
+.parameter-card,
+.result-item{
+
+    transition:all .25s ease;
+
+}
+
+.card:hover,
+.parameter-card:hover,
+.result-item:hover{
+
+    transform:translateY(-3px);
+
+}
+
+/* ==========================================================
+   CUSTOM SCROLLBAR
+========================================================== */
+
+::-webkit-scrollbar{
+
+    width:10px;
+
+    height:10px;
+
+}
+
+::-webkit-scrollbar-track{
+
+    background:#f1f5f9;
+
+}
+
+::-webkit-scrollbar-thumb{
+
+    background:#94a3b8;
+
+    border-radius:999px;
+
+}
+
+::-webkit-scrollbar-thumb:hover{
+
+    background:#64748b;
+
+}
+
+/* ==========================================================
+   TABLE RESPONSIVE
+========================================================== */
+
+.table-responsive{
+
+    width:100%;
+
+    overflow-x:auto;
+
+}
+
+.table-responsive table{
+
+    min-width:650px;
+
+}
+
+/* ==========================================================
+   IMAGE
+========================================================== */
+
+img{
+
+    max-width:100%;
+
+    height:auto;
+
+}
+
+/* ==========================================================
+   CODE
+========================================================== */
+
+code{
+
+    font-family:
+
+        Consolas,
+
+        "Courier New",
+
+        monospace;
+
+}
+
+/* ==========================================================
+   LINKS
+========================================================== */
+
+a{
+
+    color:var(--primary);
+
+    transition:.25s;
+
+}
+
+a:hover{
+
+    color:var(--primary-dark);
+
+}
+
+/* ==========================================================
+   SPACING HELPERS
+========================================================== */
+
+.mt-40{
+
+    margin-top:40px;
+
+}
+
+.mb-40{
+
+    margin-bottom:40px;
+
+}
+
+.py-40{
+
+    padding-top:40px;
+
+    padding-bottom:40px;
+
+}
+
+.rounded-xl{
+
+    border-radius:24px;
+
+}
+
+/* ==========================================================
+   SHADOW HELPERS
+========================================================== */
+
+.shadow-soft{
+
+    box-shadow:
+
+        0 10px 30px rgba(15,23,42,.08);
+
+}
+
+.shadow-large{
+
+    box-shadow:
+
+        0 25px 60px rgba(15,23,42,.14);
+
+}
+
+/* ==========================================================
+   PRINT
+========================================================== */
+
+@media print{
+
+    body{
+
+        background:#ffffff !important;
+
+    }
+
+    .sidebar,
+    .navbar,
+    .action-toolbar,
+    .btn,
+    .no-print{
+
+        display:none !important;
+
+    }
+
+    .calculator-page{
+
+        max-width:100%;
+
+        padding:0;
+
+    }
+
+    .calculator-detail{
+
+        display:block;
+
+    }
+
+    .calculator-panel,
+    .calculator-result-card{
+
+        box-shadow:none;
+
+        border:1px solid #cccccc;
+
+        margin-bottom:20px;
+
+    }
+
+}
+
+/* ==========================================================
+   TABLET
+========================================================== */
+
+@media(max-width:1200px){
+
+    .calculator-detail{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .calculator-panel{
+
+        position:relative;
+
+        top:auto;
+
+    }
+
+    .result-grid{
+
+        grid-template-columns:
+
+            repeat(2,1fr);
+
+    }
+
+}
+
+/* ==========================================================
+   MOBILE
+========================================================== */
+
+@media(max-width:768px){
+
+    .calculator-page{
+
+        padding:16px;
+
+    }
+
+    .page-header h1{
+
+        font-size:30px;
+
+    }
+
+    .page-header p{
+
+        font-size:14px;
+
+    }
+
+    .button-group{
+
+        flex-direction:column;
+
+    }
+
+    .button-group .btn{
+
+        width:100%;
+
+    }
+
+    .result-grid{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .calculation-flow{
+
+        grid-template-columns:1fr;
+
+    }
+
+    .flow-arrow{
+
+        transform:rotate(90deg);
+
+    }
+
+    .action-toolbar{
+
+        flex-direction:column;
+
+    }
+
+    .action-toolbar .btn{
+
+        width:100%;
+
+    }
+
+}
+
+/* ==========================================================
+   LARGE MONITOR
+========================================================== */
+
+@media(min-width:1700px){
+
+    .calculator-page{
+
+        max-width:1800px;
+
+    }
+
+}
+
+/* ==========================================================
+   ACCESSIBILITY
+========================================================== */
+
+:focus-visible{
+
+    outline:3px solid rgba(37,99,235,.30);
+
+    outline-offset:2px;
+
+}
+
+/* ==========================================================
+   END OF FILE
+========================================================== */

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>Login | AI-MEP Inspection</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/style.css') }}">
+
+</head>
+
+<body class="auth-page">
+
+<div class="container auth-shell">
+
+<div class="auth-card login-card">
+
+<div class="text-center mb-4">
+
+<div class="brand-badge">
+
+<i class="bi bi-building"></i>
+
+</div>
+
+<h2 class="auth-title">
+
+AI-MEP Inspection Assistant
+
+</h2>
+
+<p class="auth-subtitle">
+
+Secure workspace access for your inspection team
+
+</p>
+
+</div>
+
+{% if error %}
+
+<div class="alert alert-danger">
+
+{{ error }}
+
+</div>
+
+{% endif %}
+
+{% if success %}
+
+<div class="alert alert-success">
+
+{{ success }}
+
+</div>
+
+{% endif %}
+
+<form method="POST" action="/login" novalidate>
+
+<div class="mb-3">
+
+<label class="form-label">
+
+Email Address
+
+</label>
+
+<div class="input-group">
+
+<span class="input-group-text">
+
+<i class="bi bi-envelope"></i>
+
+</span>
+
+<input
+type="email"
+name="email"
+class="form-control"
+placeholder="Enter your email"
+required>
+
+</div>
+<div class="field-error">Please enter a valid email address.</div>
+
+</div>
+
+<div class="mb-4">
+
+<label class="form-label">
+
+Password
+
+</label>
+
+<div class="input-group">
+
+<span class="input-group-text">
+
+<i class="bi bi-lock"></i>
+
+</span>
+
+<input
+type="password"
+name="password"
+class="form-control"
+placeholder="Enter your password"
+required>
+
+</div>
+<div class="field-error">Password is required.</div>
+
+</div>
+
+<button type="submit" class="btn btn-primary btn-login auth-btn w-100">
+
+<i class="bi bi-box-arrow-in-right"></i>
+
+Login
+
+</button>
+
+</form>
+
+<div class="text-center mt-4">
+
+<a href="/forgot-password" class="auth-link">
+
+Forgot Password?
+
+</a>
+
+</div>
+
+<hr>
+
+<div class="text-center">
+
+Don't have an account?
+
+<br><br>
+
+<a
+href="/register"
+class="btn btn-outline-primary w-100 auth-link">
+
+Create Account
+
+</a>
+
+</div>
+
+</div>
+
+</div>
+
+</body>
+
+</html>

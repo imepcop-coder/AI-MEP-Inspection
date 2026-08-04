@@ -1,0 +1,101 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Engineering Intelligence Dashboard{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/analytics.css') }}">
+<div class="analytics-shell">
+  <section class="hero-panel">
+    <div class="hero-copy">
+      <p class="eyebrow">Engineering Intelligence Platform</p>
+      <h1>Enterprise analytics for QA/QC, MEP, and project delivery.</h1>
+      <p>Monitor inspections, NCRs, productivity, and risk with a premium command center designed for engineering leaders.</p>
+      <div class="hero-actions">
+        <button class="btn btn-primary">Export Report</button>
+        <button class="btn btn-outline-light">Share Snapshot</button>
+      </div>
+    </div>
+    <div class="hero-metrics">
+      <div class="metric-pill"><span>Live</span><strong>94.2%</strong><small>Inspection pass rate</small></div>
+      <div class="metric-pill"><span>Risk</span><strong>High</strong><small>3 active projects</small></div>
+      <div class="metric-pill"><span>AI</span><strong>144</strong><small>reports generated</small></div>
+    </div>
+  </section>
+
+  <section class="filters-card">
+    <div class="filter-group"><label>Date Range</label><input type="text" value="Last 90 Days"></div>
+    <div class="filter-group"><label>Project</label><input type="text" value="All Projects"></div>
+    <div class="filter-group"><label>Client</label><input type="text" value="All Clients"></div>
+    <div class="filter-group"><label>Discipline</label><input type="text" value="All Disciplines"></div>
+    <div class="filter-group"><label>Status</label><input type="text" value="Active"></div>
+  </section>
+
+  <section class="kpi-grid">
+    {% for key, value in kpis.items() %}
+    <article class="kpi-card">
+      <div class="kpi-label">{{ key.replace('_', ' ') | title }}</div>
+      <div class="kpi-value">{{ value }}</div>
+    </article>
+    {% endfor %}
+  </section>
+
+  <section class="dashboard-grid">
+    <article class="panel large-panel">
+      <div class="panel-heading"><h3>Inspection Trend</h3><span>Daily / Weekly / Monthly</span></div>
+      <canvas id="trendChart"></canvas>
+    </article>
+    <article class="panel">
+      <div class="panel-heading"><h3>Pass vs Fail</h3><span>Quality performance</span></div>
+      <canvas id="pieChart"></canvas>
+    </article>
+    <article class="panel">
+      <div class="panel-heading"><h3>NCR Trend</h3><span>Issue velocity</span></div>
+      <canvas id="ncrChart"></canvas>
+    </article>
+    <article class="panel">
+      <div class="panel-heading"><h3>AI Usage</h3><span>Automations consumed</span></div>
+      <canvas id="aiChart"></canvas>
+    </article>
+    <article class="panel large-panel">
+      <div class="panel-heading"><h3>Project Progress Timeline</h3><span>Delivery health</span></div>
+      <canvas id="timelineChart"></canvas>
+    </article>
+  </section>
+
+  <section class="insight-grid">
+    <article class="panel">
+      <div class="panel-heading"><h3>AI Insights</h3><span>Executive notes</span></div>
+      <ul class="insight-list">
+        {% for insight in insights %}
+        <li>{{ insight }}</li>
+        {% endfor %}
+      </ul>
+    </article>
+    <article class="panel">
+      <div class="panel-heading"><h3>Leaderboards</h3><span>Top performance</span></div>
+      <div class="leaderboard-list">
+        {% for leader in leaders %}
+        <div class="leader-row">
+          <strong>{{ leader.name }}</strong>
+          <span>{{ leader.metric }}</span>
+          <em>{{ leader.delta }}</em>
+        </div>
+        {% endfor %}
+      </div>
+    </article>
+    <article class="panel">
+      <div class="panel-heading"><h3>Predictive Analytics</h3><span>Forecasts</span></div>
+      <ul class="insight-list">
+        <li>Completion prediction: 87% on schedule.</li>
+        <li>Delay prediction: 2 likely slippage points.</li>
+        <li>Risk prediction: High for electrical commissioning.</li>
+      </ul>
+    </article>
+  </section>
+</div>
+<script>
+  window.analyticsData = {{ analytics_data | tojson }};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', path='js/analytics.js') }}"></script>
+{% endblock %}

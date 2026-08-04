@@ -1,0 +1,18 @@
+.container {
+  max-width: 1140px;
+}
+
+body {
+  background: #edf2fb;
+}
+
+/* Calculator card rules moved to app/static/css/calculator-card.css (canonical). */
+/* Removed duplicate rules to avoid conflicts with the canonical component stylesheet. */
+
+/* If page-specific overrides are required for plumbing, add them here using a
+   more specific selector (for example: .plumbing-page .calculator-card { ... }) */
+
+
+.btn-primary {
+  border-radius: 1rem;
+}

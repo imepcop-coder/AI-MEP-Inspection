@@ -1,0 +1,393 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Engineering Copilot{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/assistant.css') }}">
+
+<div class="assistant-shell">
+  <aside class="assistant-sidebar">
+    <button class="btn btn-primary btn-sm new-chat-btn" id="newChatBtn">+ New Chat</button>
+    <h5>Recent Chats</h5>
+    <ul class="assistant-list" id="chatList">
+      <li class="assistant-item text-muted small" data-chat-id="">No chats yet</li>
+    </ul>
+    <div class="prompts-section">
+      <h6>Quick Prompts</h6>
+      <div class="prompt-chips" id="disciplineChips">
+        <span class="assistant-chip" data-discipline="hvac">HVAC</span>
+        <span class="assistant-chip" data-discipline="electrical">Electrical</span>
+        <span class="assistant-chip" data-discipline="plumbing">Plumbing</span>
+        <span class="assistant-chip" data-discipline="fire_fighting">Fire Fighting</span>
+        <span class="assistant-chip" data-discipline="mechanical">Mechanical</span>
+        <span class="assistant-chip" data-discipline="civil">Civil</span>
+      </div>
+    </div>
+  </aside>
+
+  <div class="assistant-main">
+    <div class="assistant-header">
+      <h4 id="chatTitle">Engineering Copilot</h4>
+      <p>Draft professional engineering documents and get expert guidance.</p>
+    </div>
+
+    <div class="assistant-messages" id="chatMessages">
+      <div class="assistant-empty">
+        <i class="bi bi-chat-dots"></i>
+        <h5>Start a new chat</h5>
+        <p>Select a document type and ask for assistance, or upload a file for analysis.</p>
+      </div>
+    </div>
+
+    <div class="assistant-input-card">
+      <div class="assistant-controls">
+        <select id="docTypeSelect" class="form-select">
+          <option value="">Select Document Type...</option>
+          <option value="inspection_report">Inspection Report</option>
+          <option value="ncr">NCR (Non-Conformance Report)</option>
+          <option value="site_observation">Site Observation Report</option>
+          <option value="method_statement">Method Statement</option>
+          <option value="itp">ITP (Inspection Test Plan)</option>
+          <option value="risk_assessment">Risk Assessment</option>
+          <option value="daily_progress">Daily Progress Report</option>
+          <option value="weekly_report">Weekly Report</option>
+          <option value="monthly_report">Monthly Report</option>
+          <option value="material_inspection">Material Inspection Request</option>
+          <option value="email_client">Email to Client</option>
+          <option value="email_contractor">Email to Contractor</option>
+          <option value="email_consultant">Email to Consultant</option>
+          <option value="rfi">RFI (Request for Information)</option>
+          <option value="meeting_minutes">Meeting Minutes</option>
+          <option value="technical_letter">Technical Letter</option>
+          <option value="qa_qc">QA/QC Summary</option>
+        </select>
+        <select id="disciplineSelect" class="form-select">
+          <option value="">Select Discipline...</option>
+          <option value="hvac">HVAC</option>
+          <option value="electrical">Electrical</option>
+          <option value="plumbing">Plumbing</option>
+          <option value="fire_fighting">Fire Fighting</option>
+          <option value="mechanical">Mechanical</option>
+          <option value="civil">Civil</option>
+          <option value="structural">Structural</option>
+          <option value="commissioning">Commissioning</option>
+        </select>
+      </div>
+
+      <form class="assistant-form" id="chatForm" data-skip-processing="true">
+        <textarea id="promptInput" class="form-control" placeholder="Ask the Engineering Copilot to draft a report, analyze a file, or provide guidance..."></textarea>
+        <button type="submit" class="btn btn-primary">Send</button>
+      </form>
+
+      <label class="assistant-file-uploader" for="fileInput">
+        <input type="file" id="fileInput" accept=".pdf,.docx,.xlsx,.jpg,.jpeg,.png">
+        <i class="bi bi-cloud-upload fs-3"></i>
+        <p class="mb-0">Drag files here or click to upload</p>
+        <small class="text-muted">PDF, Word, Excel, Images</small>
+      </label>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Markdown rendering (basic)
+  function renderMarkdown(text) {
+    if (!text) return '';
+    
+    // Convert markdown to HTML
+    let html = text
+      .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
+      .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/\n/g, '<br>');
+    
+    return html;
+  }
+  
+  const chatMessages = document.getElementById('chatMessages');
+  const promptInput = document.getElementById('promptInput');
+  const chatForm = document.getElementById('chatForm');
+  const docTypeSelect = document.getElementById('docTypeSelect');
+  const disciplineSelect = document.getElementById('disciplineSelect');
+  const uploadArea = document.querySelector('.assistant-file-uploader');
+  const fileInput = document.getElementById('fileInput');
+  const newChatBtn = document.getElementById('newChatBtn');
+  const chatList = document.getElementById('chatList');
+  
+  let currentChatId = null;
+  
+  // Initialize
+  async function init() {
+    await loadChats();
+  }
+  
+  // Load chat list
+  async function loadChats() {
+    try {
+      const res = await fetch('/api/chats');
+      const chats = await res.json();
+      
+      chatList.innerHTML = '';
+      if (chats.length === 0) {
+        chatList.innerHTML = '<li class="assistant-item text-muted small" data-chat-id="">No chats yet</li>';
+      } else {
+        chats.forEach(chat => {
+          const li = document.createElement('li');
+          li.className = 'assistant-item';
+          li.dataset.chatId = chat.id;
+          li.textContent = chat.title;
+          li.onclick = () => selectChat(chat.id);
+          chatList.appendChild(li);
+        });
+      }
+    } catch (err) {
+      console.error('Error loading chats:', err);
+    }
+  }
+  
+  async function createNewChat() {
+    const docType = docTypeSelect.value || 'General';
+    const title = docTypeSelect.options[docTypeSelect.selectedIndex].text || 'New Chat';
+
+    try {
+      const res = await fetch('/api/chats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, document_type: docType })
+      });
+      if (!res.ok) {
+        console.error('Error creating chat:', res.statusText);
+        return null;
+      }
+
+      const chat = await res.json();
+      currentChatId = chat.id;
+
+      document.getElementById('chatTitle').textContent = title;
+      chatMessages.innerHTML = '<div class="empty-state"><i class="bi bi-chat-dots"></i><h5>New chat started</h5></div>';
+
+      await loadChats();
+      selectChatUI(chat.id);
+      return chat.id;
+    } catch (err) {
+      console.error('Error creating chat:', err);
+      return null;
+    }
+  }
+
+  // Create new chat
+  newChatBtn.addEventListener('click', async () => {
+    await createNewChat();
+  });
+  
+  // Select chat
+  async function selectChat(chatId) {
+    currentChatId = chatId;
+    selectChatUI(chatId);
+    
+    try {
+      const res = await fetch(`/api/chats/${chatId}/messages`);
+      const messages = await res.json();
+      
+      chatMessages.innerHTML = '';
+      messages.forEach(msg => {
+        addMessageToUI(msg.role, msg.content);
+      });
+    } catch (err) {
+      console.error('Error loading messages:', err);
+    }
+  }
+  
+  function selectChatUI(chatId) {
+    document.querySelectorAll('.assistant-item').forEach(item => {
+      item.classList.remove('active');
+    });
+    const items = chatList.querySelectorAll('.assistant-item');
+    items.forEach(item => {
+      if (String(item.dataset.chatId) === String(chatId)) {
+        item.classList.add('active');
+      }
+    });
+  }
+  
+  // Add message to UI
+  function addMessageToUI(role, content) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${role}`;
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.innerHTML = renderMarkdown(content);
+    
+    msgDiv.appendChild(bubble);
+    
+    if (role === 'assistant') {
+      const actions = document.createElement('div');
+      actions.className = 'message-actions';
+      actions.innerHTML = `
+        <button class="btn btn-sm btn-link" onclick="copyToClipboard(this)">Copy</button>
+        <button class="btn btn-sm btn-link" onclick="downloadAsText(this)">Download</button>
+      `;
+      msgDiv.appendChild(actions);
+    }
+    
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  
+  // Send message
+  chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    if (!currentChatId) {
+      const chatId = await createNewChat();
+      if (!chatId) {
+        addMessageToUI('assistant', 'Error: Unable to create a new chat. Please try again.');
+        return;
+      }
+    }
+    
+    const prompt = promptInput.value.trim();
+    if (!prompt) return;
+    
+    addMessageToUI('user', prompt);
+    promptInput.value = '';
+    
+    // Show loading
+    const loadingDiv = document.createElement('div');
+    loadingDiv.className = 'message assistant';
+    loadingDiv.innerHTML = '<div class="message-bubble"><div class="loading-indicator"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div></div>';
+    chatMessages.appendChild(loadingDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    const submitButton = chatForm.querySelector('button[type="submit"]');
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.textContent = 'Sending...';
+    }
+    
+    try {
+      const res = await fetch(`/api/chats/${currentChatId}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          prompt,
+          document_type: docTypeSelect.value,
+          discipline: disciplineSelect.value
+        })
+      });
+      
+      let message = 'Error: Could not generate response. Please try again.';
+      if (res.ok) {
+        const msg = await res.json();
+        message = msg.content || message;
+      } else {
+        try {
+          const errorPayload = await res.json();
+          message = errorPayload.detail || errorPayload.message || message;
+        } catch (err) {
+          message = `Error: ${res.status} ${res.statusText}`;
+        }
+      }
+      
+      addMessageToUI('assistant', message);
+    } catch (err) {
+      addMessageToUI('assistant', `Error: ${err.message}`);
+    } finally {
+      loadingDiv.remove();
+      if (submitButton) {
+        submitButton.disabled = false;
+        submitButton.textContent = 'Send';
+      }
+    }
+  });
+  
+  // File upload
+  if (uploadArea) {
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        handleFileUpload(e.dataTransfer.files[0]);
+      }
+    });
+    
+    uploadArea.addEventListener('click', () => {
+      fileInput.click();
+    });
+  }
+  
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) {
+      handleFileUpload(e.target.files[0]);
+    }
+  });
+  
+  async function handleFileUpload(file) {
+    if (!currentChatId) {
+      newChatBtn.click();
+      return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const res = await fetch(`/api/chats/${currentChatId}/upload`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        addMessageToUI('user', `[File uploaded: ${data.filename}]`);
+        addMessageToUI('assistant', data.message);
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+    }
+  }
+  
+  // Utility functions
+  window.copyToClipboard = function(btn) {
+    const text = btn.closest('.message').querySelector('.message-bubble').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const original = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = original, 2000);
+    });
+  };
+  
+  window.downloadAsText = function(btn) {
+    const text = btn.closest('.message').querySelector('.message-bubble').innerText;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `document_${new Date().getTime()}.txt`;
+    a.click();
+  };
+  
+  // Discipline quick prompts
+  document.querySelectorAll('.assistant-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const discipline = chip.dataset.discipline;
+      disciplineSelect.value = discipline;
+    });
+  });
+  
+  // Initialize
+  init();
+</script>
+{% endblock %}

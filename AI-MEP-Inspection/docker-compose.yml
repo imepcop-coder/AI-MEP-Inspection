@@ -1,0 +1,13 @@
+version: '3.9'
+services:
+  web:
+    build: .
+    container_name: ai-mep-inspection
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./ai_mep_inspection.db
+      - SESSION_SECRET=change-this-secret-key
+      - JWT_SECRET=change-this-jwt-secret
+    volumes:
+      - .:/app

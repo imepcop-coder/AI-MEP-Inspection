@@ -1,0 +1,31 @@
+{% extends "layouts/base.html" %}
+{% block title %}Fire Fighting Calculators{% endblock %}
+{% block content %}
+{% set card_category = 'Fire Fighting' %}
+{% set card_category_slug = 'fire-fighting' %}
+{% set card_items = [
+  {'name': 'Fire Pump Head', 'icon': 'bi-water', 'description': 'Calculate fire pump head from elevation and system pressure.', 'url': '/calculators/fire/fire-pump-head'},
+  {'name': 'Fire Flow Calculator', 'icon': 'bi-droplet-half', 'description': 'Estimate fire flow demand based on hazard classification.', 'url': '/calculators/fire/fire-flow'},
+  {'name': 'Water Tank Calculator', 'icon': 'bi-droplet', 'description': 'Calculate fire water storage capacity for a required duration.', 'url': '/calculators/fire/fire-water-tank'},
+  {'name': 'Sprinkler Spacing', 'icon': 'bi-grid-3x3-gap', 'description': 'Estimate sprinkler spacing for a coverage area.', 'url': '/calculators/fire/sprinkler-spacing'},
+  {'name': 'Standpipe Pressure', 'icon': 'bi-pipette', 'description': 'Determine standpipe outlet pressure including elevation loss.', 'url': '/calculators/fire/standpipe'},
+  {'name': 'Hose Reel Pressure', 'icon': 'bi-fire', 'description': 'Estimate hose reel pressure based on flow and hose length.', 'url': '/calculators/fire/hose-reel-pressure'},
+  {'name': 'Nozzle Pressure', 'icon': 'bi-droplet-half', 'description': 'Calculate nozzle pressure from flow and discharge coefficient.', 'url': '/calculators/fire/nozzle-pressure'},
+  {'name': 'Hydraulic Calculation', 'icon': 'bi-calculator', 'description': 'Calculate friction head loss through a fire protection pipe.', 'url': '/calculators/fire/hydraulic-calculation'}
+] %}
+<div class="container-fluid">
+  <div class="page-header">
+    <h1><i class="bi bi-fire"></i> Fire Fighting Engineering Suite</h1>
+    <p>Professional calculators for sprinkler demand, fire pump sizing, pressure loss, and fire flow studies aligned with UAE / GCC fire protection practice, NFPA/ASHRAE-informed design logic, and local authority review requirements.</p>
+  </div>
+  <div class="calculator-grid">
+    {% for item in card_items %}
+    <div class="calculator-grid__cell">
+<div class="h-100">
+  {% include 'components/calculator-card.html' %}
+</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

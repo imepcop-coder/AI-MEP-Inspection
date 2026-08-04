@@ -1,0 +1,31 @@
+{% extends "layouts/base.html" %}
+{% block title %}Electrical Calculators{% endblock %}
+{% block content %}
+{% set card_category = 'Electrical' %}
+{% set card_category_slug = 'electrical' %}
+{% set card_items = [
+  {'name': 'Cable Size Calculator', 'icon': 'bi-plug', 'description': 'Estimate conductor size from current and installation conditions.', 'url': '/calculators/electrical/cable-sizing'},
+  {'name': 'Voltage Drop Calculator', 'icon': 'bi-lightning', 'description': 'Calculate voltage drop across cable runs for feeders and branches.', 'url': '/calculators/electrical/voltage-drop'},
+  {'name': 'Current Calculator', 'icon': 'bi-activity', 'description': 'Compute current based on load power, voltage, and power factor.', 'url': '/calculators/electrical/current'},
+  {'name': 'Transformer Sizing', 'icon': 'bi-building', 'description': 'Estimate transformer rating for load and power factor.', 'url': '/calculators/electrical/transformer-sizing'},
+  {'name': 'Generator Sizing', 'icon': 'bi-fuel-pump', 'description': 'Calculate generator capacity accounting for starting loads.', 'url': '/calculators/electrical/generator-sizing'},
+  {'name': 'UPS Sizing', 'icon': 'bi-battery-half', 'description': 'Determine UPS rating and battery capacity for backup time.', 'url': '/calculators/electrical/ups-sizing'},
+  {'name': 'Lighting Lux Calculator', 'icon': 'bi-lightbulb', 'description': 'Estimate required lighting power to meet target illuminance.', 'url': '/calculators/electrical/lighting-lux'},
+  {'name': 'Circuit Breaker Calculator', 'icon': 'bi-shield-lock', 'description': 'Recommend breaker size based on design current and type.', 'url': '/calculators/electrical/circuit-breaker'}
+] %}
+<div class="container-fluid">
+  <div class="page-header">
+    <h1><i class="bi bi-lightning-charge"></i> Electrical Engineering Suite</h1>
+    <p>Professional calculators for voltage drop, cable sizing, load scheduling, and transformer planning in accordance with UAE / GCC electrical practice, IEC/ASHRAE-informed design intent, and local authority requirements.</p>
+  </div>
+  <div class="calculator-grid">
+    {% for item in card_items %}
+    <div class="calculator-grid__cell">
+      <div class="h-100">
+        {% include 'components/calculator-card.html' %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

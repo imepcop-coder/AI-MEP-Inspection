@@ -1,0 +1,39 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Project Details{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="page-header-section">
+        <div>
+            <span class="page-kicker">Portfolio</span>
+            <h1>Project Details</h1>
+            <p>{{ project.project_name }}</p>
+        </div>
+        <div class="page-actions">
+            <a href="/projects" class="btn btn-outline-primary">Back to Projects</a>
+            <a href="/projects/edit/{{ project.id }}" class="btn btn-primary">Edit Project</a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            <table class="table align-middle mb-0">
+                <tbody>
+                    <tr><th width="250">Project Code</th><td>{{ project.project_code }}</td></tr>
+                    <tr><th>Project Name</th><td>{{ project.project_name }}</td></tr>
+                    <tr><th>Client</th><td>{{ project.client_name }}</td></tr>
+                    <tr><th>Consultant</th><td>{{ project.consultant_name }}</td></tr>
+                    <tr><th>Contractor</th><td>{{ project.contractor_name }}</td></tr>
+                    <tr><th>Location</th><td>{{ project.location }}</td></tr>
+                    <tr><th>Discipline</th><td>{{ project.discipline }}</td></tr>
+                    <tr><th>Status</th><td>{{ project.status }}</td></tr>
+                    <tr><th>Start Date</th><td>{{ project.start_date }}</td></tr>
+                    <tr><th>End Date</th><td>{{ project.end_date }}</td></tr>
+                    <tr><th>Description</th><td>{{ project.description }}</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

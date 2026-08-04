@@ -1,0 +1,267 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/dashboard.css') }}">
+{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid dashboard-shell">
+
+    <!-- Welcome + Search -->
+    <div class="d-flex flex-column flex-xl-row justify-content-between align-items-start gap-4 mb-4">
+        <div>
+            <h1 class="mb-1">Welcome, {{ user.full_name }}</h1>
+            <p class="text-muted mb-0">AI MEP Inspection Assistant workspace overview</p>
+        </div>
+        <div class="dashboard-search ms-xl-3" style="width:320px;">
+            <input id="calculatorSearch" class="form-control" placeholder="Search calculators, reports, inspections..." aria-label="Search calculators" />
+        </div>
+    </div>
+
+    <div class="dashboard-hero-panel mb-4">
+        <div class="row gy-3 align-items-center">
+            <div class="col-lg-8">
+                <div class="hero-title">Engineering Command Center</div>
+                <div class="hero-copy">Track inspection progress, review reports, and navigate MEP tools with a premium workspace designed for engineering teams.</div>
+            </div>
+            <div class="col-lg-4">
+                <div class="row g-3">
+                    <div class="col-sm-4">
+                        <div class="hero-metric-pill">
+                            <strong>{{ total_projects }}</strong>
+                            Projects
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="hero-metric-pill">
+                            <strong>{{ total_inspections }}</strong>
+                            Inspections
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="hero-metric-pill">
+                            <strong>{{ approved_inspections }}</strong>
+                            Approved
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Statistics -->
+    <div class="row g-4">
+
+        <!-- Total Projects -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Total Projects</small>
+                    <h2 class="fw-bold mt-2">{{ total_projects }}</h2>
+                    <i class="bi bi-folder2-open text-primary fs-2"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Inspections -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Total Inspections</small>
+                    <h2 class="fw-bold mt-2">{{ total_inspections }}</h2>
+                    <i class="bi bi-clipboard-check text-success fs-2"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Pending -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Pending Reviews</small>
+                    <h2 class="fw-bold mt-2">{{ pending_inspections }}</h2>
+                    <i class="bi bi-hourglass-split text-warning fs-2"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Approved -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Approved</small>
+                    <h2 class="fw-bold mt-2">{{ approved_inspections }}</h2>
+                    <i class="bi bi-check-circle-fill text-success fs-2"></i>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Second Row -->
+    <div class="row g-4 mt-1">
+
+        <!-- Rejected -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">AI Requests</small>
+                    <h2 class="fw-bold mt-2">{{ ai_requests }}</h2>
+                    <i class="bi bi-robot text-danger fs-2"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reports -->
+        <div class="col-lg-3 col-md-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Plan</small>
+                    <h3 class="fw-bold mt-2">{{ subscription_plan }}</h3>
+                    <i class="bi bi-file-earmark-excel text-info fs-2"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- AI -->
+        <div class="col-lg-6">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <small class="text-muted">Workspace</small>
+                    <h3 class="fw-bold mt-2">{{ user.full_name }}'s Private Workspace</h3>
+                    <p class="text-muted mb-0">
+                        Secure inspection workspace with AI assistance and reporting tools.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mt-5">
+
+        <div class="col-lg-4">
+
+            <div class="card shadow-sm">
+
+                <div class="card-header">
+                    <strong>Quick Actions</strong>
+                </div>
+
+                <div class="card-body">
+
+                    <a href="/projects" class="btn btn-primary w-100 mb-2" data-toast-success="Project workspace opened successfully.">
+                        <i class="bi bi-folder-plus"></i>
+                        Projects
+                    </a>
+
+                    <a href="/upload" class="btn btn-success w-100 mb-2" data-toast-success="Inspection workflow ready. Upload your files to begin.">
+                        <i class="bi bi-plus-circle"></i>
+                        New Inspection
+                    </a>
+
+                    <a href="/reports" class="btn btn-info w-100 mb-2" data-toast-success="Report center opened successfully.">
+                        <i class="bi bi-file-earmark-excel"></i>
+                        Reports
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <div class="col-lg-8">
+
+            <div class="card shadow-sm">
+
+                <div class="card-header">
+                    <strong>Latest Inspections</strong>
+                </div>
+
+                <div class="card-body">
+
+                    {% if inspections %}
+
+                    <table class="table table-hover">
+
+                        <thead class="table-light">
+
+                        <tr>
+                            <th>Inspection No</th>
+                            <th>Inspector</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+
+                        </thead>
+
+                        <tbody>
+
+                        {% for inspection in inspections %}
+
+                        <tr>
+
+                            <td>{{ inspection.inspection_no }}</td>
+
+                            <td>{{ inspection.inspector }}</td>
+
+                            <td>
+
+                                {% if inspection.status == "Approved" %}
+                                <span class="badge bg-success">
+                                    {{ inspection.status }}
+                                </span>
+
+                                {% elif inspection.status == "Pending" %}
+                                <span class="badge bg-warning text-dark">
+                                    {{ inspection.status }}
+                                </span>
+
+                                {% else %}
+                                <span class="badge bg-danger">
+                                    {{ inspection.status }}
+                                </span>
+                                {% endif %}
+
+                            </td>
+
+                            <td>{{ inspection.inspection_date }}</td>
+
+                        </tr>
+
+                        {% endfor %}
+
+                        </tbody>
+
+                    </table>
+
+                    {% else %}
+
+                    <div class="text-center p-4">
+
+                        <h5>No inspections available.</h5>
+
+                    </div>
+
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', path='js/dashboard.js') }}"></script>
+{% endblock %}
+
+{% endblock %}
