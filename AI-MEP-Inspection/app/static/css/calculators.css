@@ -572,21 +572,14 @@ textarea.form-control{
 
     flex:1;
 
-    height:54px;
-
-    border-radius:14px;
-
+    min-height:44px;
+    height:44px;
+    border-radius:12px;
     font-weight:700;
-
     font-size:15px;
-
-    transition:all .25s ease;
+    transition:transform .18s ease, box-shadow .18s ease, background .18s ease, color .18s ease, border-color .18s ease;
 
 }
-
-/* ==========================================================
-   PRIMARY BUTTON
-========================================================== */
 
 .btn-primary{
 
@@ -596,39 +589,113 @@ textarea.form-control{
         var(--primary-dark)
     );
 
-    border:none;
+    border:1px solid transparent;
+    color:#fff;
+    box-shadow:0 12px 24px rgba(37,99,235,.18);
 
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+
+    transform:translateY(-1px);
+
+    background:linear-gradient(
+        135deg,
+        var(--primary-dark),
+        var(--primary)
+    );
+
+    box-shadow:0 14px 32px rgba(37,99,235,.25);
+
+}
+
+.btn-secondary,
+.btn-outline-primary,
+.btn-outline-secondary{
+
+    background:#fff;
+    color:var(--primary);
+    border:1px solid rgba(37,99,235,.35);
+
+}
+
+.btn-secondary:hover,
+.btn-outline-primary:hover,
+.btn-outline-secondary:hover,
+.btn-secondary:focus,
+.btn-outline-primary:focus,
+.btn-outline-secondary:focus {
+
+    background:linear-gradient(
+        135deg,
+        var(--primary),
+        var(--primary-dark)
+    );
+    border-color:transparent;
     color:#fff;
 
 }
 
-.btn-primary:hover{
-
-    transform:translateY(-2px);
-
-    box-shadow:
-        0 14px 32px rgba(37,99,235,.25);
-
+.btn-warning{
+    background:linear-gradient(135deg, var(--warning), var(--warning-dark));
+    border:1px solid transparent;
+    color:#fff;
 }
 
-/* ==========================================================
-   SECONDARY BUTTON
-========================================================== */
+.btn-warning:hover,
+.btn-warning:focus,
+.btn-warning:active {
+    background:linear-gradient(135deg, var(--warning-dark), var(--warning));
+    color:#fff;
+}
 
-.btn-outline-secondary{
+.btn-success{
+    background:linear-gradient(135deg, var(--success), var(--success-dark));
+    border:1px solid transparent;
+    color:#fff;
+}
 
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active {
+    background:linear-gradient(135deg, var(--success-dark), var(--success));
+    color:#fff;
+}
+
+.btn-danger{
+    background:linear-gradient(135deg, var(--danger), var(--danger-dark));
+    border:1px solid transparent;
+    color:#fff;
+}
+
+.btn-danger:hover,
+.btn-danger:focus,
+.btn-danger:active {
+    background:linear-gradient(135deg, var(--danger-dark), var(--danger));
+    color:#fff;
+}
+
+.btn-icon,
+.profile-trigger {
+    width:44px;
+    min-width:44px;
+    height:44px;
+    padding:0;
+    border-radius:12px;
     background:#fff;
-
-    color:var(--heading);
-
     border:1px solid var(--border);
-
+    color:var(--heading);
 }
 
-.btn-outline-secondary:hover{
-
-    background:#f8fafc;
-
+.btn-icon:hover,
+.profile-trigger:hover,
+.btn-icon:focus,
+.profile-trigger:focus {
+    background:rgba(37,99,235,.08);
+    border-color:rgba(37,99,235,.35);
+    color:var(--primary);
 }
 
 /* ==========================================================

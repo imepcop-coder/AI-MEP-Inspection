@@ -27,7 +27,7 @@
                     <p class="page-subtitle">Provide key design parameters and input data for the calculation.</p>
                 </div>
                 <div class="card-body p-4">
-                    <form id="calculatorForm" method="post" novalidate>
+                    <form method="POST" novalidate>
                         {% for field in page.fields %}
                         <div class="mb-3">
                             <label class="form-label fw-semibold" for="{{ field.name }}">
@@ -70,11 +70,11 @@
                         </div>
                         {% endif %}
 
-                        <div class="d-flex gap-2 mt-4">
-                            <button type="submit" class="btn btn-primary flex-fill">
+                        <div class="d-flex flex-wrap gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary flex-fill d-flex align-items-center justify-content-center" style="min-height: 48px;">
                                 <i class="bi bi-calculator me-2"></i>Calculate
                             </button>
-                            <button type="button" id="resetCalculator" class="btn btn-outline-secondary">
+                            <button type="button" id="resetCalculator" class="btn btn-secondary flex-fill d-flex align-items-center justify-content-center" style="min-height: 48px;">
                                 <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
                             </button>
                         </div>
@@ -182,13 +182,13 @@
                 </div>
                 <div class="card-body p-4">
                     <div class="d-flex flex-wrap gap-2">
-                        <button type="button" id="exportPdf" class="btn btn-danger">
+                        <button type="button" id="exportPdf" class="btn btn-danger d-flex align-items-center justify-content-center" style="min-height: 46px;">
                             <i class="bi bi-file-earmark-pdf me-2"></i>PDF
                         </button>
-                        <button type="button" id="exportExcel" class="btn btn-success">
+                        <button type="button" id="exportExcel" class="btn btn-success d-flex align-items-center justify-content-center" style="min-height: 46px;">
                             <i class="bi bi-file-earmark-excel me-2"></i>Excel
                         </button>
-                        <button type="button" class="btn btn-secondary" onclick="window.print()">
+                        <button type="button" class="btn btn-outline-primary d-flex align-items-center justify-content-center" style="min-height: 46px;" onclick="window.print()">
                             <i class="bi bi-printer me-2"></i>Print
                         </button>
                     </div>
@@ -250,7 +250,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('calculatorForm');
+        const form = document.querySelector('form');
         if (!form) return;
         const exportPdfButton = document.getElementById('exportPdf');
         const exportExcelButton = document.getElementById('exportExcel');

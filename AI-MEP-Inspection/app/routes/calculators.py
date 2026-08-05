@@ -859,15 +859,15 @@ async def airflow_calculate(
         logger.exception("Unexpected error occurred while calculating air flow: %s", ex)
         error = "Unexpected error occurred while calculating air flow."
 
-    page = HVAC_CALCULATORS.get('airflow')
-    values = {"length": length, "width": width, "height": height, "air_changes": air_changes}
     return templates.TemplateResponse(
         request=request,
-        name="calculators/calculator_page.html",
+        name="calculators/airflow.html",
         context={
             "request": request,
-            "page": page,
-            "values": values,
+            "length": length,
+            "width": width,
+            "height": height,
+            "air_changes": air_changes,
             "result": result,
             "error": error,
         },
@@ -946,15 +946,11 @@ async def fresh_air_calculate(
 @router.get("/calculators/chilled-water")
 async def chilled_water(request: Request):
 
-    page = HVAC_CALCULATORS.get('chilled-water')
-    values = {field["name"]: field.get("default", "") for field in page["fields"]}
     return templates.TemplateResponse(
         request=request,
-        name="calculators/calculator_page.html",
+        name="calculators/chilled_water.html",
         context={
             "request": request,
-            "page": page,
-            "values": values,
             "result": None,
             "error": None,
         },
@@ -988,15 +984,14 @@ async def chilled_water_calculate(
         logger.exception("Unexpected error occurred while calculating chilled water: %s", ex)
         error = "Unexpected error occurred while calculating chilled water."
 
-    page = HVAC_CALCULATORS.get('chilled-water')
-    values = {"cooling_load": cooling_load, "delta_t": delta_t, "velocity": velocity}
     return templates.TemplateResponse(
         request=request,
-        name="calculators/calculator_page.html",
+        name="calculators/chilled_water.html",
         context={
             "request": request,
-            "page": page,
-            "values": values,
+            "cooling_load": cooling_load,
+            "delta_t": delta_t,
+            "velocity": velocity,
             "result": result,
             "error": error,
         },
@@ -1008,15 +1003,11 @@ async def chilled_water_calculate(
 @router.get("/calculators/pump-head")
 async def pump_head(request: Request):
 
-    page = HVAC_CALCULATORS.get('pump-head')
-    values = {field["name"]: field.get("default", "") for field in page["fields"]}
     return templates.TemplateResponse(
         request=request,
-        name="calculators/calculator_page.html",
+        name="calculators/pump_head.html",
         context={
             "request": request,
-            "page": page,
-            "values": values,
             "result": None,
             "error": None,
         },
@@ -1052,15 +1043,15 @@ async def pump_head_calculate(
         logger.exception("Unexpected error occurred while calculating pump head: %s", ex)
         error = "Unexpected error occurred while calculating pump head."
 
-    page = HVAC_CALCULATORS.get('pump-head')
-    values = {"flow_rate": flow_rate, "static_head": static_head, "friction_loss": friction_loss, "efficiency": efficiency}
     return templates.TemplateResponse(
         request=request,
-        name="calculators/calculator_page.html",
+        name="calculators/pump_head.html",
         context={
             "request": request,
-            "page": page,
-            "values": values,
+            "flow_rate": flow_rate,
+            "static_head": static_head,
+            "friction_loss": friction_loss,
+            "efficiency": efficiency,
             "result": result,
             "error": error,
         },
@@ -1074,15 +1065,11 @@ async def pump_head_calculate(
 @router.get("/calculators/static-pressure")
 async def static_pressure(request: Request):
 
-    page = HVAC_CALCULATORS.get('static-pressure')
-    values = {field["name"]: field.get("default", "") for field in page["fields"]}
     return templates.TemplateResponse(
         request=request,
-        name="calculators/calculator_page.html",
+        name="calculators/static_pressure.html",
         context={
             "request": request,
-            "page": page,
-            "values": values,
             "result": None,
             "error": None,
         },

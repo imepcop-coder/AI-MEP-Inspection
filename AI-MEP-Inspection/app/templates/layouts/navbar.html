@@ -38,28 +38,32 @@
             <i class="bi bi-sun"></i>
         </button>
 
+        {% set auth_user = request.state.current_user if request and request.state and request.state.current_user else none %}
+        {% if not auth_user and request and request.session %}
+            {% set auth_user = request.session.get('user') %}
+        {% endif %}
         <div class="dropdown">
             <button class="btn profile-trigger" type="button" id="profileMenu" data-bs-toggle="dropdown" aria-expanded="false">
                 <div class="profile-avatar">
-                    {% if user and user.full_name %}
-                        {{ user.full_name[:1]|upper }}
+                    {% if auth_user and auth_user.full_name %}
+                        {{ auth_user.full_name[:1]|upper }}
                     {% else %}
                         G
                     {% endif %}
                 </div>
                 <div class="profile-info d-none d-md-flex flex-column ms-2 text-start">
                     <span class="fw-semibold text-dark small">
-                        {% if user and user.full_name %}{{ user.full_name }}{% else %}Guest{% endif %}
+                        {% if auth_user and auth_user.full_name %}{{ auth_user.full_name }}{% else %}Guest{% endif %}
                     </span>
                     <small class="text-muted">
-                        {% if user and user.email %}{{ user.email }}{% else %}No account connected{% endif %}
+                        {% if auth_user and auth_user.email %}{{ auth_user.email }}{% else %}No account connected{% endif %}
                     </small>
                 </div>
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="profileMenu">
                 <li class="dropdown-header">
-                    <div class="fw-semibold">{% if user and user.full_name %}{{ user.full_name }}{% else %}Guest User{% endif %}</div>
-                    <small class="text-muted">{% if user and user.email %}{{ user.email }}{% endif %}</small>
+                    <div class="fw-semibold">{% if auth_user and auth_user.full_name %}{{ auth_user.full_name }}{% else %}Guest User{% endif %}</div>
+                    <small class="text-muted">{% if auth_user and auth_user.email %}{{ auth_user.email }}{% endif %}</small>
                 </li>
                 <li><hr class="dropdown-divider"></li>
                 <li><a class="dropdown-item" href="/dashboard"><i class="bi bi-speedometer2 me-2"></i>Dashboard</a></li>

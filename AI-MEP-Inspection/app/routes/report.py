@@ -1,14 +1,16 @@
 from pathlib import Path
 from datetime import datetime
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.auth.tenant import apply_tenant_filter, ensure_tenant_access, get_authenticated_user
 from app.database.db import get_db
+from app.models.document import Document
 from app.models.report_template import ReportTemplate
+from app.models.user import User
 
 router = APIRouter()
 
@@ -21,29 +23,36 @@ REPORT_FOLDER = Path("reports")
 REPORT_FOLDER.mkdir(exist_ok=True)
 
 
+def _is_admin_user(user: User) -> bool:
+    return getattr(user, "role", "") in {"Admin", "Super Admin", "Company Admin"}
+
+
 @router.get("/reports")
 async def reports(request: Request, db: Session = Depends(get_db)):
+    current_user = get_authenticated_user(request, db)
 
+    report_query = db.query(Document).filter(Document.user_id == current_user.id)
+    if current_user.company_id is not None:
+        report_query = report_query.filter(Document.company_id == current_user.company_id)
+    if current_user.workspace_id is not None:
+        report_query = report_query.filter(Document.workspace_id == current_user.workspace_id)
+
+    documents = report_query.order_by(Document.uploaded_at.desc()).all()
     report_list = []
+    for document in documents:
+        file_path = REPORT_FOLDER / document.filename
+        if not file_path.exists():
+            continue
 
-    latest_reports = sorted(
-        REPORT_FOLDER.glob("*.xlsx"),
-        key=lambda f: f.stat().st_mtime,
-        reverse=True
-    )[:5]
-
-    for file in latest_reports:
-
-        modified = datetime.fromtimestamp(file.stat().st_mtime)
-
+        modified = document.uploaded_at or datetime.utcnow()
         report_list.append({
-            "name": file.name,
-            "size": round(file.stat().st_size / 1024, 2),
+            "name": document.filename,
+            "size": round(file_path.stat().st_size / 1024, 2),
             "date": modified.strftime("%d-%m-%Y"),
-            "time": modified.strftime("%I:%M %p")
+            "time": modified.strftime("%I:%M %p"),
         })
 
-    templates_db = db.query(ReportTemplate).order_by(ReportTemplate.created_at.desc()).all()
+    templates_db = apply_tenant_filter(db.query(ReportTemplate), current_user).order_by(ReportTemplate.created_at.desc()).all()
 
     return templates.TemplateResponse(
         request=request,
@@ -52,7 +61,7 @@ async def reports(request: Request, db: Session = Depends(get_db)):
             "request": request,
             "reports": report_list,
             "report_templates": templates_db,
-        }
+        },
     )
 
 
@@ -143,14 +152,26 @@ async def duplicate_template(template_id: int, db: Session = Depends(get_db)):
 
 @router.get("/reports/download/{filename}")
 async def download_report(filename: str, request: Request, db: Session = Depends(get_db)):
-
     current_user = get_authenticated_user(request, db)
+    document = db.query(Document).filter(Document.filename == filename).first()
+
+    if not document:
+        raise HTTPException(status_code=404, detail="Report not found.")
+
+    if not _is_admin_user(current_user):
+        if document.user_id != current_user.id:
+            raise HTTPException(status_code=403, detail="You do not have permission to download this report.")
+        if current_user.company_id is not None and document.company_id != current_user.company_id:
+            raise HTTPException(status_code=403, detail="You do not have permission to download this report.")
+        if current_user.workspace_id is not None and document.workspace_id != current_user.workspace_id:
+            raise HTTPException(status_code=403, detail="You do not have permission to download this report.")
+
     file_path = REPORT_FOLDER / filename
     if not file_path.exists():
-        raise FileResponse(path=file_path, filename=filename, media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        raise HTTPException(status_code=404, detail="Report file is unavailable.")
 
     return FileResponse(
         path=file_path,
         filename=filename,
-        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     )

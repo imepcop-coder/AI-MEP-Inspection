@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.auth.tenant import apply_tenant_filter, get_authenticated_user
+from app.auth.tenant import apply_tenant_filter, get_authenticated_user, get_session_user, SESSION_SECRET
 from app.database.db import Base, engine, get_db, ensure_sqlite_columns
 from app.models.ai_request import AIRequest
 from app.models.audit_log import AuditLog
@@ -73,7 +73,7 @@ ensure_sqlite_columns()
 
 app.add_middleware(
     SessionMiddleware,
-    secret_key=os.getenv("SESSION_SECRET") or secrets.token_hex(32),
+    secret_key=SESSION_SECRET,
     https_only=os.getenv("APP_ENV", "development").lower() == "production",
     same_site="lax",
 )
@@ -94,6 +94,29 @@ def _is_safe_origin(origin: str | None, referer: str | None, host: str | None) -
         if parsed.hostname and parsed.hostname.lower() == expected_host:
             return True
     return False
+
+
+@app.middleware("http")
+async def authentication_context_middleware(request: Request, call_next):
+    db = next(get_db())
+    try:
+        current_user = get_session_user(request, db)
+        request.state.current_user = current_user
+        request.state.user = current_user
+
+        if current_user is None:
+            session_payload = request.scope.get("session") if hasattr(request, "scope") else None
+            if not session_payload:
+                try:
+                    session_payload = request.session
+                except AssertionError:
+                    session_payload = None
+            if session_payload:
+                request.state.current_user = session_payload.get("user")
+                request.state.user = request.state.current_user
+    finally:
+        db.close()
+    return await call_next(request)
 
 
 @app.middleware("http")

@@ -33,15 +33,27 @@ def ensure_sqlite_columns():
         for table_name, table in Base.metadata.tables.items():
             result = conn.execute(text(f"PRAGMA table_info({table_name});"))
             existing_columns = {row[1] for row in result.fetchall()}
-
             added_column = False
+
             for column in table.columns:
                 if column.name in existing_columns:
                     continue
-                if column.name not in {"company_id", "workspace_id"}:
-                    continue
 
-                conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column.name} INTEGER;"))
+                column_type = column.type.compile(dialect=engine.dialect)
+                if "BOOLEAN" in column_type.upper():
+                    sql_type = "BOOLEAN"
+                elif "INTEGER" in column_type.upper():
+                    sql_type = "INTEGER"
+                elif "DATETIME" in column_type.upper():
+                    sql_type = "DATETIME"
+                elif "TEXT" in column_type.upper():
+                    sql_type = "TEXT"
+                elif "STRING" in column_type.upper():
+                    sql_type = "VARCHAR(255)"
+                else:
+                    sql_type = "TEXT"
+
+                conn.execute(text(f"ALTER TABLE {table_name} ADD COLUMN {column.name} {sql_type};"))
                 conn.execute(text(
                     f"CREATE INDEX IF NOT EXISTS ix_{table_name}_{column.name} ON {table_name}({column.name});"
                 ))
