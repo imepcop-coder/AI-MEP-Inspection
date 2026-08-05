@@ -16,7 +16,10 @@ from app.models.chat import Chat, ChatMessage
 from app.models.user import User
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 
 def _get_authenticated_user(request: Request, db: Session):

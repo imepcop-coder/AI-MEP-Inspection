@@ -31,7 +31,7 @@ from app.models.uae_compliance import (
 )
 from app.routes.admin import router as admin_router
 from app.routes.assistant import router as assistant_router
-from app.routes.auth import router as auth_router
+from app.routes.auth import router as auth_router  # merged auth router (canonical)
 from app.routes.calculators import router as calculator_router
 from app.routes.mep_calculators import router as mep_calculator_router
 from app.routes.plumbing import router as plumbing_router
@@ -46,6 +46,22 @@ from app.routes.upload import router as upload_router
 from app.services.workspace_service import WorkspaceService
 
 BASE_DIR = Path(__file__).resolve().parent
+
+import logging
+import traceback
+from fastapi.exceptions import RequestValidationError
+from pydantic import ValidationError as PydanticValidationError
+from sqlalchemy.exc import SQLAlchemyError
+
+# configure logger for application errors
+logger = logging.getLogger("ai_mep")
+if not logger.handlers:
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(logging.INFO)
+
 
 app = FastAPI(
     title="AI MEP Inspection Assistant",
@@ -117,6 +133,76 @@ app.include_router(inspection_router)
 app.include_router(settings_router)
 app.include_router(notifications_router)
 app.include_router(admin_router)
+
+
+# Centralized friendly error responses
+from fastapi import HTTPException
+from fastapi.responses import PlainTextResponse
+
+
+def _render_friendly(request: Request, message: str, status_code: int = 500, hint: str | None = None):
+    """Return TemplateResponse for HTML requests or JSONResponse for API calls.
+    Technical details are logged only; end users receive a friendly message."""
+    accept = request.headers.get("accept", "")
+    # log at info level the user-friendly message; details logged separately by handlers
+    if "application/json" in accept or request.url.path.startswith("/api/"):
+        return JSONResponse(status_code=status_code, content={"error": message})
+    # prefer template render for HTML
+    try:
+        return templates.TemplateResponse(
+            "errors/generic_error.html",
+            {"request": request, "message": message, "hint": hint},
+            status_code=status_code,
+        )
+    except Exception:
+        # fallback plain text (should not reveal details)
+        return PlainTextResponse(content=message, status_code=status_code)
+
+
+@app.exception_handler(RequestValidationError)
+async def request_validation_exception_handler(request: Request, exc: RequestValidationError):
+    # Log technical details for developers/ops
+    logger.info("Request validation failed: %s", str(exc))
+    logger.debug("Traceback:\n%s", traceback.format_exc())
+    # Friendly message for users
+    message = "Please check the highlighted fields and try again."
+    return _render_friendly(request, message, status_code=422, hint="Please complete all required fields and use valid values.")
+
+
+@app.exception_handler(PydanticValidationError)
+async def pydantic_validation_exception_handler(request: Request, exc: PydanticValidationError):
+    logger.info("Pydantic validation failed: %s", str(exc))
+    logger.debug("Traceback:\n%s", traceback.format_exc())
+    message = "Please check the highlighted fields and try again."
+    return _render_friendly(request, message, status_code=422, hint="Please complete all required fields and use valid values.")
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    # Log detail but don't show technical text
+    logger.warning("HTTP exception %s %s", exc.status_code, getattr(exc, "detail", None))
+    # map common HTTP codes to friendly messages
+    if exc.status_code == 404:
+        return _render_friendly(request, "The requested page could not be found.", status_code=404)
+    if exc.status_code in (401, 403):
+        return _render_friendly(request, "You don't have permission to access this page.", status_code=exc.status_code)
+    # default
+    return _render_friendly(request, "An unexpected error occurred. Please try again later.", status_code=exc.status_code)
+
+
+@app.exception_handler(SQLAlchemyError)
+async def sqlalchemy_exception_handler(request: Request, exc: SQLAlchemyError):
+    logger.exception("Database error: %s", str(exc))
+    return _render_friendly(request, "We couldn't save or retrieve the requested data right now. Please try again.", status_code=500)
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    # Capture technical details in the logs only
+    logger.exception("Unhandled exception: %s", str(exc))
+    # Do not expose any exception details to the client
+    return _render_friendly(request, "Something went wrong while processing your request. Please try again.", status_code=500)
+
 
 
 @app.get("/", response_class=HTMLResponse)

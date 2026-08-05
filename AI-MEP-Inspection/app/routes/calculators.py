@@ -2,6 +2,8 @@ from fastapi import APIRouter, Form, Request, HTTPException
 from fastapi.responses import StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy import values
+import logging
+from pydantic import ValidationError
 
 from app.services.duct_calculator import (
     calculate_rectangular_duct,
@@ -42,6 +44,7 @@ from app.utils.xlsx_export import build_calculator_pdf, build_calculator_workboo
 from app.routes.plumbing_page import PLUMBING_PAGES, PLUMBING_SCHEMAS, PLUMBING_HANDLERS
 
 router = APIRouter()
+logger = logging.getLogger("ai_mep")
 
 HVAC_CALCULATORS = {
     "duct-sizing": {
@@ -220,7 +223,10 @@ def _get_hvac_page(slug: str):
         raise HTTPException(status_code=404, detail="Calculator not found.")
     return page
 
-templates = Jinja2Templates(directory="app/templates")
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 
 # ==========================================================
@@ -501,7 +507,7 @@ async def plumbing_calculator(request: Request, page_slug: str):
     if not page:
         raise HTTPException(status_code=404, detail="Calculator page not found.")
     values = {field["name"]: field.get("default", "") for field in page["fields"]}
-    return templates.TemplateResponse(request=request, name="plumbing_calculator_page.html", context={"request": request, "page": page, "values": values, "result": None, "error": None})
+    return templates.TemplateResponse(request=request, name="calculators/calculator_page.html", context={"request": request, "page": page, "values": values, "result": None, "error": None})
 
 
 @router.post("/calculators/plumbing/{page_slug}")
@@ -522,10 +528,14 @@ async def plumbing_calculator_submit(request: Request, page_slug: str):
         validated = schema.parse_obj(values)
         calculation = handler(validated)
         result = calculation.dict() if hasattr(calculation, "dict") else calculation
+    except ValidationError as ex:
+        logger.warning("Validation error in plumbing calculation for %s: %s", page_slug, ex)
+        error = "Please check the highlighted fields and try again."
     except Exception as ex:
-        error = str(ex)
+        logger.exception("Error running plumbing calculation for %s: %s", page_slug, ex)
+        error = "Calculation could not be completed. Please verify your inputs and try again."
 
-    return templates.TemplateResponse(request=request, name="plumbing_calculator_page.html", context={"request": request, "page": page, "values": values, "result": result, "error": error})
+    return templates.TemplateResponse(request=request, name="calculators/calculator_page.html", context={"request": request, "page": page, "values": values, "result": result, "error": error})
 
 
 @router.get("/calculators/plumbing/{page_slug}/print")
@@ -534,7 +544,7 @@ async def plumbing_calculator_print(request: Request, page_slug: str):
     if not page:
         raise HTTPException(status_code=404, detail="Calculator page not found.")
     values = {field["name"]: field.get("default", "") for field in page["fields"]}
-    return templates.TemplateResponse(request=request, name="plumbing_calculator_page.html", context={"request": request, "page": page, "values": values, "result": None, "error": None})
+    return templates.TemplateResponse(request=request, name="calculators/calculator_page.html", context={"request": request, "page": page, "values": values, "result": None, "error": None})
 
 
 @router.post("/calculators/plumbing/{page_slug}/export_excel")
@@ -552,8 +562,12 @@ async def calculators_plumbing_export_excel(request: Request, page_slug: str):
         validated = schema.parse_obj(values)
         result_obj = handler(validated)
         result = result_obj.dict() if hasattr(result_obj, "dict") else result_obj
+    except ValidationError as ex:
+        logger.warning("Validation error during Excel export for %s: %s", page_slug, ex)
+        raise HTTPException(status_code=400, detail="Please complete all required fields and try again.")
     except Exception as ex:
-        raise HTTPException(status_code=400, detail=str(ex))
+        logger.exception("Error during Excel export for %s: %s", page_slug, ex)
+        raise HTTPException(status_code=400, detail="Calculation could not be completed. Please try again later.")
 
     page = PLUMBING_PAGES.get(page_slug)
     stream = build_calculator_workbook(
@@ -588,8 +602,12 @@ async def calculators_plumbing_export_pdf(request: Request, page_slug: str):
         validated = schema.parse_obj(values)
         result_obj = handler(validated)
         result = result_obj.dict() if hasattr(result_obj, "dict") else result_obj
+    except ValidationError as ex:
+        logger.warning("Validation error during PDF export for %s: %s", page_slug, ex)
+        raise HTTPException(status_code=400, detail="Please complete all required fields and try again.")
     except Exception as ex:
-        raise HTTPException(status_code=400, detail=str(ex))
+        logger.exception("Error during PDF export for %s: %s", page_slug, ex)
+        raise HTTPException(status_code=400, detail="Calculation could not be completed. Please try again later.")
 
     page = PLUMBING_PAGES.get(page_slug)
     stream = build_calculator_pdf(
@@ -669,23 +687,24 @@ async def duct_sizing_calculate(
             error = "Invalid duct type selected."
 
     except DuctCalculationError as ex:
+        logger.warning("Duct calculation error: %s", ex)
+        error = "Calculation could not be completed. Please verify your inputs and try again."
 
-        error = str(ex)
-
-    except Exception:
-
+    except Exception as ex:
+        logger.exception("Unexpected error occurred while calculating duct size: %s", ex)
         error = "Unexpected error occurred while calculating duct size."
 
+    page = HVAC_CALCULATORS.get('duct-sizing')
+    values = {"duct_type": duct_type, "airflow": airflow, "velocity": velocity}
     return templates.TemplateResponse(
         request=request,
-        name="calculators/duct_sizing.html",
+        name="calculators/calculator_page.html",
         context={
             "request": request,
+            "page": page,
+            "values": values,
             "result": result,
             "error": error,
-            "duct_type": duct_type,
-            "airflow": airflow,
-            "velocity": velocity,
         },
     )
 # ==========================================================
@@ -757,42 +776,40 @@ async def heat_load_calculate(
         )
 
     except HeatLoadCalculationError as ex:
+        logger.warning("Heat load calculation error: %s", ex)
+        error = "Calculation could not be completed. Please verify your inputs and try again."
 
-        error = str(ex)
-
-    except Exception:
-
+    except Exception as ex:
+        logger.exception("Unexpected error occurred while calculating heat load: %s", ex)
         error = "Unexpected error occurred while calculating heat load."
 
+    page = HVAC_CALCULATORS.get('heat-load')
+    values = {
+        "length": length,
+        "width": width,
+        "height": height,
+        "occupants": occupants,
+        "lighting": lighting,
+        "equipment": equipment,
+        "outdoor_db": outdoor_db,
+        "indoor_db": indoor_db,
+        "wall_u": wall_u,
+        "roof_u": roof_u,
+        "glass_area": glass_area,
+        "glass_u": glass_u,
+        "glass_shgc": glass_shgc,
+        "solar": solar,
+        "fresh_air_cfm": fresh_air_cfm,
+    }
     return templates.TemplateResponse(
         request=request,
-        name="calculators/heat_load.html",
+        name="calculators/calculator_page.html",
         context={
             "request": request,
+            "page": page,
+            "values": values,
             "result": result,
             "error": error,
-
-            "length": length,
-            "width": width,
-            "height": height,
-
-            "occupants": occupants,
-            "lighting": lighting,
-            "equipment": equipment,
-
-            "outdoor_db": outdoor_db,
-            "indoor_db": indoor_db,
-
-            "wall_u": wall_u,
-            "roof_u": roof_u,
-
-            "glass_area": glass_area,
-            "glass_u": glass_u,
-            "glass_shgc": glass_shgc,
-
-            "solar": solar,
-
-            "fresh_air_cfm": fresh_air_cfm,
         },
     )
 # ==========================================================
@@ -835,24 +852,24 @@ async def airflow_calculate(
         )
 
     except AirFlowCalculationError as ex:
+        logger.warning("Air flow calculation error: %s", ex)
+        error = "Calculation could not be completed. Please verify your inputs and try again."
 
-        error = str(ex)
-
-    except Exception:
-
+    except Exception as ex:
+        logger.exception("Unexpected error occurred while calculating air flow: %s", ex)
         error = "Unexpected error occurred while calculating air flow."
 
+    page = HVAC_CALCULATORS.get('airflow')
+    values = {"length": length, "width": width, "height": height, "air_changes": air_changes}
     return templates.TemplateResponse(
         request=request,
-        name="calculators/airflow.html",
+        name="calculators/calculator_page.html",
         context={
             "request": request,
+            "page": page,
+            "values": values,
             "result": result,
             "error": error,
-            "length": length,
-            "width": width,
-            "height": height,
-            "air_changes": air_changes,
         },
     )
 # ==========================================================
@@ -895,24 +912,29 @@ async def fresh_air_calculate(
         )
 
     except FreshAirCalculationError as ex:
+        logger.warning("Fresh air calculation error: %s", ex)
+        error = "Calculation could not be completed. Please verify your inputs and try again."
 
-        error = str(ex)
-
-    except Exception:
-
+    except Exception as ex:
+        logger.exception("Unexpected error occurred while calculating fresh air: %s", ex)
         error = "Unexpected error occurred while calculating fresh air."
 
+    page = HVAC_CALCULATORS.get('fresh-air')
+    values = {
+        "occupants": occupants,
+        "area": area,
+        "fresh_air_per_person": fresh_air_per_person,
+        "fresh_air_per_area": fresh_air_per_area,
+    }
     return templates.TemplateResponse(
         request=request,
-        name="calculators/fresh_air.html",
+        name="calculators/calculator_page.html",
         context={
             "request": request,
+            "page": page,
+            "values": values,
             "result": result,
             "error": error,
-            "occupants": occupants,
-            "area": area,
-            "fresh_air_per_person": fresh_air_per_person,
-            "fresh_air_per_area": fresh_air_per_area,
         },
     )
 
@@ -924,11 +946,15 @@ async def fresh_air_calculate(
 @router.get("/calculators/chilled-water")
 async def chilled_water(request: Request):
 
+    page = HVAC_CALCULATORS.get('chilled-water')
+    values = {field["name"]: field.get("default", "") for field in page["fields"]}
     return templates.TemplateResponse(
         request=request,
-        name="calculators/chilled_water.html",
+        name="calculators/calculator_page.html",
         context={
             "request": request,
+            "page": page,
+            "values": values,
             "result": None,
             "error": None,
         },
@@ -955,23 +981,24 @@ async def chilled_water_calculate(
         )
 
     except ChilledWaterCalculationError as ex:
+        logger.warning("Chilled water calculation error: %s", ex)
+        error = "Calculation could not be completed. Please verify your inputs and try again."
 
-        error = str(ex)
-
-    except Exception:
-
+    except Exception as ex:
+        logger.exception("Unexpected error occurred while calculating chilled water: %s", ex)
         error = "Unexpected error occurred while calculating chilled water."
 
+    page = HVAC_CALCULATORS.get('chilled-water')
+    values = {"cooling_load": cooling_load, "delta_t": delta_t, "velocity": velocity}
     return templates.TemplateResponse(
         request=request,
-        name="calculators/chilled_water.html",
+        name="calculators/calculator_page.html",
         context={
             "request": request,
+            "page": page,
+            "values": values,
             "result": result,
             "error": error,
-            "cooling_load": cooling_load,
-            "delta_t": delta_t,
-            "velocity": velocity,
         },
     )
 # ==========================================================
@@ -981,11 +1008,15 @@ async def chilled_water_calculate(
 @router.get("/calculators/pump-head")
 async def pump_head(request: Request):
 
+    page = HVAC_CALCULATORS.get('pump-head')
+    values = {field["name"]: field.get("default", "") for field in page["fields"]}
     return templates.TemplateResponse(
         request=request,
-        name="calculators/pump_head.html",
+        name="calculators/calculator_page.html",
         context={
             "request": request,
+            "page": page,
+            "values": values,
             "result": None,
             "error": None,
         },
@@ -1014,24 +1045,24 @@ async def pump_head_calculate(
         )
 
     except PumpHeadCalculationError as ex:
+        logger.warning("Pump head calculation error: %s", ex)
+        error = "Calculation could not be completed. Please verify your inputs and try again."
 
-        error = str(ex)
-
-    except Exception:
-
+    except Exception as ex:
+        logger.exception("Unexpected error occurred while calculating pump head: %s", ex)
         error = "Unexpected error occurred while calculating pump head."
 
+    page = HVAC_CALCULATORS.get('pump-head')
+    values = {"flow_rate": flow_rate, "static_head": static_head, "friction_loss": friction_loss, "efficiency": efficiency}
     return templates.TemplateResponse(
         request=request,
-        name="calculators/pump_head.html",
+        name="calculators/calculator_page.html",
         context={
             "request": request,
+            "page": page,
+            "values": values,
             "result": result,
             "error": error,
-            "flow_rate": flow_rate,
-            "static_head": static_head,
-            "friction_loss": friction_loss,
-            "efficiency": efficiency,
         },
     )
 
@@ -1043,11 +1074,15 @@ async def pump_head_calculate(
 @router.get("/calculators/static-pressure")
 async def static_pressure(request: Request):
 
+    page = HVAC_CALCULATORS.get('static-pressure')
+    values = {field["name"]: field.get("default", "") for field in page["fields"]}
     return templates.TemplateResponse(
         request=request,
-        name="calculators/static_pressure.html",
+        name="calculators/calculator_page.html",
         context={
             "request": request,
+            "page": page,
+            "values": values,
             "result": None,
             "error": None,
         },
@@ -1076,23 +1111,23 @@ async def static_pressure_calculate(
         )
 
     except StaticPressureCalculationError as ex:
+        logger.warning("Static pressure calculation error: %s", ex)
+        error = "Calculation could not be completed. Please verify your inputs and try again."
 
-        error = str(ex)
-
-    except Exception:
-
+    except Exception as ex:
+        logger.exception("Unexpected error occurred while calculating static pressure: %s", ex)
         error = "Unexpected error occurred while calculating static pressure."
 
+    page = HVAC_CALCULATORS.get('static-pressure')
+    values = {"airflow": airflow, "velocity": velocity, "duct_length": duct_length, "friction_rate": friction_rate}
     return templates.TemplateResponse(
         request=request,
-        name="calculators/static_pressure.html",
+        name="calculators/calculator_page.html",
         context={
             "request": request,
+            "page": page,
+            "values": values,
             "result": result,
             "error": error,
-            "airflow": airflow,
-            "velocity": velocity,
-            "duct_length": duct_length,
-            "friction_rate": friction_rate,
         },
     )

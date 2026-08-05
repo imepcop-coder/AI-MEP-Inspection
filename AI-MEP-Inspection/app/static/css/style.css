@@ -27,6 +27,12 @@
   --cc-success: var(--success, #16a34a);
   --cc-danger: var(--danger, #dc2626);
   --cc-radius: 18px;
+  --heading: var(--text-primary, #0f172a);
+  --text: var(--text-muted, #64748b);
+  --radius-lg: 20px;
+  --shadow: 0 14px 40px rgba(15, 23, 42, 0.06);
+  --shadow-sm: 0 8px 18px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 24px 60px rgba(15, 23, 42, 0.12);
 }
 
 body[data-theme="dark"] {
@@ -196,15 +202,68 @@ svg {
 .app-body {
   min-height: calc(100vh - 72px);
   background: var(--bg-page);
+  display: flex; /* ensure sidebar and main align vertically */
+  align-items: stretch;
 }
 
 .app-sidebar-col {
   width: 280px;
   transition: width 0.25s ease;
+  flex: 0 0 280px; /* fixed-width sidebar that doesn't shrink by default */
 }
 
 body.sidebar-collapsed .app-sidebar-col {
   width: 0;
+  flex: 0 0 0;
+}
+
+/* Main content should flex and prevent overflow so Bootstrap grid works reliably */
+.main-content {
+  flex: 1 1 auto;
+  min-width: 0; /* allow flex children to shrink and prevent overflow issues in nested grids */
+}
+
+/* Ensure outer container inside app-body doesn't add unwanted gutters between sidebar and main */
+.app-body > .container-fluid {
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* Ensure the inner container inside main does not add unexpected side gutters */
+.main-content > .container-fluid {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+/* Mobile: collapse sidebar and expose toggle (small screens) */
+
+/* On large screens keep the sidebar and main on the same flex line (prevent unwanted wrapping that stacks main under the sidebar) */
+@media (min-width: 992px) {
+  .app-body > .container-fluid > .row {
+    flex-wrap: nowrap; /* keep aside + main on one row */
+  }
+}
+
+@media (max-width: 991.98px) {
+  .app-sidebar-col {
+    width: 0;
+    flex: 0 0 0;
+  }
+  .sidebar {
+    transform: translateX(-100%);
+    position: fixed;
+    left: 0;
+    top: 72px;
+    height: calc(100vh - 72px);
+    z-index: 1040;
+    transition: transform 0.25s ease;
+  }
+  body.sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+  .sidebar-toggle {
+    display: inline-flex !important;
+  }
 }
 
 body.sidebar-collapsed .sidebar {

@@ -12,7 +12,10 @@ from app.services.workspace_service import WorkspaceService
 
 router = APIRouter()
 
-templates = Jinja2Templates(directory="app/templates")
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 
 # ---------------------------------------------------------

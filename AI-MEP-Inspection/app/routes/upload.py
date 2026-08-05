@@ -22,7 +22,10 @@ from app.models.report_template import ReportTemplate
 
 router = APIRouter()
 
-templates = Jinja2Templates(directory="app/templates")
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)

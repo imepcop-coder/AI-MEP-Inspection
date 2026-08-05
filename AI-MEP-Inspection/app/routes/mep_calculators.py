@@ -79,7 +79,10 @@ from app.utils.xlsx_export import build_calculator_pdf, build_calculator_workboo
 
 router = APIRouter()
 
-templates = Jinja2Templates(directory="app/templates")
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 CATEGORY_META = {
     "plumbing": "Plumbing",
@@ -571,9 +574,15 @@ async def post_calculator_page(request: Request, category: str, slug: str):
         validated = page["schema"].parse_obj(values)
         result = page["function"](**validated.dict())
     except ValidationError as ex:
-        error = "; ".join([f"{err['loc'][0]}: {err['msg']}" for err in ex.errors()])
+        # Log details to application logger and return a friendly message to the user
+        import logging
+        logging.getLogger('ai_mep').info('Validation error in HVAC calculator: %s', str(ex))
+        error = "Please check the highlighted fields and try again."
     except Exception as ex:
-        error = str(ex)
+        import logging
+        logging.getLogger('ai_mep').exception('Error running HVAC calculator: %s', str(ex))
+        # Friendly generic message for calculation failures
+        error = "Calculation could not be completed. Please verify your inputs and try again."
 
     return templates.TemplateResponse(
         request,

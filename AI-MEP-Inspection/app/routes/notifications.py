@@ -9,7 +9,10 @@ from app.models.notification import Notification
 from app.models.user import User
 
 router = APIRouter()
-templates = Jinja2Templates(directory="app/templates")
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 
 def check_login(request: Request):

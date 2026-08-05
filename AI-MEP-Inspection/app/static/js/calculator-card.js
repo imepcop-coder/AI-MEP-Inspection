@@ -1,9 +1,9 @@
-document.addEventListener('DOMContentLoaded', () => {
+const initializeCalculatorCardScript = () => {
   const storage = {
     favorites: 'mepCalculatorFavorites',
     recent: 'mepCalculatorRecent',
   };
-
+  
   const getArray = (key) => {
     try {
       return JSON.parse(localStorage.getItem(key) || '[]');
@@ -136,7 +136,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const matchesCategory = activeCategory === 'all' || category === activeCategory;
       const matchesSearch = !searchValue || name.includes(searchValue) || description.includes(searchValue) || category.includes(searchValue);
       const visible = matchesCategory && matchesSearch;
-      card.style.display = visible ? '' : 'none';
+      const cell = card.closest('.calculator-grid__cell');
+      const displayValue = visible ? '' : 'none';
+      if (cell) {
+        cell.classList.toggle('d-none', !visible);
+      }
+      card.style.display = displayValue;
       if (visible) visibleCount += 1;
     });
 
@@ -220,4 +225,10 @@ document.addEventListener('DOMContentLoaded', () => {
   renderFavoriteItems();
   renderRecentItems();
   applyFilters();
-});
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeCalculatorCardScript);
+} else {
+  initializeCalculatorCardScript();
+}

@@ -21,32 +21,35 @@ from app.services.plumbing_service import PlumbingService
 
 router = APIRouter()
 
-templates = Jinja2Templates(directory="app/templates")
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 PLUMBING_SCHEMAS = {
-    "water-demand-page": WaterDemandRequest,
-    "fixture-units-page": FixtureUnitRequest,
-    "pipe-size-page": PipeSizeRequest,
-    "drainage-page": DrainageRequest,
-    "rainwater-page": RainwaterRequest,
-    "tank-page": TankRequest,
-    "sump-page": SumpRequest,
-    "pump-page": PumpRequest,
+    "water-demand": WaterDemandRequest,
+    "fixture-unit": FixtureUnitRequest,
+    "pipe-sizing": PipeSizeRequest,
+    "drainage-pipe": DrainageRequest,
+    "rainwater-pipe": RainwaterRequest,
+    "water-tank": TankRequest,
+    "sump-tank": SumpRequest,
+    "pump-selection": PumpRequest,
 }
 
 PLUMBING_HANDLERS = {
-    "water-demand-page": PlumbingService.calculate_water_demand,
-    "fixture-units-page": PlumbingService.calculate_fixture_units,
-    "pipe-size-page": PlumbingService.calculate_pipe_size,
-    "drainage-page": PlumbingService.calculate_drainage,
-    "rainwater-page": PlumbingService.calculate_rainwater,
-    "tank-page": PlumbingService.calculate_water_tank,
-    "sump-page": PlumbingService.calculate_sump,
-    "pump-page": PlumbingService.calculate_pump,
+    "water-demand": PlumbingService.calculate_water_demand,
+    "fixture-unit": PlumbingService.calculate_fixture_units,
+    "pipe-sizing": PlumbingService.calculate_pipe_size,
+    "drainage-pipe": PlumbingService.calculate_drainage,
+    "rainwater-pipe": PlumbingService.calculate_rainwater,
+    "water-tank": PlumbingService.calculate_water_tank,
+    "sump-tank": PlumbingService.calculate_sump,
+    "pump-selection": PlumbingService.calculate_pump,
 }
 
 PLUMBING_PAGES = {
-    "water-demand-page": {
+    "water-demand": {
         "title": "Water Demand Calculator",
         "description": "Estimate daily and peak water demand.",
         "api_path": "/plumbing/water-demand",
@@ -84,7 +87,7 @@ PLUMBING_PAGES = {
         "formula": "Demand = max(occupancy × 0.12, fixture units × 1.1) × building type factor",
         "reference": "Adapted from domestic water demand design practices.",
     },
-    "fixture-units-page": {
+    "fixture-unit": {
         "title": "Fixture Unit Calculator",
         "description": "Calculate total fixture loading.",
         "api_path": "/plumbing/fixture-units",
@@ -101,7 +104,7 @@ PLUMBING_PAGES = {
         "formula": "Total fixture units = fixture unit factor × quantity.",
         "reference": "Fixture unit load calculation for plumbing design.",
     },
-    "pipe-size-page": {
+    "pipe-sizing": {
         "title": "Pipe Size Calculator",
         "description": "Pipe diameter calculation from flow and velocity.",
         "api_path": "/plumbing/pipe-size",
@@ -120,7 +123,7 @@ PLUMBING_PAGES = {
         "formula": "d = sqrt(4Q / (π v)) where Q is flow in m³/s.",
         "reference": "Hydraulic continuity equation for pipe sizing.",
     },
-    "drainage-page": {
+    "drainage-pipe": {
         "title": "Drainage Calculator",
         "description": "Drainage pipe sizing based on fixture units and slope.",
         "api_path": "/plumbing/drainage",
@@ -137,7 +140,7 @@ PLUMBING_PAGES = {
         "formula": "Use fixture unit load and slope to select drainage diameter.",
         "reference": "Drainage pipe sizing guidelines for plumbing systems.",
     },
-    "rainwater-page": {
+    "rainwater-pipe": {
         "title": "Rainwater Calculator",
         "description": "Roof rainwater calculations.",
         "api_path": "/plumbing/rainwater",
@@ -155,7 +158,7 @@ PLUMBING_PAGES = {
         "formula": "Flow = roof area × rainfall × runoff coefficient / 3600.",
         "reference": "Rainwater drainage sizing using runoff and intensity.",
     },
-    "tank-page": {
+    "water-tank": {
         "title": "Water Tank Calculator",
         "description": "Tank capacity calculator.",
         "api_path": "/plumbing/tank",
@@ -174,7 +177,7 @@ PLUMBING_PAGES = {
         "formula": "Capacity = occupancy × liters per person × storage days.",
         "reference": "Potable water storage sizing based on daily demand.",
     },
-    "sump-page": {
+    "sump-tank": {
         "title": "Underground Sump Calculator",
         "description": "Sump capacity calculator.",
         "api_path": "/plumbing/sump",
@@ -191,7 +194,7 @@ PLUMBING_PAGES = {
         "formula": "Sump capacity = daily demand × storage days.",
         "reference": "Sump storage sizing for pump cycling and overflow safety.",
     },
-    "pump-page": {
+    "pump-selection": {
         "title": "Pump Head & Power Calculator",
         "description": "Pump selection calculator.",
         "api_path": "/plumbing/pump",
@@ -256,9 +259,13 @@ async def plumbing_calculator_page_submit(request: Request, page_slug: str):
         calculation = handler(validated)
         result = calculation.dict() if hasattr(calculation, "dict") else calculation
     except ValidationError as ex:
-        error = "; ".join([f"{err['loc'][0]}: {err['msg']}" for err in ex.errors()])
+        import logging
+        logging.getLogger('ai_mep').info('Validation error in Plumbing calculator: %s', str(ex))
+        error = "Please check the highlighted fields and try again."
     except Exception as ex:
-        error = str(ex)
+        import logging
+        logging.getLogger('ai_mep').exception('Error running Plumbing calculator: %s', str(ex))
+        error = "Calculation could not be completed. Please verify your inputs and try again."
 
     return templates.TemplateResponse(
         request,
