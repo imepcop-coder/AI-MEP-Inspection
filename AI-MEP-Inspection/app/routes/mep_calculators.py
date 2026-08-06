@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import ValidationError
+from app.utils.validation import map_pydantic_errors
 
 from app.schemas.calculators import (
     BatteryRoomVentilationRequest,
@@ -37,7 +38,9 @@ from app.schemas.calculators import (
     VoltageDropRequest,
     WaterDemandRequest,
     WaterTankRequest,
+    WaterTankPageRequest,
     FixtureUnitRequest,
+    SumpTankPageRequest,
 )
 from app.services.plumbing_calculators import (
     calculate_drainage_pipe,
@@ -171,7 +174,7 @@ CALCULATOR_PAGES = {
             {"name": "storage_hours", "label": "Storage Hours", "type": "number", "min": "1", "step": "0.1", "required": True},
         ],
         "function": calculate_water_tank_capacity,
-        "schema": WaterTankRequest,
+        "schema": WaterTankPageRequest,
         "result_label": "Tank Capacity",
         "result_key": "tank_capacity_l",
         "result_unit": "L",
@@ -187,7 +190,7 @@ CALCULATOR_PAGES = {
             {"name": "pump_cycles", "label": "Pump Cycles per Day", "type": "number", "min": "1", "step": "1", "required": True},
         ],
         "function": calculate_sump_size,
-        "schema": SumpTankRequest,
+        "schema": SumpTankPageRequest,
         "result_label": "Sump Volume",
         "result_key": "sump_volume_l",
         "result_unit": "L",
@@ -534,7 +537,78 @@ CALCULATOR_PAGES = {
 }
 
 
+# Augment fields with helpful sample/typical guidance used by the UI helpers.
+# This centralized mapping injects `sample` values into each field if a specific
+# example is not already provided in the page definition. It keeps the page
+# definitions concise while improving UX placeholders and helper text site-wide.
+SAMPLE_GUIDANCE = {
+    # Plumbing
+    "building_type": {"sample": "Commercial"},
+    "occupancy": {"sample": "5", "typical_range": "1–100"},
+    "fixture_units": {"sample": "12", "typical_range": "1–200"},
+    "roof_area": {"sample": "200", "typical_range": "1–10000"},
+    "rainfall_intensity": {"sample": "50", "typical_range": "1–200"},
+    "daily_demand": {"sample": "10000", "typical_range": "100–100000"},
+    "storage_hours": {"sample": "24", "typical_range": "1–168"},
+    "pump_cycles": {"sample": "6", "typical_range": "1–24"},
+    "flow": {"sample": "100", "typical_range": "0.1–5000"},
+    "head": {"sample": "10", "typical_range": "0.1–200"},
+    "efficiency": {"sample": "70", "typical_range": "10–100"},
+    "flow_rate": {"sample": "100", "typical_range": "0.1–5000"},
+
+    # Electrical
+    "current": {"sample": "50", "typical_range": "0.1–10000"},
+    "ambient_temperature": {"sample": "30", "typical_range": "-20–60"},
+    "voltage": {"sample": "230", "typical_range": "110–10000"},
+    "length": {"sample": "50", "typical_range": "0.1–10000"},
+    "conductor_area": {"sample": "25", "typical_range": "0.5–1000"},
+    "power": {"sample": "5", "typical_range": "0.1–10000"},
+    "power_factor": {"sample": "0.9", "typical_range": "0.5–1"},
+    "phase_type": {"sample": "Three-phase"},
+    "load": {"sample": "50", "typical_range": "0.1–10000"},
+    "starting_load_factor": {"sample": "1.2", "typical_range": "1–5"},
+    "autonomy_minutes": {"sample": "30", "typical_range": "1–1440"},
+    "lumens_per_watt": {"sample": "100", "typical_range": "50–200"},
+    "target_lux": {"sample": "300", "typical_range": "10–2000"},
+
+    # Fire
+    "system_pressure": {"sample": "300", "typical_range": "0–2000"},
+    "elevation": {"sample": "10", "typical_range": "0–5000"},
+    "area": {"sample": "100", "typical_range": "1–100000"},
+    "hazard_class": {"sample": "Ordinary"},
+    "pump_flow_lpm": {"sample": "50", "typical_range": "0.1–5000"},
+    "pressure_margin_kpa": {"sample": "10", "typical_range": "0.1–500"},
+    "efficiency_percent": {"sample": "70", "typical_range": "10–100"},
+    "demand": {"sample": "100", "typical_range": "0.1–5000"},
+    "duration": {"sample": "2", "typical_range": "0.1–168"},
+    "height": {"sample": "10", "typical_range": "0.1–500"},
+    "hose_length": {"sample": "20", "typical_range": "0.1–5000"},
+    "friction_loss": {"sample": "0.2", "typical_range": "0.01–10"},
+    "nozzle_coefficient": {"sample": "0.8", "typical_range": "0.1–5"},
+
+    # Hydraulic / general
+    "diameter": {"sample": "50", "typical_range": "1–2000"},
+    "roughness": {"sample": "0.01", "typical_range": "0.0001–10"},
+}
+
+# Inject sample guidance into page field definitions where missing. This runs
+# at module import so templates and client-side helpers will find `field.sample`.
+for _slug, _page in CALCULATOR_PAGES.items():
+    fields = _page.get("fields") or []
+    for f in fields:
+        name = f.get("name")
+        if not name:
+            continue
+        guidance = SAMPLE_GUIDANCE.get(name)
+        if guidance:
+            if "sample" not in f and "sample" in guidance:
+                f["sample"] = guidance.get("sample")
+            if "typical_range" in guidance and "typical_range" not in f:
+                f["typical_range"] = guidance.get("typical_range")
+
+
 def _strip_project_name(form_data: dict) -> tuple[dict, str | None]:
+
     values = dict(form_data)
     project_name = values.pop("project_name", None)
     return values, project_name
@@ -574,15 +648,22 @@ async def post_calculator_page(request: Request, category: str, slug: str):
         validated = page["schema"].parse_obj(values)
         result = page["function"](**validated.dict())
     except ValidationError as ex:
-        # Log details to application logger and return a friendly message to the user
+        # Map pydantic errors to field-specific messages and render them in the template
         import logging
-        logging.getLogger('ai_mep').info('Validation error in HVAC calculator: %s', str(ex))
+        logging.getLogger('ai_mep').info('Validation error in calculator %s/%s: %s', category, slug, str(ex))
+        field_errors = map_pydantic_errors(page, ex.errors())
         error = "Please check the highlighted fields and try again."
-    except Exception as ex:
-        import logging
-        logging.getLogger('ai_mep').exception('Error running HVAC calculator: %s', str(ex))
-        # Friendly generic message for calculation failures
-        error = "Calculation could not be completed. Please verify your inputs and try again."
+        return templates.TemplateResponse(
+            request,
+            "calculators/calculator_page.html",
+            {
+                "page": page,
+                "values": values,
+                "result": None,
+                "error": error,
+                "field_errors": field_errors,
+            },
+        )
 
     return templates.TemplateResponse(
         request,
@@ -604,15 +685,27 @@ async def export_calculator_excel(request: Request, category: str, slug: str):
 
     try:
         validated = page["schema"].parse_obj(values)
-        result = page["function"](**validated.dict())
+        validated_inputs = validated.dict()
     except ValidationError as ex:
-        raise HTTPException(status_code=400, detail="; ".join([f"{err['loc'][0]}: {err['msg']}" for err in ex.errors()]))
-    except Exception as ex:
-        raise HTTPException(status_code=400, detail=str(ex))
+        try:
+            field_errors = map_pydantic_errors(page, ex.errors())
+        except Exception:
+            field_errors = { (err.get('loc')[-1] if err.get('loc') else 'field'): err.get('msg') for err in ex.errors() }
+        raise HTTPException(status_code=400, detail={"errors": field_errors})
+
+    # Run calculation with structured logging
+    from app.utils.calc_runner import run_calculation
+    calc_resp = run_calculation(page.get('title', slug), page, page['function'], validated_inputs)
+    if not calc_resp['success']:
+        # log exc_info already done by runner; return structured validation-like errors to client
+        logger.error('Calculation failed for %s: %s', slug, calc_resp['error'])
+        raise HTTPException(status_code=400, detail={"errors": {"__internal": "Calculation failed. Please verify inputs and try again."}})
+
+    result = calc_resp['result']
 
     stream = build_calculator_workbook(
         page["title"],
-        values,
+        validated_inputs,
         result,
         page=page,
         project_name=project_name,
@@ -635,15 +728,25 @@ async def export_calculator_pdf(request: Request, category: str, slug: str):
 
     try:
         validated = page["schema"].parse_obj(values)
-        result = page["function"](**validated.dict())
+        validated_inputs = validated.dict()
     except ValidationError as ex:
-        raise HTTPException(status_code=400, detail="; ".join([f"{err['loc'][0]}: {err['msg']}" for err in ex.errors()]))
-    except Exception as ex:
-        raise HTTPException(status_code=400, detail=str(ex))
+        try:
+            field_errors = map_pydantic_errors(page, ex.errors())
+        except Exception:
+            field_errors = { (err.get('loc')[-1] if err.get('loc') else 'field'): err.get('msg') for err in ex.errors() }
+        raise HTTPException(status_code=400, detail={"errors": field_errors})
+
+    from app.utils.calc_runner import run_calculation
+    calc_resp = run_calculation(page.get('title', slug), page, page['function'], validated_inputs)
+    if not calc_resp['success']:
+        logger.error('Calculation failed for %s: %s', slug, calc_resp['error'])
+        raise HTTPException(status_code=400, detail={"errors": {"__internal": "Calculation failed. Please verify inputs and try again."}})
+
+    result = calc_resp['result']
 
     stream = build_calculator_pdf(
         page["title"],
-        values,
+        validated_inputs,
         result,
         page=page,
         project_name=project_name,
@@ -666,14 +769,17 @@ async def api_calculate(category: str, slug: str, request: Request):
     try:
         validated = page["schema"].parse_obj(payload)
     except ValidationError as ex:
-        return JSONResponse(
-            status_code=422,
-            content={"error": "; ".join([f"{err['loc'][0]}: {err['msg']}" for err in ex.errors()])},
-        )
+        try:
+            field_errors = map_pydantic_errors(page, ex.errors())
+        except Exception:
+            field_errors = { (err.get('loc')[-1] if err.get('loc') else 'field'): err.get('msg') for err in ex.errors() }
+        return JSONResponse(status_code=422, content={"success": False, "errors": field_errors})
 
-    try:
-        result = page["function"](**validated.dict())
-    except Exception as ex:
-        return JSONResponse(status_code=400, content={"error": str(ex)})
+    from app.utils.calc_runner import run_calculation
+    calc_resp = run_calculation(page.get('title', slug), page, page['function'], validated.dict())
+    if not calc_resp['success']:
+        # return structured failure with friendly message and log contains stack trace
+        logger.error('API calculation failed for %s: %s', slug, calc_resp['error'])
+        return JSONResponse(status_code=400, content={"success": False, "errors": {"__internal": "Calculation failed. See server logs for details."}})
 
-    return JSONResponse(content={"result": result})
+    return JSONResponse(content={"success": True, "inputs": calc_resp['inputs'], "results": calc_resp['result'], "summary": {"calculator": page.get('title')}})

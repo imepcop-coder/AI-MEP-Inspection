@@ -4,6 +4,8 @@
 
 {% block content %}
 
+{% from 'partials/result_renderer.html' import format_value %}
+
 <style>
     .professional-card {
         background: #fff;
@@ -148,28 +150,28 @@
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Occupancy</div>
-                                    <div class="metric-value text-primary">{{ result.occupants }}</div>
+                                    <div class="metric-value text-primary">{{ format_value(result.get('occupants'), key='occupants') }}</div>
                                     <div class="metric-unit">People</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Area</div>
-                                    <div class="metric-value text-success">{{ result.room_area }}</div>
+                                    <div class="metric-value text-success">{{ format_value(result.get('room_area'), key='room_area', unit='m²') }}</div>
                                     <div class="metric-unit">m²</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">CFM</div>
-                                    <div class="metric-value text-danger">{{ result.total_cfm }}</div>
+                                    <div class="metric-value text-danger">{{ format_value(result.get('total_cfm'), key='total_cfm', unit='CFM') }}</div>
                                     <div class="metric-unit">Total</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">FA Units</div>
-                                    <div class="metric-value text-warning">{{ result.recommended_fa_unit }}</div>
+                                    <div class="metric-value text-warning">{{ format_value(result.get('recommended_fa_unit'), key='recommended_fa_unit') }}</div>
                                     <div class="metric-unit">Units</div>
                                 </div>
                             </div>
@@ -183,16 +185,16 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td>Occupants</td><td class="text-end">{{ result.occupants }}</td></tr>
-                                <tr><td>Room Area</td><td class="text-end">{{ result.room_area }} m²</td></tr>
-                                <tr><td>Occupancy Fresh Air</td><td class="text-end">{{ result.people_air }} CFM</td></tr>
-                                <tr><td>Area Fresh Air</td><td class="text-end">{{ result.area_air }} CFM</td></tr>
-                                <tr><td>Total Fresh Air</td><td class="text-end">{{ result.total_cfm }} CFM</td></tr>
-                                <tr><td>Total Fresh Air</td><td class="text-end">{{ result.total_lps }} L/s</td></tr>
-                                <tr><td>Total Fresh Air</td><td class="text-end">{{ result.total_cmh }} CMH</td></tr>
+                                <tr><td>Occupants</td><td class="text-end">{{ format_value(result.get('occupants'), key='occupants') }}</td></tr>
+                                                                <tr><td>Room Area</td><td class="text-end">{{ format_value(result.get('room_area'), key='room_area', unit='m²') }}</td></tr>
+                                                                <tr><td>Occupancy Fresh Air</td><td class="text-end">{{ format_value(result.get('people_air'), key='people_air', unit='CFM') }}</td></tr>
+                                                                <tr><td>Area Fresh Air</td><td class="text-end">{{ format_value(result.get('area_air'), key='area_air', unit='CFM') }}</td></tr>
+                                                                <tr><td>Total Fresh Air</td><td class="text-end">{{ format_value(result.get('total_cfm'), key='total_cfm', unit='CFM') }}</td></tr>
+                                                                <tr><td>Total Fresh Air</td><td class="text-end">{{ format_value(result.get('total_lps'), key='total_lps', unit='L/s') }}</td></tr>
+                                                                <tr><td>Total Fresh Air</td><td class="text-end">{{ format_value(result.get('total_cmh'), key='total_cmh', unit='CMH') }}</td></tr>
                                 <tr class="table-primary fw-bold">
                                     <th>Recommended FA Unit</th>
-                                    <th class="text-end">{{ result.recommended_fa_unit }}</th>
+                                    <th class="text-end">{{ format_value(result.get('recommended_fa_unit'), key='recommended_fa_unit') }}</th>
                                 </tr>
                             </tbody>
                         </table>
@@ -200,9 +202,9 @@
                         <div class="alert alert-info mb-4">
                             <h5 class="mb-3"><i class="bi bi-info-circle-fill me-2"></i>Engineering Summary</h5>
                             <ul class="mb-0 ps-3">
-                                <li>Occupants: <strong>{{ result.summary['Occupants'] }}</strong></li>
-                                <li>Room Area: <strong>{{ result.summary['Room Area'] }} m²</strong></li>
-                                <li>Total Fresh Air: <strong>{{ result.summary['Total Fresh Air'] }} CFM</strong></li>
+                                <li>Occupants: <strong>{{ format_value(result.summary.get('Occupants'), key='Occupants') }}</strong></li>
+                                                                <li>Room Area: <strong>{{ format_value(result.summary.get('Room Area'), key='Room Area', unit='m²') }}</strong></li>
+                                                                <li>Total Fresh Air: <strong>{{ format_value(result.summary.get('Total Fresh Air'), key='Total Fresh Air', unit='CFM') }}</strong></li>
                             </ul>
                         </div>
 

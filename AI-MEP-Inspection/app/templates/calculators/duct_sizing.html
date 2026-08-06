@@ -4,6 +4,8 @@
 
 {% block content %}
 
+{% from 'partials/result_renderer.html' import format_value %}
+
 <style>
     .professional-card {
         background: #fff;
@@ -146,21 +148,21 @@
                             <div class="col-md-6 col-xl-4">
                                 <div class="metric-card">
                                     <div class="metric-title">Air Flow</div>
-                                    <div class="metric-value text-primary">{{ result.airflow }}</div>
+                                    <div class="metric-value text-primary">{{ format_value(result.get('airflow'), key='airflow', unit='CFM') }}</div>
                                     <div class="metric-unit">CFM</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-4">
                                 <div class="metric-card">
                                     <div class="metric-title">Velocity</div>
-                                    <div class="metric-value text-success">{{ result.velocity }}</div>
+                                    <div class="metric-value text-success">{{ format_value(result.get('velocity'), key='velocity', unit='FPM') }}</div>
                                     <div class="metric-unit">FPM</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-4">
                                 <div class="metric-card">
                                     <div class="metric-title">Area</div>
-                                    <div class="metric-value text-danger">{{ result.area_sqft }}</div>
+                                    <div class="metric-value text-danger">{{ format_value(result.get('area_sqft'), key='area_sqft', unit='sq.ft') }}</div>
                                     <div class="metric-unit">ft²</div>
                                 </div>
                             </div>
@@ -174,17 +176,17 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td>Duct Type</td><td class="text-end">{{ result.type }}</td></tr>
-                                <tr><td>Air Flow</td><td class="text-end">{{ result.airflow }} CFM</td></tr>
-                                <tr><td>Velocity</td><td class="text-end">{{ result.velocity }} FPM</td></tr>
-                                <tr><td>Duct Area</td><td class="text-end">{{ result.area_sqft }} sq.ft</td></tr>
+                                <tr><td>Duct Type</td><td class="text-end">{{ format_value(result.get('type'), key='type') }}</td></tr>
+                                <tr><td>Air Flow</td><td class="text-end">{{ format_value(result.get('airflow'), key='airflow', unit='CFM') }}</td></tr>
+                                <tr><td>Velocity</td><td class="text-end">{{ format_value(result.get('velocity'), key='velocity', unit='FPM') }}</td></tr>
+                                <tr><td>Duct Area</td><td class="text-end">{{ format_value(result.get('area_sqft'), key='area_sqft', unit='sq.ft') }}</td></tr>
                                 {% if result.type == "Rectangular" %}
-                                    <tr><td>Width</td><td class="text-end">{{ result.width }} in</td></tr>
-                                    <tr><td>Height</td><td class="text-end">{{ result.height }} in</td></tr>
-                                    <tr><td>Hydraulic Diameter</td><td class="text-end">{{ result.hydraulic_diameter }} in</td></tr>
+                                    <tr><td>Width</td><td class="text-end">{{ format_value(result.get('width'), key='width', unit='in') }}</td></tr>
+                                                                        <tr><td>Height</td><td class="text-end">{{ format_value(result.get('height'), key='height', unit='in') }}</td></tr>
+                                                                        <tr><td>Hydraulic Diameter</td><td class="text-end">{{ format_value(result.get('hydraulic_diameter'), key='hydraulic_diameter', unit='in') }}</td></tr>
                                 {% else %}
-                                    <tr><td>Diameter</td><td class="text-end">{{ result.diameter }} in</td></tr>
-                                    <tr><td>Circumference</td><td class="text-end">{{ result.circumference }} in</td></tr>
+                                    <tr><td>Diameter</td><td class="text-end">{{ format_value(result.get('diameter'), key='diameter', unit='in') }}</td></tr>
+                                                                        <tr><td>Circumference</td><td class="text-end">{{ format_value(result.get('circumference'), key='circumference', unit='in') }}</td></tr>
                                 {% endif %}
                             </tbody>
                         </table>
@@ -192,9 +194,9 @@
                         <div class="alert alert-info mb-4">
                             <h5 class="mb-3"><i class="bi bi-info-circle-fill me-2"></i>Engineering Summary</h5>
                             <ul class="mb-0 ps-3">
-                                <li>Duct Type: <strong>{{ result.type }}</strong></li>
-                                <li>Airflow: <strong>{{ result.airflow }} CFM</strong></li>
-                                <li>Velocity: <strong>{{ result.velocity }} FPM</strong></li>
+                                <li>Duct Type: <strong>{{ format_value(result.get('type'), key='type') }}</strong></li>
+                                                                <li>Airflow: <strong>{{ format_value(result.get('airflow'), key='airflow', unit='CFM') }}</strong></li>
+                                                                <li>Velocity: <strong>{{ format_value(result.get('velocity'), key='velocity', unit='FPM') }}</strong></li>
                             </ul>
                         </div>
 
@@ -204,7 +206,7 @@
                                     <div class="section-label">Calculation Steps</div>
                                     <ul class="mb-0 ps-3">
                                         {% for key, value in result.calculation_steps.items() %}
-                                            <li>{{ key }}: <strong>{{ value }}</strong></li>
+                                                                                    <li>{{ key }}: <strong>{{ format_value(value, key=key) }}</strong></li>
                                         {% endfor %}
                                     </ul>
                                 </div>

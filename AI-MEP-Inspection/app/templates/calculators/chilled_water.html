@@ -4,6 +4,8 @@
 
 {% block content %}
 
+{% from 'partials/result_renderer.html' import format_value %}
+
 <style>
     .professional-card {
         background: #fff;
@@ -143,28 +145,28 @@
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Cooling Load</div>
-                                    <div class="metric-value text-primary">{{ result.cooling_load_kw }}</div>
+                                    <div class="metric-value text-primary">{{ format_value(result.get('cooling_load_kw'), key='cooling_load_kw', unit='kW') }}</div>
                                     <div class="metric-unit">kW</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Flow Rate</div>
-                                    <div class="metric-value text-success">{{ result.flow_lps }}</div>
+                                    <div class="metric-value text-success">{{ format_value(result.get('flow_lps'), key='flow_lps', unit='L/s') }}</div>
                                     <div class="metric-unit">L/s</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Pipe Diameter</div>
-                                    <div class="metric-value text-danger">{{ result.pipe_diameter_mm }}</div>
+                                    <div class="metric-value text-danger">{{ format_value(result.get('pipe_diameter_mm'), key='pipe_diameter_mm', unit='mm') }}</div>
                                     <div class="metric-unit">mm</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Recommended Pipe</div>
-                                    <div class="metric-value text-warning">{{ result.recommended_pipe_mm }}</div>
+                                    <div class="metric-value text-warning">{{ format_value(result.get('recommended_pipe_mm'), key='recommended_pipe_mm', unit='mm') }}</div>
                                     <div class="metric-unit">mm</div>
                                 </div>
                             </div>
@@ -178,16 +180,16 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td>Cooling Load</td><td class="text-end">{{ result.cooling_load_kw }} kW</td></tr>
-                                <tr><td>Temperature Difference</td><td class="text-end">{{ result.delta_t_c }} °C</td></tr>
-                                <tr><td>Pipe Velocity</td><td class="text-end">{{ result.velocity_m_s }} m/s</td></tr>
-                                <tr><td>Flow Rate</td><td class="text-end">{{ result.flow_lps }} L/s</td></tr>
-                                <tr><td>Flow Rate</td><td class="text-end">{{ result.flow_lpm }} L/min</td></tr>
-                                <tr><td>Flow Rate</td><td class="text-end">{{ result.flow_m3hr }} m³/hr</td></tr>
-                                <tr><td>Flow Rate</td><td class="text-end">{{ result.flow_gpm }} GPM</td></tr>
+                                <tr><td>Cooling Load</td><td class="text-end">{{ format_value(result.get('cooling_load_kw'), key='cooling_load_kw', unit='kW') }}</td></tr>
+                                <tr><td>Temperature Difference</td><td class="text-end">{{ format_value(result.get('delta_t_c'), key='delta_t_c', unit='°C') }}</td></tr>
+                                <tr><td>Pipe Velocity</td><td class="text-end">{{ format_value(result.get('velocity_m_s'), key='velocity_m_s', unit='m/s') }}</td></tr>
+                                <tr><td>Flow Rate</td><td class="text-end">{{ format_value(result.get('flow_lps'), key='flow_lps', unit='L/s') }}</td></tr>
+                                <tr><td>Flow Rate</td><td class="text-end">{{ format_value(result.get('flow_lpm'), key='flow_lpm', unit='L/min') }}</td></tr>
+                                <tr><td>Flow Rate</td><td class="text-end">{{ format_value(result.get('flow_m3hr'), key='flow_m3hr', unit='m³/hr') }}</td></tr>
+                                <tr><td>Flow Rate</td><td class="text-end">{{ format_value(result.get('flow_gpm'), key='flow_gpm', unit='GPM') }}</td></tr>
                                 <tr class="table-primary fw-bold">
                                     <th>Recommended Pipe Size</th>
-                                    <th class="text-end">DN {{ result.recommended_pipe_mm }}</th>
+                                                                    <th class="text-end">DN {{ format_value(result.get('recommended_pipe_mm'), key='recommended_pipe_mm', unit='mm') }}</th>
                                 </tr>
                             </tbody>
                         </table>
@@ -195,9 +197,9 @@
                         <div class="alert alert-info mb-4">
                             <h5 class="mb-3"><i class="bi bi-info-circle-fill me-2"></i>Engineering Summary</h5>
                             <ul class="mb-0 ps-3">
-                                <li>Cooling Load: <strong>{{ result.summary['Cooling Load'] }} kW</strong></li>
-                                <li>Flow Rate: <strong>{{ result.summary['Flow Rate'] }} L/s</strong></li>
-                                <li>Pipe Diameter: <strong>{{ result.summary['Pipe Diameter'] }} mm</strong></li>
+                                <li>Cooling Load: <strong>{{ format_value(result.summary.get('Cooling Load'), key='Cooling Load', unit='kW') }}</strong></li>
+                                <li>Flow Rate: <strong>{{ format_value(result.summary.get('Flow Rate'), key='Flow Rate', unit='L/s') }}</strong></li>
+                                <li>Pipe Diameter: <strong>{{ format_value(result.summary.get('Pipe Diameter'), key='Pipe Diameter', unit='mm') }}</strong></li>
                             </ul>
                         </div>
 
@@ -206,9 +208,9 @@
                                 <div class="border rounded p-3 h-100">
                                     <div class="section-label">Calculation Steps</div>
                                     <ul class="mb-0 ps-3">
-                                        <li>Flow Rate: <strong>{{ result.calculation_steps['Flow Rate'] }}</strong></li>
-                                        <li>Pipe Area: <strong>{{ result.calculation_steps['Pipe Area'] }}</strong></li>
-                                        <li>Pipe Diameter: <strong>{{ result.calculation_steps['Pipe Diameter'] }}</strong></li>
+                                        <li>Flow Rate: <strong>{{ format_value(result.calculation_steps.get('Flow Rate'), key='Flow Rate') }}</strong></li>
+                                                                                <li>Pipe Area: <strong>{{ format_value(result.calculation_steps.get('Pipe Area'), key='Pipe Area') }}</strong></li>
+                                                                                <li>Pipe Diameter: <strong>{{ format_value(result.calculation_steps.get('Pipe Diameter'), key='Pipe Diameter', unit='mm') }}</strong></li>
                                     </ul>
                                 </div>
                             </div>

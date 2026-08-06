@@ -38,6 +38,7 @@ BuildingType = Literal[
     "Restaurant",
     "Mall",
     "Industrial",
+    "Mixed-use",
 ]
 
 
@@ -81,6 +82,10 @@ FixtureType = Literal[
     "Bathtub",
     "Drinking Fountain",
     "Service Sink",
+    "WC",
+    "Sink",
+    "Laundry",
+    "Dishwasher",
 ]
 
 
@@ -110,9 +115,11 @@ PipeMaterial = Literal[
 
 
 class PipeSizeRequest(BaseModel):
-    flow_rate_lpm: float = Field(..., gt=0)
-    velocity_mps: float = Field(..., gt=0)
-    material: PipeMaterial
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    flow_rate_lpm: float = Field(..., gt=0, alias="flow_rate")
+    velocity_mps: float = Field(..., gt=0, alias="velocity")
+    material: PipeMaterial = Field(default="PVC")
 
 
 class PipeSizeResponse(CalculatorResponse):
@@ -146,8 +153,10 @@ class DrainageResponse(CalculatorResponse):
 # ============================================================
 
 class RainwaterRequest(BaseModel):
-    roof_area_m2: float = Field(..., gt=0)
-    rainfall_mm_hr: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    roof_area_m2: float = Field(..., gt=0, alias="roof_area")
+    rainfall_mm_hr: float = Field(..., gt=0, alias="rainfall_intensity")
     runoff_coefficient: float = Field(
         default=0.9,
         ge=0,
@@ -183,6 +192,13 @@ class WaterTankResponse(CalculatorResponse):
     required_capacity_m3: float
 
 
+class WaterTankPageRequest(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    daily_demand_liters: float = Field(..., gt=0, alias="daily_demand")
+    storage_hours: float = Field(..., gt=0, alias="storage_hours")
+
+
 # ============================================================
 # Underground Sump Calculator
 # ============================================================
@@ -193,6 +209,13 @@ class SumpRequest(BaseModel):
 
 
 SumpTankRequest = SumpRequest
+
+
+class SumpTankPageRequest(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    daily_demand_liters: float = Field(..., gt=0, alias="daily_demand")
+    pump_cycles: int = Field(..., gt=0, alias="pump_cycles")
 
 
 class SumpResponse(CalculatorResponse):
@@ -207,8 +230,10 @@ class SumpResponse(CalculatorResponse):
 # ============================================================
 
 class PumpRequest(BaseModel):
-    flow_lps: float = Field(..., gt=0)
-    total_head_m: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    flow_lpm: float = Field(..., gt=0, alias="flow")
+    total_head_m: float = Field(..., gt=0, alias="head")
     efficiency: float = Field(
         default=70,
         gt=0,
@@ -244,51 +269,67 @@ class HealthResponse(BaseModel):
 # ============================================================
 
 class CableSizeRequest(BaseModel):
-    current: float = Field(..., gt=0)
-    ambient_temperature: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    current_a: float = Field(..., gt=0, alias="current")
+    ambient_temp_c: float = Field(..., ge=0, alias="ambient_temperature")
 
 
 class VoltageDropRequest(BaseModel):
-    voltage: float = Field(..., gt=0)
-    current: float = Field(..., gt=0)
-    length: float = Field(..., gt=0)
-    conductor_area: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    voltage_v: float = Field(..., gt=0, alias="voltage")
+    current_a: float = Field(..., gt=0, alias="current")
+    length_m: float = Field(..., gt=0, alias="length")
+    conductor_area_mm2: float = Field(..., gt=0, alias="conductor_area")
     power_factor: float = Field(..., gt=0, le=1)
     phase_type: Literal["Single-phase", "Three-phase"]
 
 
 class CurrentCalculatorRequest(BaseModel):
-    power: float = Field(..., gt=0)
-    voltage: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    power_kw: float = Field(..., gt=0, alias="power")
+    voltage_v: float = Field(..., gt=0, alias="voltage")
     power_factor: float = Field(..., gt=0, le=1)
     phase_type: Literal["Single-phase", "Three-phase"]
 
 
 class TransformerSizingRequest(BaseModel):
-    load: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    load_kw: float = Field(..., gt=0, alias="load")
     power_factor: float = Field(..., gt=0, le=1)
 
 
 class GeneratorSizingRequest(BaseModel):
-    load: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    load_kw: float = Field(..., gt=0, alias="load")
     power_factor: float = Field(..., gt=0, le=1)
     starting_load_factor: float = Field(..., gt=0)
 
 
 class UPSSizingRequest(BaseModel):
-    load: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    load_kw: float = Field(..., gt=0, alias="load")
     autonomy_minutes: float = Field(..., gt=0)
-    efficiency: float = Field(..., gt=0, le=100)
+    efficiency_percent: float = Field(..., gt=0, le=100, alias="efficiency")
 
 
 class LightingLuxRequest(BaseModel):
-    area: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    area_m2: float = Field(..., gt=0, alias="area")
     target_lux: float = Field(..., gt=0)
     lumens_per_watt: float = Field(..., gt=0)
 
 
 class CircuitBreakerRequest(BaseModel):
-    current: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    current_a: float = Field(..., gt=0, alias="current")
     breaker_type: Literal["Thermal Magnetic", "Electronic", "Molded Case"]
 
 
@@ -307,8 +348,10 @@ class EarthingRequest(BaseModel):
 
 
 class PowerFactorRequest(BaseModel):
-    real_power: float = Field(..., gt=0)
-    apparent_power: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    real_power_kw: float = Field(..., gt=0, alias="real_power")
+    apparent_power_kva: float = Field(..., gt=0, alias="apparent_power")
     target_power_factor: float | None = Field(default=None, gt=0, le=1)
 
 
@@ -317,19 +360,25 @@ class PowerFactorRequest(BaseModel):
 # ============================================================
 
 class FirePumpHeadRequest(BaseModel):
-    flow: float = Field(..., gt=0)
-    system_pressure: float = Field(..., gt=0)
-    elevation: float = Field(...)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    flow_lpm: float = Field(..., gt=0, alias="flow")
+    system_pressure_kpa: float = Field(..., gt=0, alias="system_pressure")
+    elevation_m: float = Field(..., alias="elevation")
 
 
 class FireFlowRequest(BaseModel):
-    area: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    area_m2: float = Field(..., gt=0, alias="area")
     hazard_class: Literal["Light", "Ordinary", "Extra", "High"]
 
 
 class FireWaterTankRequest(BaseModel):
-    demand: float = Field(..., gt=0)
-    duration: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    demand_lpm: float = Field(..., gt=0, alias="demand")
+    duration_hours: float = Field(..., gt=0, alias="duration")
 
 
 class JockeyPumpRequest(BaseModel):
@@ -345,24 +394,32 @@ class FirePipeSizingRequest(BaseModel):
 
 
 class SprinklerSpacingRequest(BaseModel):
-    area: float = Field(..., gt=0)
-    efficiency: float = Field(..., gt=0, le=100)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    area_m2: float = Field(..., gt=0, alias="area")
+    efficiency_percent: float = Field(..., gt=0, le=100, alias="efficiency")
 
 
 class StandpipeRequest(BaseModel):
-    height: float = Field(..., gt=0)
-    hose_length: float = Field(..., gt=0)
-    friction_loss: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    height_m: float = Field(..., gt=0, alias="height")
+    hose_length_m: float = Field(..., gt=0, alias="hose_length")
+    friction_loss_kpa_per_m: float = Field(..., gt=0, alias="friction_loss")
 
 
 class HoseReelRequest(BaseModel):
-    flow: float = Field(..., gt=0)
-    hose_length: float = Field(..., gt=0)
-    nozzle_pressure: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    flow_lpm: float = Field(..., gt=0, alias="flow")
+    hose_length_m: float = Field(..., gt=0, alias="hose_length")
+    nozzle_pressure_kpa: float = Field(..., gt=0, alias="nozzle_pressure")
 
 
 class NozzlePressureRequest(BaseModel):
-    flow: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    flow_lpm: float = Field(..., gt=0, alias="flow")
     nozzle_coefficient: float = Field(..., gt=0)
 
 
@@ -440,10 +497,12 @@ class HeaterCapacityRequest(BaseModel):
 
 
 class HydraulicCalculationRequest(BaseModel):
-    flow: float = Field(..., gt=0)
-    diameter: float = Field(..., gt=0)
-    length: float = Field(..., gt=0)
-    roughness: float = Field(..., gt=0)
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    flow_lpm: float = Field(..., gt=0, alias="flow")
+    diameter_mm: float = Field(..., gt=0, alias="diameter")
+    length_m: float = Field(..., gt=0, alias="length")
+    roughness_mm: float = Field(..., gt=0, alias="roughness")
 
 
 class CalculationResponse(BaseModel):

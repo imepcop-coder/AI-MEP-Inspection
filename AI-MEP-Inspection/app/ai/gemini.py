@@ -19,19 +19,19 @@ def _fallback_payload(message: str | None = None) -> str:
     return json.dumps(payload)
 
 
+class AIUnavailable(Exception):
+    pass
+
+
 def analyze_image(image_path):
     if not GEMINI_API_KEY:
-        return _fallback_payload("Gemini AI provider is not configured.")
-    return _fallback_payload("Gemini provider is available but not configured for live analysis in this environment.")
+        raise AIUnavailable("Gemini AI provider is not configured")
+    # Not implemented for streaming in this environment — fallback
+    raise AIUnavailable("Gemini provider not configured for live analysis in this environment")
 
 
 def generate_text(prompt: str, system_prompt: str | None = None) -> str:
     if not GEMINI_API_KEY:
-        return (
-            "Gemini AI provider is not configured. Using fallback guidance to structure your request: "
-            f"{prompt}"
-        )
-    return (
-        "Gemini provider is not configured for live generation in this environment. "
-        "Please review the request manually and structure the response around the available inspection context."
-    )
+        raise AIUnavailable("Gemini AI provider is not configured")
+    # Not implemented for live generation here
+    raise AIUnavailable("Gemini provider not configured for live generation in this environment")

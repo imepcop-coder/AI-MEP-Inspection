@@ -55,7 +55,16 @@ async def export_plumbing_excel(request: Request, page_slug: str):
         result_obj = handler(validated)
         result = result_obj.dict() if hasattr(result_obj, "dict") else result_obj
     except Exception as ex:
-        raise HTTPException(status_code=400, detail=str(ex))
+        # Handle validation errors specially so frontend can attach messages to fields
+        from pydantic import ValidationError
+        if isinstance(ex, ValidationError):
+            try:
+                from app.utils.validation import map_pydantic_errors
+                field_errors = map_pydantic_errors(PLUMBING_PAGES.get(page_slug), ex.errors())
+            except Exception:
+                field_errors = {}
+            raise HTTPException(status_code=400, detail={"errors": field_errors})
+        raise HTTPException(status_code=400, detail="Calculation failed.")
 
     page = PLUMBING_PAGES.get(page_slug)
     stream = build_calculator_workbook(
@@ -91,7 +100,16 @@ async def export_plumbing_pdf(request: Request, page_slug: str):
         result_obj = handler(validated)
         result = result_obj.dict() if hasattr(result_obj, "dict") else result_obj
     except Exception as ex:
-        raise HTTPException(status_code=400, detail=str(ex))
+        # Handle validation errors specially so frontend can attach messages to fields
+        from pydantic import ValidationError
+        if isinstance(ex, ValidationError):
+            try:
+                from app.utils.validation import map_pydantic_errors
+                field_errors = map_pydantic_errors(PLUMBING_PAGES.get(page_slug), ex.errors())
+            except Exception:
+                field_errors = {}
+            raise HTTPException(status_code=400, detail={"errors": field_errors})
+        raise HTTPException(status_code=400, detail="Calculation failed.")
 
     page = PLUMBING_PAGES.get(page_slug)
     stream = build_calculator_pdf(

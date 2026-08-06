@@ -1,0 +1,142 @@
+{% macro format_value(value, key=None, unit=None) %}
+    {# Returns a safe, well-formatted representation for scalar or simple iterables #}
+    {% if value is none %}
+        -
+    {% elif value is mapping %}
+        {# For mappings, indicate structured data; rendering should be handled by render_result or render_section #}
+        <div class="nested-map">{# Use nested renderer when appropriate #}
+            {{ render_section(key or 'Details', value) }}
+        </div>
+    {% elif value is iterable and not value is string %}
+        <ul class="list-unstyled mb-0 text-break">
+        {% for item in value %}
+            <li>{{ format_value(item) }}</li>
+        {% endfor %}
+        </ul>
+    {% elif value is number %}
+        {# Integers shown without decimals, floats with two decimals #}
+        {% if value == value|int %}
+            {{ value|int }}{% if unit %} {{ unit }}{% endif %}
+        {% else %}
+            {{ ('%.2f' % value) }}{% if unit %} {{ unit }}{% endif %}
+        {% endif %}
+    {% else %}
+        {{ value }}{% if unit %} {{ unit }}{% endif %}
+    {% endif %}
+{% endmacro %}
+
+{% macro render_section(title, mapping) %}
+    <div class="result-section mb-3">
+        <div class="section-label">{{ title }}</div>
+        <div class="table-responsive">
+            <table class="table table-sm table-borderless mb-0">
+                <tbody>
+                {% for k, v in mapping.items() %}
+                    <tr>
+                        <td class="text-muted" style="width:50%; white-space: normal; word-break: break-word;">{{ k.replace('_',' ')|title }}</td>
+                        <td class="text-end" style="white-space: normal; word-break: break-word;">{{ format_value(v, key=k) }}</td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endmacro %}
+
+{% macro render_result(result, page=None) %}
+    <div class="professional-card">
+        <div class="professional-header">
+            <h3><i class="bi bi-bar-chart-fill me-2"></i>Professional Results Summary</h3>
+            <p class="page-subtitle">Engineering output based on the current input set.</p>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3 mb-4">
+                {# Primary metric #}
+                {% if page and page.result_key is defined and page.result_key in result %}
+                <div class="col-md-6 col-xl-3">
+                    <div class="metric-card">
+                        <div class="metric-title fw-semibold fs-6">{{ (page.result_key.replace('_',' ')|title) }}</div>
+                        <div class="metric-value text-primary fs-4">{{ format_value(result[page.result_key], key=page.result_key, unit=page.result_unit if page.result_unit is defined else None) }}</div>
+                        <div class="metric-unit text-muted small">{{ page.result_unit if page.result_unit is defined else '' }}</div>
+                    </div>
+                </div>
+                {% else %}
+                    {# fallback primary: first numeric or first item #}
+                    {% set primary_key = (result.keys()|list)[0] %}
+                    <div class="col-md-6 col-xl-3">
+                        <div class="metric-card">
+                            <div class="metric-title fw-semibold fs-6">{{ primary_key.replace('_',' ')|title }}</div>
+                            <div class="metric-value text-primary fs-4">{{ format_value(result[primary_key], key=primary_key) }}</div>
+                            <div class="metric-unit text-muted small">&nbsp;</div>
+                        </div>
+                    </div>
+                {% endif %}
+
+                {# Up to 3 extras #}
+                {% set extra_count = 0 %}
+                {% for key, value in result.items() %}
+                    {% if not (page is defined and page.result_key is defined and key == page.result_key) and extra_count < 3 %}
+                    <div class="col-md-6 col-xl-3">
+                        <div class="metric-card">
+                            <div class="metric-title fw-semibold fs-6">{{ key.replace('_',' ')|title }}</div>
+                            <div class="metric-value text-success fs-4">{{ format_value(value, key=key) }}</div>
+                            <div class="metric-unit text-muted small">&nbsp;</div>
+                        </div>
+                    </div>
+                    {% set extra_count = extra_count + 1 %}
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            {# Results table and nested sections #}
+            <div class="table-responsive">
+                <table class="table table-bordered result-table mb-4">
+                    <thead>
+                        <tr>
+                            <th>Parameter</th>
+                            <th class="text-end">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if page and page.result_rows is defined %}
+                            {% for row in page.result_rows %}
+                            <tr>
+                                <td style="white-space: normal; word-break: break-word;">{{ row.label }}</td>
+                                <td class="text-end" style="white-space: normal; word-break: break-word;">{{ format_value(result.get(row.key), key=row.key) }}</td>
+                            </tr>
+                            {% endfor %}
+                        {% else %}
+                            {% for key, value in result.items() %}
+                                {% if value is mapping %}
+                                    <tr>
+                                        <td colspan="2" style="white-space: normal; word-break: break-word;">{{ render_section(key.replace('_',' ')|title, value) }}</td>
+                                    </tr>
+                                {% else %}
+                                    <tr>
+                                        <td style="white-space: normal; word-break: break-word;">{{ key.replace('_',' ')|title }}</td>
+                                        <td class="text-end" style="white-space: normal; word-break: break-word;">{{ format_value(value, key=key) }}</td>
+                                    </tr>
+                                {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="alert alert-info mb-4">
+                <h5 class="mb-3"><i class="bi bi-info-circle-fill me-2"></i>Engineering Summary</h5>
+                <ul class="mb-0 ps-3">
+                    {% if page and page.formula %}
+                    <li>Formula: <strong>{{ page.formula }}</strong></li>
+                    {% endif %}
+                    {% if page and page.reference %}
+                    <li>Reference: <strong>{{ page.reference }}</strong></li>
+                    {% endif %}
+                    {% if page and page.result_key is defined and page.result_key in result %}
+                    <li>Primary result: <strong>{{ format_value(result[page.result_key], key=page.result_key, unit=page.result_unit if page.result_unit is defined else None) }}</strong></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </div>
+{% endmacro %}

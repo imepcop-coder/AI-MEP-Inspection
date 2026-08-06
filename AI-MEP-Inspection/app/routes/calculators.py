@@ -530,7 +530,13 @@ async def plumbing_calculator_submit(request: Request, page_slug: str):
         result = calculation.dict() if hasattr(calculation, "dict") else calculation
     except ValidationError as ex:
         logger.warning("Validation error in plumbing calculation for %s: %s", page_slug, ex)
+        try:
+            from app.utils.validation import map_pydantic_errors
+            field_errors = map_pydantic_errors(page, ex.errors())
+        except Exception:
+            field_errors = { (err.get('loc')[-1] if err.get('loc') else 'field'): err.get('msg') for err in ex.errors() }
         error = "Please check the highlighted fields and try again."
+        return templates.TemplateResponse(request=request, name="calculators/calculator_page.html", context={"request": request, "page": page, "values": values, "result": None, "error": error, "field_errors": field_errors})
     except Exception as ex:
         logger.exception("Error running plumbing calculation for %s: %s", page_slug, ex)
         error = "Calculation could not be completed. Please verify your inputs and try again."
@@ -564,7 +570,12 @@ async def calculators_plumbing_export_excel(request: Request, page_slug: str):
         result = result_obj.dict() if hasattr(result_obj, "dict") else result_obj
     except ValidationError as ex:
         logger.warning("Validation error during Excel export for %s: %s", page_slug, ex)
-        raise HTTPException(status_code=400, detail="Please complete all required fields and try again.")
+        try:
+            from app.utils.validation import map_pydantic_errors
+            field_errors = map_pydantic_errors(page, ex.errors())
+        except Exception:
+            field_errors = { (err.get('loc')[-1] if err.get('loc') else 'field'): err.get('msg') for err in ex.errors() }
+        raise HTTPException(status_code=400, detail={"errors": field_errors})
     except Exception as ex:
         logger.exception("Error during Excel export for %s: %s", page_slug, ex)
         raise HTTPException(status_code=400, detail="Calculation could not be completed. Please try again later.")
@@ -604,7 +615,12 @@ async def calculators_plumbing_export_pdf(request: Request, page_slug: str):
         result = result_obj.dict() if hasattr(result_obj, "dict") else result_obj
     except ValidationError as ex:
         logger.warning("Validation error during PDF export for %s: %s", page_slug, ex)
-        raise HTTPException(status_code=400, detail="Please complete all required fields and try again.")
+        try:
+            from app.utils.validation import map_pydantic_errors
+            field_errors = map_pydantic_errors(page, ex.errors())
+        except Exception:
+            field_errors = { (err.get('loc')[-1] if err.get('loc') else 'field'): err.get('msg') for err in ex.errors() }
+        raise HTTPException(status_code=400, detail={"errors": field_errors})
     except Exception as ex:
         logger.exception("Error during PDF export for %s: %s", page_slug, ex)
         raise HTTPException(status_code=400, detail="Calculation could not be completed. Please try again later.")
@@ -663,39 +679,34 @@ async def duct_sizing_calculate(
     velocity: float = Form(...),
 ):
 
-    result = None
-    error = None
-
-    try:
-
-        if duct_type == "Rectangular":
-
-            result = calculate_rectangular_duct(
-                airflow=airflow,
-                velocity=velocity,
-            )
-
-        elif duct_type == "Round":
-
-            result = calculate_round_duct(
-                airflow=airflow,
-                velocity=velocity,
-            )
-
-        else:
-
-            error = "Invalid duct type selected."
-
-    except DuctCalculationError as ex:
-        logger.warning("Duct calculation error: %s", ex)
-        error = "Calculation could not be completed. Please verify your inputs and try again."
-
-    except Exception as ex:
-        logger.exception("Unexpected error occurred while calculating duct size: %s", ex)
-        error = "Unexpected error occurred while calculating duct size."
-
-    page = HVAC_CALCULATORS.get('duct-sizing')
+    page_slug = 'duct-sizing'
+    page = HVAC_CALCULATORS.get(page_slug)
     values = {"duct_type": duct_type, "airflow": airflow, "velocity": velocity}
+
+    # Wrap the HVAC runner so run_calculation can call it with **inputs
+    def _handler(**inputs):
+        return _run_hvac_calculation(page_slug, inputs)
+
+    from app.utils.calc_runner import run_calculation
+    calc_resp = run_calculation(page.get('title', page_slug), page, _handler, values)
+
+    if not calc_resp['success']:
+        logger.error('Calculation failed for %s: %s', page_slug, calc_resp['error'])
+        error = "Calculation could not be completed. Please verify your inputs and try again."
+        return templates.TemplateResponse(
+            request=request,
+            name="calculators/calculator_page.html",
+            context={
+                "request": request,
+                "page": page,
+                "values": values,
+                "result": None,
+                "error": error,
+                "field_errors": {"__internal": "Calculation failed. Check server logs for details."},
+            },
+        )
+
+    result = calc_resp['result']
     return templates.TemplateResponse(
         request=request,
         name="calculators/calculator_page.html",
@@ -704,7 +715,7 @@ async def duct_sizing_calculate(
             "page": page,
             "values": values,
             "result": result,
-            "error": error,
+            "error": None,
         },
     )
 # ==========================================================
@@ -747,43 +758,8 @@ async def heat_load_calculate(
     fresh_air_cfm: float = Form(0),
 ):
 
-    result = None
-    error = None
-
-    try:
-
-        result = calculate_heat_load(
-            length=length,
-            width=width,
-            height=height,
-            occupants=occupants,
-            lighting=lighting,
-            equipment=equipment,
-
-            outdoor_db=outdoor_db,
-            indoor_db=indoor_db,
-
-            wall_u=wall_u,
-            roof_u=roof_u,
-
-            glass_area=glass_area,
-            glass_u=glass_u,
-            glass_shgc=glass_shgc,
-
-            solar=solar,
-
-            fresh_air_cfm=fresh_air_cfm,
-        )
-
-    except HeatLoadCalculationError as ex:
-        logger.warning("Heat load calculation error: %s", ex)
-        error = "Calculation could not be completed. Please verify your inputs and try again."
-
-    except Exception as ex:
-        logger.exception("Unexpected error occurred while calculating heat load: %s", ex)
-        error = "Unexpected error occurred while calculating heat load."
-
-    page = HVAC_CALCULATORS.get('heat-load')
+    page_slug = 'heat-load'
+    page = HVAC_CALCULATORS.get(page_slug)
     values = {
         "length": length,
         "width": width,
@@ -801,6 +777,29 @@ async def heat_load_calculate(
         "solar": solar,
         "fresh_air_cfm": fresh_air_cfm,
     }
+
+    def _handler(**inputs):
+        return _run_hvac_calculation(page_slug, inputs)
+
+    from app.utils.calc_runner import run_calculation
+    calc_resp = run_calculation(page.get('title', page_slug), page, _handler, values)
+    if not calc_resp['success']:
+        logger.error('Calculation failed for %s: %s', page_slug, calc_resp['error'])
+        error = "Calculation could not be completed. Please verify your inputs and try again."
+        return templates.TemplateResponse(
+            request=request,
+            name="calculators/calculator_page.html",
+            context={
+                "request": request,
+                "page": page,
+                "values": values,
+                "result": None,
+                "error": error,
+                "field_errors": {"__internal": "Calculation failed. Check server logs for details."},
+            },
+        )
+
+    result = calc_resp['result']
     return templates.TemplateResponse(
         request=request,
         name="calculators/calculator_page.html",
@@ -809,7 +808,7 @@ async def heat_load_calculate(
             "page": page,
             "values": values,
             "result": result,
-            "error": error,
+            "error": None,
         },
     )
 # ==========================================================
@@ -839,26 +838,34 @@ async def airflow_calculate(
     air_changes: float = Form(...),
 ):
 
-    result = None
-    error = None
+    page_slug = 'airflow'
+    page = HVAC_CALCULATORS.get(page_slug)
+    values = {"length": length, "width": width, "height": height, "air_changes": air_changes}
 
-    try:
+    def _handler(**inputs):
+        return _run_hvac_calculation(page_slug, inputs)
 
-        result = calculate_airflow(
-            length=length,
-            width=width,
-            height=height,
-            air_changes=air_changes,
+    from app.utils.calc_runner import run_calculation
+    calc_resp = run_calculation(page.get('title', page_slug), page, _handler, values)
+    if not calc_resp['success']:
+        logger.error('Calculation failed for %s: %s', page_slug, calc_resp['error'])
+        error = "Calculation could not be completed. Please verify your inputs and try again."
+        return templates.TemplateResponse(
+            request=request,
+            name="calculators/airflow.html",
+            context={
+                "request": request,
+                "length": length,
+                "width": width,
+                "height": height,
+                "air_changes": air_changes,
+                "result": None,
+                "error": error,
+                "field_errors": {"__internal": "Calculation failed. Check server logs for details."},
+            },
         )
 
-    except AirFlowCalculationError as ex:
-        logger.warning("Air flow calculation error: %s", ex)
-        error = "Calculation could not be completed. Please verify your inputs and try again."
-
-    except Exception as ex:
-        logger.exception("Unexpected error occurred while calculating air flow: %s", ex)
-        error = "Unexpected error occurred while calculating air flow."
-
+    result = calc_resp['result']
     return templates.TemplateResponse(
         request=request,
         name="calculators/airflow.html",
@@ -869,7 +876,7 @@ async def airflow_calculate(
             "height": height,
             "air_changes": air_changes,
             "result": result,
-            "error": error,
+            "error": None,
         },
     )
 # ==========================================================
@@ -899,42 +906,37 @@ async def fresh_air_calculate(
     fresh_air_per_area: float = Form(...),
 ):
 
-    result = None
-    error = None
+    page_slug = 'fresh-air'
+    page = HVAC_CALCULATORS.get(page_slug)
+    values = {"occupants": occupants, "area": area, "fresh_air_per_person": fresh_air_per_person, "fresh_air_per_area": fresh_air_per_area}
 
-    try:
+    def _handler(**inputs):
+        return _run_hvac_calculation(page_slug, inputs)
 
-        result = calculate_fresh_air(
-            occupants=occupants,
-            area=area,
-            fresh_air_per_person=fresh_air_per_person,
-            fresh_air_per_area=fresh_air_per_area,
+    from app.utils.calc_runner import run_calculation
+    calc_resp = run_calculation(page.get('title', page_slug), page, _handler, values)
+    if not calc_resp['success']:
+        logger.error('Calculation failed for %s: %s', page_slug, calc_resp['error'])
+        error = "Calculation could not be completed. Please verify your inputs and try again."
+        return templates.TemplateResponse(
+            request=request,
+            name="calculators/fresh_air.html",
+            context={
+                "request": request,
+                "result": None,
+                "error": error,
+                "field_errors": {"__internal": "Calculation failed. Check server logs for details."},
+            },
         )
 
-    except FreshAirCalculationError as ex:
-        logger.warning("Fresh air calculation error: %s", ex)
-        error = "Calculation could not be completed. Please verify your inputs and try again."
-
-    except Exception as ex:
-        logger.exception("Unexpected error occurred while calculating fresh air: %s", ex)
-        error = "Unexpected error occurred while calculating fresh air."
-
-    page = HVAC_CALCULATORS.get('fresh-air')
-    values = {
-        "occupants": occupants,
-        "area": area,
-        "fresh_air_per_person": fresh_air_per_person,
-        "fresh_air_per_area": fresh_air_per_area,
-    }
+    result = calc_resp['result']
     return templates.TemplateResponse(
         request=request,
-        name="calculators/calculator_page.html",
+        name="calculators/fresh_air.html",
         context={
             "request": request,
-            "page": page,
-            "values": values,
             "result": result,
-            "error": error,
+            "error": None,
         },
     )
 
@@ -965,25 +967,33 @@ async def chilled_water_calculate(
     velocity: float = Form(...),
 ):
 
-    result = None
-    error = None
+    page_slug = 'chilled-water'
+    page = HVAC_CALCULATORS.get(page_slug)
+    values = {"cooling_load": cooling_load, "delta_t": delta_t, "velocity": velocity}
 
-    try:
+    def _handler(**inputs):
+        return _run_hvac_calculation(page_slug, inputs)
 
-        result = calculate_chilled_water(
-            cooling_load=cooling_load,
-            delta_t=delta_t,
-            velocity=velocity,
+    from app.utils.calc_runner import run_calculation
+    calc_resp = run_calculation(page.get('title', page_slug), page, _handler, values)
+    if not calc_resp['success']:
+        logger.error('Calculation failed for %s: %s', page_slug, calc_resp['error'])
+        error = "Calculation could not be completed. Please verify your inputs and try again."
+        return templates.TemplateResponse(
+            request=request,
+            name="calculators/chilled_water.html",
+            context={
+                "request": request,
+                "cooling_load": cooling_load,
+                "delta_t": delta_t,
+                "velocity": velocity,
+                "result": None,
+                "error": error,
+                "field_errors": {"__internal": "Calculation failed. Check server logs for details."},
+            },
         )
 
-    except ChilledWaterCalculationError as ex:
-        logger.warning("Chilled water calculation error: %s", ex)
-        error = "Calculation could not be completed. Please verify your inputs and try again."
-
-    except Exception as ex:
-        logger.exception("Unexpected error occurred while calculating chilled water: %s", ex)
-        error = "Unexpected error occurred while calculating chilled water."
-
+    result = calc_resp['result']
     return templates.TemplateResponse(
         request=request,
         name="calculators/chilled_water.html",
@@ -993,7 +1003,7 @@ async def chilled_water_calculate(
             "delta_t": delta_t,
             "velocity": velocity,
             "result": result,
-            "error": error,
+            "error": None,
         },
     )
 # ==========================================================
@@ -1023,26 +1033,34 @@ async def pump_head_calculate(
     efficiency: float = Form(...),
 ):
 
-    result = None
-    error = None
+    page_slug = 'pump-head'
+    page = HVAC_CALCULATORS.get(page_slug)
+    values = {"flow_rate": flow_rate, "static_head": static_head, "friction_loss": friction_loss, "efficiency": efficiency}
 
-    try:
+    def _handler(**inputs):
+        return _run_hvac_calculation(page_slug, inputs)
 
-        result = calculate_pump_head(
-            flow_rate=flow_rate,
-            static_head=static_head,
-            friction_loss=friction_loss,
-            efficiency=efficiency,
+    from app.utils.calc_runner import run_calculation
+    calc_resp = run_calculation(page.get('title', page_slug), page, _handler, values)
+    if not calc_resp['success']:
+        logger.error('Calculation failed for %s: %s', page_slug, calc_resp['error'])
+        error = "Calculation could not be completed. Please verify your inputs and try again."
+        return templates.TemplateResponse(
+            request=request,
+            name="calculators/pump_head.html",
+            context={
+                "request": request,
+                "flow_rate": flow_rate,
+                "static_head": static_head,
+                "friction_loss": friction_loss,
+                "efficiency": efficiency,
+                "result": None,
+                "error": error,
+                "field_errors": {"__internal": "Calculation failed. Check server logs for details."},
+            },
         )
 
-    except PumpHeadCalculationError as ex:
-        logger.warning("Pump head calculation error: %s", ex)
-        error = "Calculation could not be completed. Please verify your inputs and try again."
-
-    except Exception as ex:
-        logger.exception("Unexpected error occurred while calculating pump head: %s", ex)
-        error = "Unexpected error occurred while calculating pump head."
-
+    result = calc_resp['result']
     return templates.TemplateResponse(
         request=request,
         name="calculators/pump_head.html",
@@ -1053,7 +1071,7 @@ async def pump_head_calculate(
             "friction_loss": friction_loss,
             "efficiency": efficiency,
             "result": result,
-            "error": error,
+            "error": None,
         },
     )
 
@@ -1085,28 +1103,32 @@ async def static_pressure_calculate(
     friction_rate: float = Form(...),
 ):
 
-    result = None
-    error = None
+    page_slug = 'static-pressure'
+    page = HVAC_CALCULATORS.get(page_slug)
+    values = {"airflow": airflow, "velocity": velocity, "duct_length": duct_length, "friction_rate": friction_rate}
 
-    try:
+    def _handler(**inputs):
+        return _run_hvac_calculation(page_slug, inputs)
 
-        result = calculate_static_pressure(
-            airflow=airflow,
-            velocity=velocity,
-            duct_length=duct_length,
-            friction_rate=friction_rate,
+    from app.utils.calc_runner import run_calculation
+    calc_resp = run_calculation(page.get('title', page_slug), page, _handler, values)
+    if not calc_resp['success']:
+        logger.error('Calculation failed for %s: %s', page_slug, calc_resp['error'])
+        error = "Calculation could not be completed. Please verify your inputs and try again."
+        return templates.TemplateResponse(
+            request=request,
+            name="calculators/calculator_page.html",
+            context={
+                "request": request,
+                "page": page,
+                "values": values,
+                "result": None,
+                "error": error,
+                "field_errors": {"__internal": "Calculation failed. Check server logs for details."},
+            },
         )
 
-    except StaticPressureCalculationError as ex:
-        logger.warning("Static pressure calculation error: %s", ex)
-        error = "Calculation could not be completed. Please verify your inputs and try again."
-
-    except Exception as ex:
-        logger.exception("Unexpected error occurred while calculating static pressure: %s", ex)
-        error = "Unexpected error occurred while calculating static pressure."
-
-    page = HVAC_CALCULATORS.get('static-pressure')
-    values = {"airflow": airflow, "velocity": velocity, "duct_length": duct_length, "friction_rate": friction_rate}
+    result = calc_resp['result']
     return templates.TemplateResponse(
         request=request,
         name="calculators/calculator_page.html",
@@ -1115,6 +1137,6 @@ async def static_pressure_calculate(
             "page": page,
             "values": values,
             "result": result,
-            "error": error,
+            "error": None,
         },
     )

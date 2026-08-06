@@ -1,4 +1,6 @@
 {% extends "layouts/base.html" %}
+
+{% from 'partials/result_renderer.html' import format_value %}
 {% block title %}{{ page.title }}{% endblock %}
 
 {% block content %}
@@ -80,9 +82,11 @@
                             {% if field.type == 'select' %}
 
                             <select
-                                class="form-select"
+                                class="form-select {% if (field_errors|default({})).get(field.name) %}is-invalid{% endif %}"
                                 id="{{ field.name }}"
                                 name="{{ field.name }}"
+                                aria-describedby="helper-{{ field.name }} error-{{ field.name }}"
+                                aria-invalid="{{ 'true' if (field_errors|default({})).get(field.name) else 'false' }}"
                                 {% if field.required %}required{% endif %}>
 
                                 <option value="">
@@ -108,14 +112,27 @@
                             {% else %}
 
                             <input
-                                class="form-control"
+                                class="form-control {% if (field_errors|default({})).get(field.name) %}is-invalid{% endif %}"
                                 id="{{ field.name }}"
                                 name="{{ field.name }}"
                                 type="{{ field.type }}"
                                 value="{{ values.get(field.name,'') }}"
+                                aria-describedby="helper-{{ field.name }} error-{{ field.name }}"
+                                aria-invalid="{{ 'true' if (field_errors|default({})).get(field.name) else 'false' }}"
                                 {% if field.required %}required{% endif %}>
 
                             {% endif %}
+
+                            <div id="helper-{{ field.name }}" class="field-helper text-muted small">
+                                {% if field.sample %}
+                                    Example: {{ field.sample }}{% if field.label and not field.sample.endswith(field.label.split()[-1]) %} {% endif %}
+                                {% endif %}
+                                {% if field.typical_range %}
+                                    <div>Typical range: {{ field.typical_range }}</div>
+                                {% endif %}
+                            </div>
+
+                            <div id="error-{{ field.name }}" class="field-error" role="alert" aria-live="polite">{{ (field_errors|default({})).get(field.name) }}</div>
 
                         </div>
 
@@ -232,11 +249,7 @@
 
                             </th>
 
-                            <td>
-
-                                {{ result[row.key] }}
-
-                            </td>
+                            <td class="text-end">{{ format_value(result.get(row.key), key=row.key) }}</td>
 
                         </tr>
 

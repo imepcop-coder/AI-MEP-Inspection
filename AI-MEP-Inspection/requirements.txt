@@ -56,7 +56,7 @@ jiter==0.16.0
 
 matplotlib==3.11.1
 Markupsafe==3.0.3
-openai==2.48.0
+anthropic==0.120.2
 openpyxl==3.1.5
 passlib==1.7.4
 

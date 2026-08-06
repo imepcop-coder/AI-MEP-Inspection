@@ -4,6 +4,8 @@
 
 {% block content %}
 
+{% from 'partials/result_renderer.html' import format_value %}
+
 <style>
     .professional-card {
         background: #fff;
@@ -148,28 +150,28 @@
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Velocity Pressure</div>
-                                    <div class="metric-value text-primary">{{ result.results['Velocity Pressure (in.wg)'] }}</div>
+                                    <div class="metric-value text-primary">{{ format_value(result.results.get('Velocity Pressure (in.wg)'), key='Velocity Pressure (in.wg)', unit='in.wg') }}</div>
                                     <div class="metric-unit">in.wg</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Friction Loss</div>
-                                    <div class="metric-value text-success">{{ result.results['Friction Loss (in.wg)'] }}</div>
+                                    <div class="metric-value text-success">{{ format_value(result.results.get('Friction Loss (in.wg)'), key='Friction Loss (in.wg)', unit='in.wg') }}</div>
                                     <div class="metric-unit">in.wg</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Total Static</div>
-                                    <div class="metric-value text-danger">{{ result.results['Total Static Pressure (in.wg)'] }}</div>
+                                    <div class="metric-value text-danger">{{ format_value(result.results.get('Total Static Pressure (in.wg)'), key='Total Static Pressure (in.wg)', unit='in.wg') }}</div>
                                     <div class="metric-unit">in.wg</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Fan Pressure</div>
-                                    <div class="metric-value text-warning">{{ result.results['Recommended Fan Pressure (in.wg)'] }}</div>
+                                    <div class="metric-value text-warning">{{ format_value(result.results.get('Recommended Fan Pressure (in.wg)'), key='Recommended Fan Pressure (in.wg)', unit='in.wg') }}</div>
                                     <div class="metric-unit">in.wg</div>
                                 </div>
                             </div>
@@ -183,14 +185,14 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td>Airflow</td><td class="text-end">{{ result.airflow_cfm }} CFM</td></tr>
-                                <tr><td>Velocity</td><td class="text-end">{{ result.velocity_fpm }} FPM</td></tr>
-                                <tr><td>Velocity Pressure</td><td class="text-end">{{ result.results['Velocity Pressure (Pa)'] }} Pa</td></tr>
-                                <tr><td>Friction Loss</td><td class="text-end">{{ result.results['Friction Loss (Pa)'] }} Pa</td></tr>
-                                <tr><td>Total Static Pressure</td><td class="text-end">{{ result.results['Total Static Pressure (Pa)'] }} Pa</td></tr>
+                                <tr><td>Airflow</td><td class="text-end">{{ format_value(result.get('airflow_cfm'), key='airflow_cfm', unit='CFM') }}</td></tr>
+                                                                <tr><td>Velocity</td><td class="text-end">{{ format_value(result.get('velocity_fpm'), key='velocity_fpm', unit='FPM') }}</td></tr>
+                                                                <tr><td>Velocity Pressure</td><td class="text-end">{{ format_value(result.results.get('Velocity Pressure (Pa)'), key='Velocity Pressure (Pa)', unit='Pa') }}</td></tr>
+                                                                <tr><td>Friction Loss</td><td class="text-end">{{ format_value(result.results.get('Friction Loss (Pa)'), key='Friction Loss (Pa)', unit='Pa') }}</td></tr>
+                                                                <tr><td>Total Static Pressure</td><td class="text-end">{{ format_value(result.results.get('Total Static Pressure (Pa)'), key='Total Static Pressure (Pa)', unit='Pa') }}</td></tr>
                                 <tr class="table-primary fw-bold">
                                     <th>Recommended Fan Pressure</th>
-                                    <th class="text-end">{{ result.results['Recommended Fan Pressure (Pa)'] }} Pa</th>
+                                    <th class="text-end">{{ format_value(result.results.get('Recommended Fan Pressure (Pa)'), key='Recommended Fan Pressure (Pa)', unit='Pa') }}</th>
                                 </tr>
                             </tbody>
                         </table>
@@ -198,9 +200,9 @@
                         <div class="alert alert-info mb-4">
                             <h5 class="mb-3"><i class="bi bi-info-circle-fill me-2"></i>Engineering Summary</h5>
                             <ul class="mb-0 ps-3">
-                                <li>Velocity Pressure: <strong>{{ result.summary['Velocity Pressure'] }} in.wg</strong></li>
-                                <li>Friction Loss: <strong>{{ result.summary['Friction Loss'] }} in.wg</strong></li>
-                                <li>Total Static Pressure: <strong>{{ result.summary['Total Static Pressure'] }} in.wg</strong></li>
+                                <li>Velocity Pressure: <strong>{{ format_value(result.summary.get('Velocity Pressure'), key='Velocity Pressure', unit='in.wg') }}</strong></li>
+                                                                <li>Friction Loss: <strong>{{ format_value(result.summary.get('Friction Loss'), key='Friction Loss', unit='in.wg') }}</strong></li>
+                                                                <li>Total Static Pressure: <strong>{{ format_value(result.summary.get('Total Static Pressure'), key='Total Static Pressure', unit='in.wg') }}</strong></li>
                             </ul>
                         </div>
 
@@ -209,9 +211,9 @@
                                 <div class="border rounded p-3 h-100">
                                     <div class="section-label">Calculation Steps</div>
                                     <ul class="mb-0 ps-3">
-                                        <li>Velocity Pressure: <strong>{{ result.calculation_steps['Velocity Pressure'] }}</strong></li>
-                                        <li>Friction Loss: <strong>{{ result.calculation_steps['Straight Duct Friction Loss'] }}</strong></li>
-                                        <li>Total Static Pressure: <strong>{{ result.calculation_steps['Total Static Pressure'] }}</strong></li>
+                                        <li>Velocity Pressure: <strong>{{ format_value(result.calculation_steps.get('Velocity Pressure'), key='Velocity Pressure') }}</strong></li>
+                                                                                <li>Friction Loss: <strong>{{ format_value(result.calculation_steps.get('Straight Duct Friction Loss'), key='Straight Duct Friction Loss') }}</strong></li>
+                                                                                <li>Total Static Pressure: <strong>{{ format_value(result.calculation_steps.get('Total Static Pressure'), key='Total Static Pressure') }}</strong></li>
                                     </ul>
                                 </div>
                             </div>

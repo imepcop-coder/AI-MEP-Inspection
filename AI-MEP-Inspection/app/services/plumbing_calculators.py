@@ -251,6 +251,10 @@ FIXTURE_UNITS_UAE = {
     "Bathtub": 4.0,
     "Drinking Fountain": 0.5,
     "Service Sink": 3.0,
+    "WC": 4.0,
+    "Sink": 1.0,
+    "Laundry": 3.0,
+    "Dishwasher": 2.0,
 }
 
 
@@ -906,6 +910,43 @@ def calculate_expansion_tank(
     }
 
 
+def calculate_pipe_diameter(flow_rate_lpm: float, velocity_mps: float, material: str = "PVC") -> Dict[str, Any]:
+    return pipe_size(flow_rate_lpm=flow_rate_lpm, velocity=velocity_mps, pipe_material=material)
+
+
+def calculate_rainwater_pipe(roof_area_m2: float, rainfall_mm_hr: float, runoff_coefficient: float = 0.9) -> Dict[str, Any]:
+    return rainwater(area=roof_area_m2, rainfall=rainfall_mm_hr, runoff=runoff_coefficient)
+
+
+def calculate_water_tank_capacity(daily_demand_liters: float, storage_hours: float) -> Dict[str, Any]:
+    daily_demand_value = _positive(daily_demand_liters, "Daily demand")
+    storage_hours_value = _positive(storage_hours, "Storage hours")
+    tank_capacity_l = daily_demand_value * storage_hours_value / 24.0
+    return {
+        "daily_demand_liters": round(daily_demand_value, 2),
+        "storage_hours": round(storage_hours_value, 2),
+        "tank_capacity_l": round(tank_capacity_l, 2),
+    }
+
+
+def calculate_sump_size(daily_demand_liters: float, pump_cycles: float) -> Dict[str, Any]:
+    daily_demand_value = _positive(daily_demand_liters, "Daily demand")
+    pump_cycles_value = int(_positive(pump_cycles, "Pump cycles"))
+    if pump_cycles_value <= 0:
+        raise UAEPlumbingError("Pump cycles must be greater than zero.")
+    sump_volume_l = daily_demand_value / pump_cycles_value * 1.2
+    return {
+        "daily_demand_liters": round(daily_demand_value, 2),
+        "pump_cycles": pump_cycles_value,
+        "sump_volume_l": round(sump_volume_l, 2),
+    }
+
+
+def calculate_pump_power(flow_lpm: float, total_head_m: float, efficiency: float) -> Dict[str, Any]:
+    flow_lps = _positive(flow_lpm, "Flow") / 60.0
+    return pump_power(flow_lps=flow_lps, total_head=total_head_m, efficiency=efficiency)
+
+
 # ==========================================================
 # Backward Compatibility Aliases
 # ==========================================================
@@ -931,27 +972,25 @@ except NameError:
     pass
 
 try:
-    calculate_rainwater_pipe = rainwater
+    calculate_rainwater_pipe = calculate_rainwater_pipe
 except NameError:
     pass
 
 try:
-    calculate_water_tank_capacity = water_tank
+    calculate_water_tank_capacity = calculate_water_tank_capacity
 except NameError:
     pass
 
 try:
-    calculate_pump_power = pump_power
+    calculate_pump_power = calculate_pump_power
 except NameError:
     pass
-calculate_pipe_diameter = pipe_size
-
 try:
-    calculate_pipe_diameter = pipe_size
+    calculate_pipe_diameter = calculate_pipe_diameter
 except NameError:
     pass
 
 try:
-    calculate_sump_size = sump_capacity
+    calculate_sump_size = calculate_sump_size
 except NameError:
     pass

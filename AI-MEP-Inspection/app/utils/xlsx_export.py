@@ -15,6 +15,7 @@ from reportlab.lib.pagesizes import A4
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
 from reportlab.platypus import Image as ReportLabImage, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from PIL import Image as PILImage
 
 
 COMPANY_NAME = "MEP Engineering Studio"
@@ -469,103 +470,170 @@ def build_calculator_workbook(
     client_name: str | None = None,
     engineer_name: str | None = None,
 ):
+    """
+    Build a professional workbook for calculators matching the inspection report style.
+    Returns a BytesIO with the workbook content.
+    """
     wb = Workbook()
     summary_ws = wb.active
     summary_ws.title = "Summary"
 
-    trend_fill = PatternFill("solid", fgColor="0F172A")
-    head_fill = PatternFill("solid", fgColor="D9E1F2")
+    # Styling
+    header_fill = PatternFill("solid", fgColor=BRAND_PRIMARY)
+    title_fill = PatternFill("solid", fgColor=BRAND_ACCENT)
+    alt_fill = PatternFill("solid", fgColor="F8FAFC")
+    thin = Side(style="thin")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    summary_ws.merge_cells("A1:F1")
-    summary_ws["A1"] = f"{title} Engineering Workbook"
-    summary_ws["A1"].font = Font(size=16, bold=True, color="FFFFFF")
-    summary_ws["A1"].fill = trend_fill
-    summary_ws["A1"].alignment = Alignment(horizontal="center")
+    # Title banner
+    last_col = 6
+    summary_ws.merge_cells(f"A1:{get_column_letter(last_col)}1")
+    summary_ws["A1"] = "AI MEP INSPECTION REPORT"
+    summary_ws["A1"].font = Font(size=16, bold=True, color="FFFFFF", name="Calibri")
+    summary_ws["A1"].fill = title_fill
+    summary_ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
 
+    # Metadata rows
     generated_date = datetime.now().strftime("%Y-%m-%d")
-    summary_rows = [
-        ["Company", COMPANY_NAME, "Project", project_name or "Untitled Project", "Date", generated_date],
+    report_number = f"REP-{datetime.now().strftime('%Y%m%d%H%M%S')}"
+    project_val = project_name or (results[0].get("project") if results and isinstance(results, (list, tuple)) and results[0] else "")
+    inspection_date = (results[0].get("inspection_date") if results and isinstance(results, (list, tuple)) and results[0] else "")
+
+    meta_rows = [
+        ["Report Number", report_number, "Project", project_val, "Generated Date", generated_date],
         ["Client", client_name or "Client TBD", "Engineer", engineer_name or "Engineer TBD", "Calculator", title],
     ]
-    for row_idx, row in enumerate(summary_rows, start=2):
-        for col_idx, value in enumerate(row, start=1):
-            cell = summary_ws.cell(row=row_idx, column=col_idx, value=value)
-            cell.border = _border()
-            cell.font = Font(bold=True if col_idx % 2 == 1 else False)
-            cell.fill = head_fill if col_idx % 2 == 1 else PatternFill("solid", fgColor="F8FAFC")
-            cell.alignment = Alignment(horizontal="left")
+    for r_idx, row in enumerate(meta_rows, start=2):
+        for c_idx, val in enumerate(row, start=1):
+            cell = summary_ws.cell(row=r_idx, column=c_idx, value=val)
+            cell.font = Font(bold=True if c_idx % 2 == 1 else False, name="Calibri", size=11)
+            cell.fill = header_fill if c_idx % 2 == 1 else PatternFill("solid", fgColor="F8FAFC")
+            cell.border = border
+            cell.alignment = Alignment(horizontal="left", vertical="center")
 
+    # Inputs sheet
     inputs_ws = wb.create_sheet("Inputs")
     inputs_rows = [["Parameter", "Value"]] + [[label, str(value)] for label, value in _format_values_ordered(inputs, page)]
-    for row_idx, row in enumerate(inputs_rows, start=1):
-        for col_idx, value in enumerate(row, start=1):
-            cell = inputs_ws.cell(row=row_idx, column=col_idx, value=value)
-            cell.border = _border()
-            if row_idx == 1:
-                cell.fill = _header_fill()
-                cell.font = Font(bold=True, color="FFFFFF")
+    for r_idx, row in enumerate(inputs_rows, start=1):
+        for c_idx, val in enumerate(row, start=1):
+            cell = inputs_ws.cell(row=r_idx, column=c_idx, value=val)
+            cell.border = border
+            cell.font = Font(name="Calibri", size=11)
+            if r_idx == 1:
+                cell.fill = header_fill
+                cell.font = Font(bold=True, color="FFFFFF", name="Calibri", size=11)
+                cell.alignment = Alignment(horizontal="center", vertical="center")
             else:
-                cell.fill = PatternFill("solid", fgColor="F8FAFC") if (row_idx % 2 == 0) else PatternFill("solid", fgColor="FFFFFF")
+                cell.fill = alt_fill if r_idx % 2 == 0 else PatternFill("solid", fgColor="FFFFFF")
+                cell.alignment = Alignment(wrap_text=True, vertical="center")
 
+    # Calculations sheet
     calc_ws = wb.create_sheet("Engineering Calculations")
     calc_ws["A1"] = "Formula"
-    calc_ws["A1"].font = Font(bold=True)
+    calc_ws["A1"].font = Font(bold=True, name="Calibri")
     calc_ws["A2"] = page.get("formula") if page and page.get("formula") else "Engineering equation applied to the project inputs"
     calc_ws["A2"].alignment = Alignment(wrap_text=True)
     calc_ws["A5"] = "Step-by-Step Calculation"
-    calc_ws["A5"].font = Font(bold=True)
-    for index, step in enumerate(_build_step_by_step(page.get("formula") if page else None, inputs, results), start=7):
-        calc_ws[f"A{index}"] = step
-        calc_ws[f"A{index}"].alignment = Alignment(wrap_text=True)
+    calc_ws["A5"].font = Font(bold=True, name="Calibri")
+    for idx, step in enumerate(_build_step_by_step(page.get("formula") if page else None, inputs, results), start=7):
+        calc_ws[f"A{idx}"] = step
+        calc_ws[f"A{idx}"].alignment = Alignment(wrap_text=True, vertical="center")
 
+    # Results sheet
     results_ws = wb.create_sheet("Results")
     results_rows = [["Result", "Value"]] + [[label, str(value)] for label, value in _format_values_ordered(results, page)]
-    for row_idx, row in enumerate(results_rows, start=1):
-        for col_idx, value in enumerate(row, start=1):
-            cell = results_ws.cell(row=row_idx, column=col_idx, value=value)
-            cell.border = _border()
-            if row_idx == 1:
-                cell.fill = _header_fill()
-                cell.font = Font(bold=True, color="FFFFFF")
+    for r_idx, row in enumerate(results_rows, start=1):
+        for c_idx, val in enumerate(row, start=1):
+            cell = results_ws.cell(row=r_idx, column=c_idx, value=val)
+            cell.border = border
+            cell.font = Font(name="Calibri", size=11)
+            if r_idx == 1:
+                cell.fill = header_fill
+                cell.font = Font(bold=True, color="FFFFFF", name="Calibri", size=11)
+                cell.alignment = Alignment(horizontal="center", vertical="center")
             else:
-                cell.fill = PatternFill("solid", fgColor="F8FAFC") if row_idx % 2 == 0 else PatternFill("solid", fgColor="FFFFFF")
+                cell.fill = alt_fill if r_idx % 2 == 0 else PatternFill("solid", fgColor="FFFFFF")
+                cell.alignment = Alignment(wrap_text=True, vertical="center")
 
+    # Charts sheet - ensure chart image fits and is centered
     charts_ws = wb.create_sheet("Charts")
-    chart_buffer = _generate_chart_image(title, inputs, results)
-    chart_image = Image(chart_buffer)
-    chart_image.width = 760
-    chart_image.height = 420
-    charts_ws.add_image(chart_image, "A1")
-    charts_ws["A1"].value = "Dynamic Engineering Diagram"
-    charts_ws["A1"].font = Font(bold=True)
+    try:
+        chart_buffer = _generate_chart_image(title, inputs, results)
+        # Create a temporary padded image from the chart buffer so it fits nicely in the sheet
+        pil_chart = PILImage.open(chart_buffer).convert("RGB")
+        max_w = 760
+        max_h = 420
+        pil_chart.thumbnail((max_w, max_h), PILImage.LANCZOS)
+        # create canvas with small padding
+        pad = 8
+        canvas_w = pil_chart.width + pad * 2
+        canvas_h = pil_chart.height + pad * 2
+        canvas = PILImage.new("RGB", (canvas_w, canvas_h), "white")
+        canvas.paste(pil_chart, (pad, pad))
+        tmp_path = os.path.join("uploads", "resized", f"chart_{datetime.now().strftime('%Y%m%d%H%M%S')}.png")
+        os.makedirs(os.path.dirname(tmp_path), exist_ok=True)
+        canvas.save(tmp_path, format="PNG")
+        chart_image = Image(tmp_path)
+        chart_image.width = canvas_w
+        chart_image.height = canvas_h
+        charts_ws.add_image(chart_image, "A1")
+        charts_ws["A1"].value = "Dynamic Engineering Diagram"
+        charts_ws["A1"].font = Font(bold=True)
+    except Exception:
+        # fallback: if chart generation fails, leave the Charts sheet blank
+        pass
 
+    # Equipment & notes
     equipment_ws = wb.create_sheet("Equipment Selection")
     equipment_ws["A1"] = "Recommended Equipment"
-    equipment_ws["A1"].font = Font(bold=True, size=12)
-    for index, item in enumerate(_equipment_recommendations(title, page), start=2):
-        equipment_ws[f"A{index}"] = item
-        equipment_ws[f"A{index}"].border = _border()
+    equipment_ws["A1"].font = Font(bold=True, size=12, name="Calibri")
+    for idx, item in enumerate(_equipment_recommendations(title, page), start=2):
+        equipment_ws[f"A{idx}"] = item
+        equipment_ws[f"A{idx}"].border = border
 
     notes_ws = wb.create_sheet("Design Notes")
     notes_ws["A1"] = "Recommendations"
-    notes_ws["A1"].font = Font(bold=True)
-    for index, item in enumerate(_build_recommendations(page), start=2):
-        notes_ws[f"A{index}"] = item
-        notes_ws[f"A{index}"].alignment = Alignment(wrap_text=True)
-        notes_ws[f"A{index}"].border = _border()
+    notes_ws["A1"].font = Font(bold=True, name="Calibri")
+    for idx, item in enumerate(_build_recommendations(page), start=2):
+        notes_ws[f"A{idx}"] = item
+        notes_ws[f"A{idx}"].alignment = Alignment(wrap_text=True, vertical="center")
+        notes_ws[f"A{idx}"].border = border
     notes_ws["A10"] = "Applicable Standards"
-    notes_ws["A10"].font = Font(bold=True)
-    for index, item in enumerate(_infer_standard(title, page), start=11):
-        notes_ws[f"A{index}"] = item
-        notes_ws[f"A{index}"].border = _border()
+    notes_ws["A10"].font = Font(bold=True, name="Calibri")
+    for idx, item in enumerate(_infer_standard(title, page), start=11):
+        notes_ws[f"A{idx}"] = item
+        notes_ws[f"A{idx}"].border = border
 
+    # Auto-fit-ish column widths (compute by content length)
     for variant in [summary_ws, inputs_ws, calc_ws, results_ws, charts_ws, equipment_ws, notes_ws]:
         for column_cells in variant.columns:
             cells = [cell for cell in column_cells if getattr(cell, "value", None) is not None]
             if not cells:
                 continue
             max_width = max(len(str(cell.value)) for cell in cells)
-            variant.column_dimensions[cells[0].column_letter].width = max(max_width + 2, 18)
+            # special-case: if header contains 'Image' use wider width
+            if any(str(cell.value).lower() == 'image' for cell in cells[:1]):
+                variant.column_dimensions[cells[0].column_letter].width = max(25, max_width + 2)
+            else:
+                variant.column_dimensions[cells[0].column_letter].width = max(max_width + 2, 18)
+
+    # Freeze headers on main sheets
+    inputs_ws.freeze_panes = "A2"
+    results_ws.freeze_panes = "A2"
+
+    # Print settings
+    for ws in [summary_ws, inputs_ws, results_ws, charts_ws]:
+        ws.page_setup.orientation = "landscape"
+        ws.page_setup.fitToWidth = 1
+        ws.print_title_rows = "1:1"
+        ws.page_margins.left = 0.5
+        ws.page_margins.right = 0.5
+        ws.page_margins.top = 0.75
+        ws.page_margins.bottom = 0.75
+        try:
+            ws.oddFooter.center.text = "Generated by AI MEP Inspection Platform"
+        except Exception:
+            pass
 
     output = BytesIO()
     wb.save(output)

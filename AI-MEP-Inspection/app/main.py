@@ -173,8 +173,9 @@ def _render_friendly(request: Request, message: str, status_code: int = 500, hin
     # prefer template render for HTML
     try:
         return templates.TemplateResponse(
-            "errors/generic_error.html",
-            {"request": request, "message": message, "hint": hint},
+            request=request,
+            name="errors/generic_error.html",
+            context={"request": request, "message": message, "hint": hint},
             status_code=status_code,
         )
     except Exception:
@@ -187,23 +188,201 @@ async def request_validation_exception_handler(request: Request, exc: RequestVal
     # Log technical details for developers/ops
     logger.info("Request validation failed: %s", str(exc))
     logger.debug("Traceback:\n%s", traceback.format_exc())
-    # Friendly message for users
-    message = "Please check the highlighted fields and try again."
-    return _render_friendly(request, message, status_code=422, hint="Please complete all required fields and use valid values.")
+
+    # Attempt to build a structured field-errors mapping when possible
+    from app.utils.validation import map_pydantic_errors
+    field_errors = {}
+    try:
+        # Try to resolve a calculator page context from the request path to get friendly labels
+        path_parts = request.url.path.strip('/').split('/')
+        page = None
+        # Patterns: /api/calculators/{category}/{slug} or /calculators/{category}/{slug} or /calculators/{slug}
+        if len(path_parts) >= 4 and path_parts[0] == 'api' and path_parts[1] == 'calculators':
+            category = path_parts[2]
+            slug = path_parts[3]
+            try:
+                from app.routes.mep_calculators import get_calculator as _get_calc
+                page = _get_calc(category, slug)
+            except Exception:
+                try:
+                    from app.routes.calculators import get_calculator as _get_calc2
+                    page = _get_calc2(category, slug)
+                except Exception:
+                    page = None
+        elif len(path_parts) >= 2 and path_parts[0] == 'calculators':
+            # Could be /calculators/{category}/{slug} or /calculators/{slug}
+            if len(path_parts) >= 3:
+                category = path_parts[1]
+                slug = path_parts[2]
+                try:
+                    from app.routes.mep_calculators import get_calculator as _get_calc
+                    page = _get_calc(category, slug)
+                except Exception:
+                    try:
+                        from app.routes.calculators import _get_hvac_page as _get_hvac
+                        page = _get_hvac()  # fallback not ideal
+                    except Exception:
+                        page = None
+            else:
+                slug = path_parts[1]
+                try:
+                    from app.routes.calculators import HVAC_CALCULATORS
+                    page = HVAC_CALCULATORS.get(slug)
+                except Exception:
+                    page = None
+
+        field_errors = map_pydantic_errors(page, exc.errors())
+    except Exception:
+        # Fallback: map simple loc -> message without labels
+        for err in exc.errors():
+            loc = err.get('loc', [])
+            name = loc[-1] if isinstance(loc, (list, tuple)) and loc else str(loc)
+            field_errors[str(name)] = err.get('msg', 'Invalid value')
+
+    # If caller expects JSON or this is an API path, return structured JSON
+    accept = request.headers.get('accept', '')
+    if 'application/json' in accept or request.url.path.startswith('/api/'):
+        return JSONResponse(status_code=422, content={"success": False, "errors": field_errors})
+
+    # Otherwise render the calculator template if applicable
+    try:
+        # Attempt to read form values to preserve user input
+        form_vals = {}
+        try:
+            form = await request.form()
+            form_vals = dict(form)
+        except Exception:
+            form_vals = {}
+        # If we identified a page, render calculator template with field_errors
+        if 'page' in locals() and page:
+            return templates.TemplateResponse(
+                request=request,
+                name='calculators/calculator_page.html',
+                context={
+                    'request': request,
+                    'page': page,
+                    'values': form_vals,
+                    'result': None,
+                    'error': 'Please check the highlighted fields and try again.',
+                    'field_errors': field_errors,
+                },
+                status_code=422,
+            )
+    except Exception:
+        logger.debug('Failed to render calculator page for validation error.')
+
+    # Fallback to generic friendly message
+    message = 'Please check the highlighted fields and try again.'
+    return _render_friendly(request, message, status_code=422, hint='Please complete all required fields and use valid values.')
 
 
 @app.exception_handler(PydanticValidationError)
 async def pydantic_validation_exception_handler(request: Request, exc: PydanticValidationError):
     logger.info("Pydantic validation failed: %s", str(exc))
     logger.debug("Traceback:\n%s", traceback.format_exc())
-    message = "Please check the highlighted fields and try again."
-    return _render_friendly(request, message, status_code=422, hint="Please complete all required fields and use valid values.")
 
+    from app.utils.validation import map_pydantic_errors
+    try:
+        # try to resolve page as above
+        path_parts = request.url.path.strip('/').split('/')
+        page = None
+        if len(path_parts) >= 3 and path_parts[0] == 'calculators':
+            slug = path_parts[-1]
+            try:
+                from app.routes.mep_calculators import CALCULATOR_PAGES as CP
+                page = CP.get(slug)
+            except Exception:
+                page = None
+        field_errors = map_pydantic_errors(page, exc.errors())
+    except Exception:
+        field_errors = { (e.get('loc')[-1] if e.get('loc') else 'field'): e.get('msg') for e in exc.errors() }
+
+    accept = request.headers.get('accept', '')
+    if 'application/json' in accept or request.url.path.startswith('/api/'):
+        return JSONResponse(status_code=422, content={"success": False, "errors": field_errors})
+
+    # Try to render calculator template
+    try:
+        form_vals = {}
+        try:
+            form = await request.form()
+            form_vals = dict(form)
+        except Exception:
+            form_vals = {}
+        if page:
+            return templates.TemplateResponse(
+                request=request,
+                name='calculators/calculator_page.html',
+                context={
+                    'request': request,
+                    'page': page,
+                    'values': form_vals,
+                    'result': None,
+                    'error': 'Please check the highlighted fields and try again.',
+                    'field_errors': field_errors,
+                },
+                status_code=422,
+            )
+    except Exception:
+        logger.debug('Failed to render calculator page for pydantic validation error.')
+
+    message = 'Please check the highlighted fields and try again.'
+    return _render_friendly(request, message, status_code=422, hint='Please complete all required fields and use valid values.')
 
 @app.exception_handler(HTTPException)
 async def http_exception_handler(request: Request, exc: HTTPException):
     # Log detail but don't show technical text
     logger.warning("HTTP exception %s %s", exc.status_code, getattr(exc, "detail", None))
+
+    # If the exception detail contains structured field errors, surface them to the client
+    detail = getattr(exc, 'detail', None)
+    if isinstance(detail, dict) and detail.get('errors'):
+        # For API/JSON callers return structured JSON
+        accept = request.headers.get('accept', '')
+        if 'application/json' in accept or request.url.path.startswith('/api/'):
+            return JSONResponse(status_code=exc.status_code, content={"success": False, "errors": detail.get('errors')})
+        # For calculator pages, try to render the calculator template with field_errors
+        try:
+            path_parts = request.url.path.strip('/').split('/')
+            page = None
+            if len(path_parts) >= 3 and path_parts[0] == 'calculators':
+                # /calculators/{category}/{slug} or /calculators/{slug}
+                if len(path_parts) >= 4:
+                    category = path_parts[1]
+                    slug = path_parts[2]
+                    from app.routes.mep_calculators import get_calculator as _get_calc
+                    page = _get_calc(category, slug)
+                else:
+                    slug = path_parts[1]
+                    from app.routes.calculators import HVAC_CALCULATORS
+                    page = HVAC_CALCULATORS.get(slug)
+            # preserve form values if present
+            form_vals = {}
+            try:
+                form = await request.form()
+                form_vals = dict(form)
+            except Exception:
+                form_vals = {}
+            if page:
+                return templates.TemplateResponse(
+                    request=request,
+                    name='calculators/calculator_page.html',
+                    context={
+                        'request': request,
+                        'page': page,
+                        'values': form_vals,
+                        'result': None,
+                        'error': 'Please check the highlighted fields and try again.',
+                        'field_errors': detail.get('errors'),
+                    },
+                    status_code=exc.status_code,
+                )
+        except Exception:
+            logger.debug('Failed to render calculator page for HTTPException with field errors.')
+
+        # fallback to JSON with errors
+        return JSONResponse(status_code=exc.status_code, content={"success": False, "errors": detail.get('errors')})
+
     # map common HTTP codes to friendly messages
     if exc.status_code == 404:
         return _render_friendly(request, "The requested page could not be found.", status_code=404)

@@ -4,6 +4,8 @@
 
 {% block content %}
 
+{% from 'partials/result_renderer.html' import format_value %}
+
 <style>
     .professional-card {
         background: #fff;
@@ -148,28 +150,28 @@
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Flow</div>
-                                    <div class="metric-value text-primary">{{ result.flow_rate }}</div>
+                                    <div class="metric-value text-primary">{{ format_value(result.get('flow_rate'), key='flow_rate', unit='m³/hr') }}</div>
                                     <div class="metric-unit">m³/hr</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">TDH</div>
-                                    <div class="metric-value text-success">{{ result.total_dynamic_head }}</div>
+                                    <div class="metric-value text-success">{{ format_value(result.get('total_dynamic_head'), key='total_dynamic_head', unit='m') }}</div>
                                     <div class="metric-unit">m</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Hydraulic</div>
-                                    <div class="metric-value text-danger">{{ result.hydraulic_power }}</div>
+                                    <div class="metric-value text-danger">{{ format_value(result.get('hydraulic_power'), key='hydraulic_power', unit='kW') }}</div>
                                     <div class="metric-unit">kW</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Rating</div>
-                                    <div class="metric-value text-warning">{{ result.recommended_pump_rating }}</div>
+                                    <div class="metric-value text-warning">{{ format_value(result.get('recommended_pump_rating'), key='recommended_pump_rating', unit='kW') }}</div>
                                     <div class="metric-unit">kW</div>
                                 </div>
                             </div>
@@ -183,16 +185,16 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td>Flow Rate</td><td class="text-end">{{ result.flow_rate }} m³/hr</td></tr>
-                                <tr><td>Static Head</td><td class="text-end">{{ result.static_head }} m</td></tr>
-                                <tr><td>Friction Loss</td><td class="text-end">{{ result.friction_loss }} m</td></tr>
-                                <tr><td>Total Dynamic Head</td><td class="text-end">{{ result.total_dynamic_head }} m</td></tr>
-                                <tr><td>Hydraulic Power</td><td class="text-end">{{ result.hydraulic_power }} kW</td></tr>
-                                <tr><td>Shaft Power</td><td class="text-end">{{ result.shaft_power }} kW</td></tr>
-                                <tr><td>Brake Horsepower</td><td class="text-end">{{ result.bhp }} HP</td></tr>
+                                <tr><td>Flow Rate</td><td class="text-end">{{ format_value(result.get('flow_rate'), key='flow_rate', unit='m³/hr') }}</td></tr>
+                                                                <tr><td>Static Head</td><td class="text-end">{{ format_value(result.get('static_head'), key='static_head', unit='m') }}</td></tr>
+                                                                <tr><td>Friction Loss</td><td class="text-end">{{ format_value(result.get('friction_loss'), key='friction_loss', unit='m') }}</td></tr>
+                                                                <tr><td>Total Dynamic Head</td><td class="text-end">{{ format_value(result.get('total_dynamic_head'), key='total_dynamic_head', unit='m') }}</td></tr>
+                                                                <tr><td>Hydraulic Power</td><td class="text-end">{{ format_value(result.get('hydraulic_power'), key='hydraulic_power', unit='kW') }}</td></tr>
+                                                                <tr><td>Shaft Power</td><td class="text-end">{{ format_value(result.get('shaft_power'), key='shaft_power', unit='kW') }}</td></tr>
+                                                                <tr><td>Brake Horsepower</td><td class="text-end">{{ format_value(result.get('bhp'), key='bhp', unit='HP') }}</td></tr>
                                 <tr class="table-primary fw-bold">
                                     <th>Recommended Pump Rating</th>
-                                    <th class="text-end">{{ result.recommended_pump_rating }} kW</th>
+                                    <th class="text-end">{{ format_value(result.get('recommended_pump_rating'), key='recommended_pump_rating', unit='kW') }}</th>
                                 </tr>
                             </tbody>
                         </table>
@@ -200,9 +202,9 @@
                         <div class="alert alert-info mb-4">
                             <h5 class="mb-3"><i class="bi bi-info-circle-fill me-2"></i>Engineering Summary</h5>
                             <ul class="mb-0 ps-3">
-                                <li>Flow Rate: <strong>{{ result.summary['Flow Rate'] }} m³/hr</strong></li>
-                                <li>Total Dynamic Head: <strong>{{ result.summary['Total Dynamic Head'] }} m</strong></li>
-                                <li>Recommended Pump Rating: <strong>{{ result.summary['Recommended Pump Rating'] }} kW</strong></li>
+                                <li>Flow Rate: <strong>{{ format_value(result.summary.get('Flow Rate'), key='Flow Rate', unit='m³/hr') }}</strong></li>
+                                                                <li>Total Dynamic Head: <strong>{{ format_value(result.summary.get('Total Dynamic Head'), key='Total Dynamic Head', unit='m') }}</strong></li>
+                                                                <li>Recommended Pump Rating: <strong>{{ format_value(result.summary.get('Recommended Pump Rating'), key='Recommended Pump Rating', unit='kW') }}</strong></li>
                             </ul>
                         </div>
 

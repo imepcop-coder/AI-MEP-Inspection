@@ -396,6 +396,17 @@
     }
 
 }
+
+/* Validation helpers */
+.field-helper { font-size: .85rem; color: var(--cc-muted); }
+.field-helper .helper-example { margin-bottom: 0.25rem; }
+.field-helper .helper-allowed, .field-helper .helper-range { margin-bottom: 0.1rem; }
+.field-error { font-size: 0.9rem; color: var(--cc-danger); display: block; }
+.is-invalid { border-color: var(--cc-danger) !important; box-shadow: 0 0 0 0.12rem rgba(220, 38, 38, 0.08) !important; }
+
+/* small icon style in errors */
+.field-error .bi { vertical-align: -.125rem; margin-right: .35rem; }
+
 /* ==========================================================
    PART 2
    FORM CONTROLS
@@ -677,26 +688,6 @@ textarea.form-control{
     color:#fff;
 }
 
-.btn-icon,
-.profile-trigger {
-    width:44px;
-    min-width:44px;
-    height:44px;
-    padding:0;
-    border-radius:12px;
-    background:#fff;
-    border:1px solid var(--border);
-    color:var(--heading);
-}
-
-.btn-icon:hover,
-.profile-trigger:hover,
-.btn-icon:focus,
-.profile-trigger:focus {
-    background:rgba(37,99,235,.08);
-    border-color:rgba(37,99,235,.35);
-    color:var(--primary);
-}
 
 /* ==========================================================
    FORMULA CARD

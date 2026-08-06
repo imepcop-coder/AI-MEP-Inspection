@@ -130,31 +130,48 @@ async def upload_images(
 
             print(f"Saved : {filepath}")
 
+            def _normalize_ai_response(response_payload):
+                if isinstance(response_payload, (dict, list)):
+                    return response_payload
+
+                text = str(response_payload or "").strip()
+                if text.startswith("```json"):
+                    text = text.replace("```json", "", 1)
+                if text.startswith("```"):
+                    text = text.replace("```", "", 1)
+                if text.endswith("```"):
+                    text = text[:-3]
+                return text.strip()
+
+            def _extract_json(text: str):
+                try:
+                    return json.loads(text)
+                except (json.JSONDecodeError, TypeError, ValueError):
+                    start = text.find("{")
+                    end = text.rfind("}")
+                    if start != -1 and end != -1 and end > start:
+                        try:
+                            return json.loads(text[start:end + 1])
+                        except json.JSONDecodeError:
+                            pass
+                return None
+
+            ai_response = None
             try:
-
                 ai_response = analyze_image(filepath)
-
                 print(ai_response)
 
-                ai_response = ai_response.strip()
+                normalized = _normalize_ai_response(ai_response)
+                if isinstance(normalized, (dict, list)):
+                    data = normalized
+                else:
+                    data = _extract_json(normalized)
+                    if data is None:
+                        raise ValueError(f"Invalid AI JSON: {normalized}")
 
-                if ai_response.startswith("```json"):
-                    ai_response = ai_response.replace("```json", "")
-
-                if ai_response.startswith("```"):
-                    ai_response = ai_response.replace("```", "")
-
-                if ai_response.endswith("```"):
-                    ai_response = ai_response[:-3]
-
-                ai_response = ai_response.strip()
-
-                data = json.loads(ai_response)
-
-            except json.JSONDecodeError:
-
-                print("Invalid AI JSON")
-
+            except (json.JSONDecodeError, ValueError, TypeError) as ex:
+                print("Invalid AI JSON", str(ex))
+                print(repr(ai_response))
                 data = {
                     "location": "Unknown",
                     "discipline": "General",
@@ -166,9 +183,7 @@ async def upload_images(
                 }
 
             except Exception as ex:
-
-                print(ex)
-
+                print("AI analysis exception", str(ex))
                 data = {
                     "location": "Unknown",
                     "discipline": "General",

@@ -219,7 +219,7 @@ PLUMBING_PAGES = {
 
 @router.get("/plumbing")
 async def plumbing_dashboard(request: Request):
-    return templates.TemplateResponse(request, "plumbing.html", {"request": request})
+    return templates.TemplateResponse(request=request, name="plumbing.html", context={"request": request})
 
 
 @router.get("/plumbing/{page_slug}")
@@ -227,17 +227,13 @@ async def plumbing_calculator_page(request: Request, page_slug: str):
     page = PLUMBING_PAGES.get(page_slug)
     if not page:
         raise HTTPException(status_code=404, detail="Calculator page not found.")
-    return templates.TemplateResponse(
-        request,
-        "plumbing_calculator_page.html",
-        {
+    return templates.TemplateResponse(request=request, name="plumbing_calculator_page.html", context={
             "request": request,
             "page": page,
             "values": {field["name"]: field.get("default", "") for field in page["fields"]},
             "result": None,
             "error": None,
-        },
-    )
+        })
 
 
 @router.post("/plumbing/{page_slug}")
@@ -256,25 +252,47 @@ async def plumbing_calculator_page_submit(request: Request, page_slug: str):
 
     try:
         validated = schema.parse_obj(values)
-        calculation = handler(validated)
-        result = calculation.dict() if hasattr(calculation, "dict") else calculation
+        validated_inputs = validated.dict()
     except ValidationError as ex:
         import logging
         logging.getLogger('ai_mep').info('Validation error in Plumbing calculator: %s', str(ex))
+        try:
+            from app.utils.validation import map_pydantic_errors
+            field_errors = map_pydantic_errors(page, ex.errors())
+        except Exception:
+            field_errors = {}
         error = "Please check the highlighted fields and try again."
-    except Exception as ex:
-        import logging
-        logging.getLogger('ai_mep').exception('Error running Plumbing calculator: %s', str(ex))
-        error = "Calculation could not be completed. Please verify your inputs and try again."
-
-    return templates.TemplateResponse(
-        request,
-        "plumbing_calculator_page.html",
-        {
+        return templates.TemplateResponse(request=request, name="plumbing_calculator_page.html", context={
             "request": request,
             "page": page,
             "values": values,
-            "result": result,
+            "result": None,
             "error": error,
-        },
-    )
+            "field_errors": field_errors,
+        })
+
+    # Run calculation with structured logging
+    from app.utils.calc_runner import run_calculation
+    calc_resp = run_calculation(page.get('title', page_slug), page, handler, validated_inputs)
+    if not calc_resp['success']:
+        logging.getLogger('ai_mep').error('Calculation failed for %s: %s', page_slug, calc_resp['error'])
+        # Include internal-friendly error mapping for UI
+        error = "Calculation could not be completed. Please verify your inputs and try again."
+        # Return template with no result but include an internal error notice
+        return templates.TemplateResponse(request=request, name="plumbing_calculator_page.html", context={
+            "request": request,
+            "page": page,
+            "values": values,
+            "result": None,
+            "error": error,
+            "field_errors": {"__internal": "Calculation failed. Check server logs for details."},
+        })
+
+    result = calc_resp['result']
+    return templates.TemplateResponse(request=request, name="plumbing_calculator_page.html", context={
+            "request": request,
+            "page": page,
+            "values": validated_inputs,
+            "result": result,
+            "error": None,
+        })

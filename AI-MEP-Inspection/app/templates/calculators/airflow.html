@@ -4,6 +4,8 @@
 
 {% block content %}
 
+{% from 'partials/result_renderer.html' import format_value %}
+
 <style>
     .professional-card {
         background: #fff;
@@ -148,28 +150,28 @@
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Room Area</div>
-                                    <div class="metric-value text-primary">{{ result.summary['Room Area'] }}</div>
+                                    <div class="metric-value text-primary">{{ format_value(result.summary.get('Room Area'), key='Room Area', unit='m²') }}</div>
                                     <div class="metric-unit">m²</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Room Volume</div>
-                                    <div class="metric-value text-success">{{ result.summary['Room Volume'] }}</div>
+                                    <div class="metric-value text-success">{{ format_value(result.summary.get('Room Volume'), key='Room Volume', unit='m³') }}</div>
                                     <div class="metric-unit">m³</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Airflow</div>
-                                    <div class="metric-value text-danger">{{ result.results['Final Required Airflow (CFM)'] }}</div>
+                                    <div class="metric-value text-danger">{{ format_value(result.results.get('Final Required Airflow (CFM)'), key='Final Required Airflow (CFM)', unit='CFM') }}</div>
                                     <div class="metric-unit">CFM</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Diffusers</div>
-                                    <div class="metric-value text-warning">{{ result.results['Recommended Diffusers'] }}</div>
+                                    <div class="metric-value text-warning">{{ format_value(result.results.get('Recommended Diffusers'), key='Recommended Diffusers') }}</div>
                                     <div class="metric-unit">Units</div>
                                 </div>
                             </div>
@@ -183,15 +185,15 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td>Room Area</td><td class="text-end">{{ result.room_area }} m²</td></tr>
-                                <tr><td>Room Volume</td><td class="text-end">{{ result.room_volume }} m³</td></tr>
-                                <tr><td>Airflow (CMH)</td><td class="text-end">{{ result.airflow_cmh }} CMH</td></tr>
-                                <tr><td>Airflow (CMS)</td><td class="text-end">{{ result.airflow_cms }} m³/s</td></tr>
-                                <tr><td>Airflow (CFM)</td><td class="text-end">{{ result.airflow_cfm }} CFM</td></tr>
-                                <tr><td>Airflow (L/s)</td><td class="text-end">{{ result.airflow_lps }} L/s</td></tr>
+                                <tr><td>Room Area</td><td class="text-end">{{ format_value(result.get('room_area'), key='room_area', unit='m²') }}</td></tr>
+                                <tr><td>Room Volume</td><td class="text-end">{{ format_value(result.get('room_volume'), key='room_volume', unit='m³') }}</td></tr>
+                                <tr><td>Airflow (CMH)</td><td class="text-end">{{ format_value(result.get('airflow_cmh'), key='airflow_cmh', unit='CMH') }}</td></tr>
+                                <tr><td>Airflow (CMS)</td><td class="text-end">{{ format_value(result.get('airflow_cms'), key='airflow_cms', unit='m³/s') }}</td></tr>
+                                <tr><td>Airflow (CFM)</td><td class="text-end">{{ format_value(result.get('airflow_cfm'), key='airflow_cfm', unit='CFM') }}</td></tr>
+                                <tr><td>Airflow (L/s)</td><td class="text-end">{{ format_value(result.get('airflow_lps'), key='airflow_lps', unit='L/s') }}</td></tr>
                                 <tr class="table-primary fw-bold">
                                     <th>Required Ventilation</th>
-                                    <th class="text-end">{{ result.results['Final Required Airflow (CFM)'] }} CFM</th>
+                                    <th class="text-end">{{ format_value(result.results.get('Final Required Airflow (CFM)'), key='Final Required Airflow (CFM)', unit='CFM') }}</th>
                                 </tr>
                             </tbody>
                         </table>
@@ -199,9 +201,9 @@
                         <div class="alert alert-info mb-4">
                             <h5 class="mb-3"><i class="bi bi-info-circle-fill me-2"></i>Engineering Summary</h5>
                             <ul class="mb-0 ps-3">
-                                <li>Room Area: <strong>{{ result.summary['Room Area'] }} m²</strong></li>
-                                <li>Room Volume: <strong>{{ result.summary['Room Volume'] }} m³</strong></li>
-                                <li>Required Airflow: <strong>{{ result.summary['Required Airflow'] }} CFM</strong></li>
+                                <li>Room Area: <strong>{{ format_value(result.summary.get('Room Area'), key='Room Area', unit='m²') }}</strong></li>
+                                                                <li>Room Volume: <strong>{{ format_value(result.summary.get('Room Volume'), key='Room Volume', unit='m³') }}</strong></li>
+                                                                <li>Required Airflow: <strong>{{ format_value(result.summary.get('Required Airflow'), key='Required Airflow', unit='CFM') }}</strong></li>
                             </ul>
                         </div>
 
@@ -210,10 +212,10 @@
                                 <div class="border rounded p-3 h-100">
                                     <div class="section-label">Calculation Steps</div>
                                     <ul class="mb-0 ps-3">
-                                        <li>Room Area: <strong>{{ result.calculation_steps['Room Area'] }}</strong></li>
-                                        <li>Room Volume: <strong>{{ result.calculation_steps['Room Volume'] }}</strong></li>
-                                        <li>Airflow (CMH): <strong>{{ result.calculation_steps['Airflow (CMH)'] }}</strong></li>
-                                        <li>Airflow (CFM): <strong>{{ result.calculation_steps['Airflow (CFM)'] }}</strong></li>
+                                        <li>Room Area: <strong>{{ format_value(result.calculation_steps.get('Room Area'), key='Room Area') }}</strong></li>
+                                                                                <li>Room Volume: <strong>{{ format_value(result.calculation_steps.get('Room Volume'), key='Room Volume') }}</strong></li>
+                                                                                <li>Airflow (CMH): <strong>{{ format_value(result.calculation_steps.get('Airflow (CMH)'), key='Airflow (CMH)', unit='CMH') }}</strong></li>
+                                                                                <li>Airflow (CFM): <strong>{{ format_value(result.calculation_steps.get('Airflow (CFM)'), key='Airflow (CFM)', unit='CFM') }}</strong></li>
                                     </ul>
                                 </div>
                             </div>

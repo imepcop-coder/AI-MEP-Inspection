@@ -4,6 +4,8 @@
 
 {% block content %}
 
+{% from 'partials/result_renderer.html' import format_value %}
+
 <style>
     .professional-card {
         background: #fff;
@@ -211,28 +213,28 @@
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Cooling Load</div>
-                                    <div class="metric-value text-primary">{{ result.total_kw }}</div>
+                                    <div class="metric-value text-primary">{{ format_value(result.get('total_kw'), key='total_kw', unit='kW') }}</div>
                                     <div class="metric-unit">kW</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Air Flow</div>
-                                    <div class="metric-value text-success">{{ result.required_cfm }}</div>
+                                    <div class="metric-value text-success">{{ format_value(result.get('required_cfm'), key='required_cfm', unit='CFM') }}</div>
                                     <div class="metric-unit">CFM</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Cooling Capacity</div>
-                                    <div class="metric-value text-danger">{{ result.tons_of_refrigeration }}</div>
+                                    <div class="metric-value text-danger">{{ format_value(result.get('tons_of_refrigeration'), key='tons_of_refrigeration', unit='TR') }}</div>
                                     <div class="metric-unit">TR</div>
                                 </div>
                             </div>
                             <div class="col-md-6 col-xl-3">
                                 <div class="metric-card">
                                     <div class="metric-title">Recommended AC</div>
-                                    <div class="metric-value text-warning">{{ result.recommended_ac }}</div>
+                                    <div class="metric-value text-warning">{{ format_value(result.get('recommended_ac'), key='recommended_ac', unit='TR') }}</div>
                                     <div class="metric-unit">TR</div>
                                 </div>
                             </div>
@@ -246,15 +248,15 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr><td>Total Heat Load</td><td class="text-end">{{ result.total_watts }} W</td></tr>
-                                <tr><td>Total Cooling Capacity</td><td class="text-end">{{ result.total_kw }} kW</td></tr>
-                                <tr><td>Total BTU/hr</td><td class="text-end">{{ result.total_btuh }}</td></tr>
-                                <tr><td>Cooling Capacity</td><td class="text-end">{{ result.tons_of_refrigeration }} TR</td></tr>
-                                <tr><td>Required Air Flow</td><td class="text-end">{{ result.required_cfm }} CFM</td></tr>
-                                <tr><td>Air Flow Rate</td><td class="text-end">{{ result.airflow_lps }} L/s</td></tr>
+                                <tr><td>Total Heat Load</td><td class="text-end">{{ format_value(result.get('total_watts'), key='total_watts', unit='W') }}</td></tr>
+                                <tr><td>Total Cooling Capacity</td><td class="text-end">{{ format_value(result.get('total_kw'), key='total_kw', unit='kW') }}</td></tr>
+                                <tr><td>Total BTU/hr</td><td class="text-end">{{ format_value(result.get('total_btuh'), key='total_btuh') }}</td></tr>
+                                <tr><td>Cooling Capacity</td><td class="text-end">{{ format_value(result.get('tons_of_refrigeration'), key='tons_of_refrigeration', unit='TR') }}</td></tr>
+                                <tr><td>Required Air Flow</td><td class="text-end">{{ format_value(result.get('required_cfm'), key='required_cfm', unit='CFM') }}</td></tr>
+                                <tr><td>Air Flow Rate</td><td class="text-end">{{ format_value(result.get('airflow_lps'), key='airflow_lps', unit='L/s') }}</td></tr>
                                 <tr class="table-primary fw-bold">
                                     <th>Recommended AC Capacity</th>
-                                    <th class="text-end">{{ result.recommended_ac }} TR</th>
+                                    <th class="text-end">{{ format_value(result.get('recommended_ac'), key='recommended_ac', unit='TR') }}</th>
                                 </tr>
                             </tbody>
                         </table>
@@ -262,10 +264,10 @@
                         <div class="alert alert-info mb-4">
                             <h5 class="mb-3"><i class="bi bi-info-circle-fill me-2"></i>Engineering Summary</h5>
                             <ul class="mb-0 ps-3">
-                                <li>Envelope Load: <strong>{{ result.summary["Envelope Load"] }} W</strong></li>
-                                <li>Internal Load: <strong>{{ result.summary["Internal Load"] }} W</strong></li>
-                                <li>Ventilation Load: <strong>{{ result.summary["Ventilation Load"] }} W</strong></li>
-                                <li>Grand Total Cooling Load: <strong>{{ result.summary["Grand Total"] }} W</strong></li>
+                                <li>Envelope Load: <strong>{{ format_value(result.summary.get('Envelope Load'), key='Envelope Load', unit='W') }}</strong></li>
+                                                                <li>Internal Load: <strong>{{ format_value(result.summary.get('Internal Load'), key='Internal Load', unit='W') }}</strong></li>
+                                                                <li>Ventilation Load: <strong>{{ format_value(result.summary.get('Ventilation Load'), key='Ventilation Load', unit='W') }}</strong></li>
+                                                                <li>Grand Total Cooling Load: <strong>{{ format_value(result.summary.get('Grand Total'), key='Grand Total', unit='W') }}</strong></li>
                             </ul>
                         </div>
 
@@ -274,14 +276,14 @@
                                 <div class="border rounded p-3 h-100">
                                     <div class="section-label">Calculation Details</div>
                                     <ul class="mb-0 ps-3">
-                                        <li>Room Area: {{ result.room_area }} m²</li>
-                                        <li>Room Volume: {{ result.room_volume }} m³</li>
-                                        <li>Wall Heat Gain: {{ result.wall_heat_gain }} W</li>
-                                        <li>Roof Heat Gain: {{ result.roof_heat_gain }} W</li>
-                                        <li>Glass Conduction Gain: {{ result.glass_conduction_gain }} W</li>
-                                        <li>Glass Solar Gain: {{ result.glass_solar_gain }} W</li>
-                                        <li>People Load: {{ result.people_load }} W</li>
-                                        <li>Fresh Air Load: {{ result.fresh_air_load }} W</li>
+                                        <li>Room Area: {{ format_value(result.get('room_area'), key='room_area', unit='m²') }}</li>
+                                                                                <li>Room Volume: {{ format_value(result.get('room_volume'), key='room_volume', unit='m³') }}</li>
+                                                                                <li>Wall Heat Gain: {{ format_value(result.get('wall_heat_gain'), key='wall_heat_gain', unit='W') }}</li>
+                                                                                <li>Roof Heat Gain: {{ format_value(result.get('roof_heat_gain'), key='roof_heat_gain', unit='W') }}</li>
+                                                                                <li>Glass Conduction Gain: {{ format_value(result.get('glass_conduction_gain'), key='glass_conduction_gain', unit='W') }}</li>
+                                                                                <li>Glass Solar Gain: {{ format_value(result.get('glass_solar_gain'), key='glass_solar_gain', unit='W') }}</li>
+                                                                                <li>People Load: {{ format_value(result.get('people_load'), key='people_load', unit='W') }}</li>
+                                                                                <li>Fresh Air Load: {{ format_value(result.get('fresh_air_load'), key='fresh_air_load', unit='W') }}</li>
                                     </ul>
                                 </div>
                             </div>
@@ -310,21 +312,21 @@
                             <div class="col-md-4">
                                 <div class="metric-card">
                                     <div class="metric-title">Envelope Load</div>
-                                    <div class="metric-value text-primary">{{ result.summary["Envelope Load"] }}</div>
+                                    <div class="metric-value text-primary">{{ format_value(result.summary.get('Envelope Load'), key='Envelope Load', unit='W') }}</div>
                                     <div class="metric-unit">W</div>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="metric-card">
                                     <div class="metric-title">Internal Load</div>
-                                    <div class="metric-value text-success">{{ result.summary["Internal Load"] }}</div>
+                                    <div class="metric-value text-success">{{ format_value(result.summary.get('Internal Load'), key='Internal Load', unit='W') }}</div>
                                     <div class="metric-unit">W</div>
                                 </div>
                             </div>
                             <div class="col-md-4">
                                 <div class="metric-card">
                                     <div class="metric-title">Ventilation Load</div>
-                                    <div class="metric-value text-warning">{{ result.summary["Ventilation Load"] }}</div>
+                                    <div class="metric-value text-warning">{{ format_value(result.summary.get('Ventilation Load'), key='Ventilation Load', unit='W') }}</div>
                                     <div class="metric-unit">W</div>
                                 </div>
                             </div>
@@ -332,7 +334,7 @@
 
                         <div class="alert alert-light border mb-0">
                             <strong>Result Highlights:</strong>
-                            <span class="d-block mt-2">Peak cooling demand is {{ result.total_kw }} kW, with {{ result.required_cfm }} CFM required ventilation and an estimated equipment selection of {{ result.recommended_ac }} TR.</span>
+                            <span class="d-block mt-2">Peak cooling demand is {{ format_value(result.get('total_kw'), key='total_kw', unit='kW') }}, with {{ format_value(result.get('required_cfm'), key='required_cfm', unit='CFM') }} required ventilation and an estimated equipment selection of {{ format_value(result.get('recommended_ac'), key='recommended_ac', unit='TR') }}.</span>
                         </div>
                     </div>
                 </div>
@@ -400,11 +402,11 @@
                 <div class="row text-center text-md-start align-items-center g-2">
                     <div class="col-md-4">
                         <small class="text-muted">Generated Time</small>
-                        <div class="fw-semibold">{{ result.generated_at if result else 'Pending calculation' }}</div>
+                        <div class="fw-semibold">{{ format_value(result.get('generated_at')) if result else 'Pending calculation' }}</div>
                     </div>
                     <div class="col-md-4">
                         <small class="text-muted">Calculation Standard</small>
-                        <div class="fw-semibold">{{ result.calculation_standard if result else 'ASHRAE Fundamentals / UAE GCC' }}</div>
+                        <div class="fw-semibold">{{ format_value(result.get('calculation_standard')) if result else 'ASHRAE Fundamentals / UAE GCC' }}</div>
                     </div>
                     <div class="col-md-4">
                         <small class="text-muted">Version</small>
@@ -428,9 +430,9 @@
                 datasets: [{
                     label: 'Heat Load (W)',
                     data: [
-                        {{ result.summary["Envelope Load"] }},
-                        {{ result.summary["Internal Load"] }},
-                        {{ result.summary["Ventilation Load"] }}
+                        {{ result.summary.get('Envelope Load', 0) }},
+                        {{ result.summary.get('Internal Load', 0) }},
+                        {{ result.summary.get('Ventilation Load', 0) }}
                     ],
                     backgroundColor: ['#2563eb', '#16a34a', '#f59e0b'],
                     borderRadius: 8,
