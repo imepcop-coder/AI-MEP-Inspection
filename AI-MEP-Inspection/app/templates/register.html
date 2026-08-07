@@ -16,280 +16,124 @@
 
 <body class="auth-page">
 
-<div class="container auth-shell">
-
-    <div class="auth-card register-card">
-
-        <div class="text-center mb-4">
-
+<div class="auth-shell">
+    <section class="auth-panel">
+        <div>
             <div class="brand-badge">
                 <i class="bi bi-person-plus-fill"></i>
             </div>
+            <h2>Create your team workspace</h2>
+            <p>Join the premium enterprise AI MEP platform and centralize inspections, reports, and technical calculator workflows.</p>
+        </div>
+        <ul>
+            <li><i class="bi bi-shield-lock"></i><span>Secure multi-user access</span></li>
+            <li><i class="bi bi-kanban"></i><span>Organized inspection and project management</span></li>
+            <li><i class="bi bi-graph-up-arrow"></i><span>AI-assisted reporting and analysis</span></li>
+        </ul>
+        <div class="auth-panel-footer">
+            <small class="text-muted">Your account will be ready for immediate inspection workflows.</small>
+        </div>
+    </section>
 
-            <h2 class="auth-title">Create Account</h2>
-
-            <p class="auth-subtitle">
-                Join the AI-MEP Inspection Assistant workspace
-            </p>
-
+    <section class="auth-card register-card">
+        <div class="text-center mb-4">
+            <div class="brand-badge">
+                <i class="bi bi-person-plus"></i>
+            </div>
+            <h2 class="auth-title">Create account</h2>
+            <p class="auth-subtitle">Sign up to access the AI MEP Inspection Suite.</p>
         </div>
 
         {% if error %}
-
         <div class="alert alert-danger">
-
             {{ error }}
-
         </div>
-
         {% endif %}
 
         {% if success %}
-
         <div class="alert alert-success">
-
             {{ success }}
-
         </div>
-
         {% endif %}
 
         <form method="POST" action="/register" novalidate>
-
-            <div class="mb-3">
-
-                <label class="form-label">
-
-                    Full Name
-                    <span class="required">*</span>
-
-                </label>
-
-                <div class="input-group">
-
-                    <span class="input-group-text">
-
-                        <i class="bi bi-person"></i>
-
-                    </span>
-
-                    <input
-                        type="text"
-                        class="form-control"
-                        name="full_name"
-                        placeholder="Enter your full name"
-                        required>
-
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">Full Name</label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text"><i class="bi bi-person"></i></span>
+                        <input type="text" class="form-control" name="full_name" placeholder="Your full name" required>
+                    </div>
+                    <div class="field-error">Full name is required.</div>
                 </div>
-                <div class="field-error">Full name is required.</div>
-
-            </div>
-
-            <div class="mb-3">
-
-                <label class="form-label">
-
-                    Email Address
-                    <span class="required">*</span>
-
-                </label>
-
-                <div class="input-group">
-
-                    <span class="input-group-text">
-
-                        <i class="bi bi-envelope"></i>
-
-                    </span>
-
-                    <input
-                        type="email"
-                        class="form-control"
-                        name="email"
-                        placeholder="Enter your email"
-                        required>
-
+                <div class="col-md-6">
+                    <label class="form-label">Email Address</label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                        <input type="email" class="form-control" name="email" placeholder="team.member@company.com" required>
+                    </div>
+                    <div class="field-error">Please enter a valid email address.</div>
                 </div>
-                <div class="field-error">Please enter a valid email address.</div>
-
             </div>
 
-            <div class="mb-3">
-
-                <label class="form-label">
-
-                    Phone Number
-                    <span class="required">*</span>
-
-                </label>
-
-                <div class="input-group">
-
-                    <span class="input-group-text">
-
-                        <i class="bi bi-telephone"></i>
-
-                    </span>
-
-                    <input
-                        type="text"
-                        class="form-control"
-                        name="phone"
-                        placeholder="+971XXXXXXXXX"
-                        required>
-
+            <div class="row g-3 mt-3">
+                <div class="col-md-6">
+                    <label class="form-label">Phone Number</label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text"><i class="bi bi-telephone"></i></span>
+                        <input type="text" class="form-control" name="phone" placeholder="+971XXXXXXXXX" required>
+                    </div>
+                    <div class="field-error">Phone number is required.</div>
                 </div>
-                <div class="field-error">Phone number is required.</div>
-
-            </div>
-
-            <div class="mb-3">
-
-                <label class="form-label">
-
-                    Password
-                    <span class="required">*</span>
-
-                </label>
-
-                <div class="input-group">
-
-                    <span class="input-group-text">
-
-                        <i class="bi bi-lock"></i>
-
-                    </span>
-
-                    <input
-                        type="password"
-                        class="form-control"
-                        name="password"
-                        placeholder="Minimum 8 characters"
-                        required>
-
+                <div class="col-md-6">
+                    <label class="form-label">Role</label>
+                    <select class="form-select form-select-lg" name="role" required>
+                        <option value="">Select role</option>
+                        <option value="Engineer">Engineer</option>
+                        <option value="Inspector">Inspector</option>
+                    </select>
+                    <div class="field-error">Please select a role.</div>
                 </div>
-                <div class="field-error">Password must be at least 8 characters.</div>
-
             </div>
 
-            <div class="mb-3">
-
-                <label class="form-label">
-
-                    Confirm Password
-                    <span class="required">*</span>
-
-                </label>
-
-                <div class="input-group">
-
-                    <span class="input-group-text">
-
-                        <i class="bi bi-lock-fill"></i>
-
-                    </span>
-
-                    <input
-                        type="password"
-                        class="form-control"
-                        name="confirm_password"
-                        placeholder="Re-enter password"
-                        required>
-
+            <div class="row g-3 mt-3">
+                <div class="col-md-6">
+                    <label class="form-label">Password</label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                        <input type="password" class="form-control" name="password" placeholder="Minimum 8 characters" required>
+                    </div>
+                    <div class="field-error">Password must be at least 8 characters.</div>
                 </div>
-                <div class="field-error">Please confirm your password.</div>
-
+                <div class="col-md-6">
+                    <label class="form-label">Confirm Password</label>
+                    <div class="input-group input-group-lg">
+                        <span class="input-group-text"><i class="bi bi-lock-fill"></i></span>
+                        <input type="password" class="form-control" name="confirm_password" placeholder="Re-enter password" required>
+                    </div>
+                    <div class="field-error">Please confirm your password.</div>
+                </div>
             </div>
 
-            <div class="mb-3">
-
-                <label class="form-label">
-
-                    Role
-                    <span class="required">*</span>
-
-                </label>
-
-                <select
-                    class="form-select"
-                    name="role"
-                    required>
-
-                    <option value="">-- Select Role --</option>
-
-                    <option value="Engineer">
-
-                        Engineer
-
-                    </option>
-
-                    <option value="Inspector">
-
-                        Inspector
-
-                    </option>
-
-                </select>
-                <div class="field-error">Please select a role.</div>
-
-            </div>
-
-            <div class="form-check mb-4">
-
-                <input
-                    class="form-check-input"
-                    type="checkbox"
-                    required
-                    id="agree">
-
-                <label
-                    class="form-check-label"
-                    for="agree">
-
-                    I agree to the
-                    <a href="#">
-                        Terms & Conditions
-                    </a>
-
-                </label>
+            <div class="form-check form-check-solid my-4">
+                <input class="form-check-input" type="checkbox" required id="agree">
+                <label class="form-check-label" for="agree">I agree to the <a href="#">Terms & Conditions</a></label>
                 <div class="field-error">You must accept the terms and conditions.</div>
-
             </div>
 
-            <button
-                type="submit"
-                class="btn btn-primary btn-register w-100">
-
+            <button type="submit" class="btn btn-primary auth-btn w-100">
                 <i class="bi bi-person-plus-fill"></i>
-
                 Create Account
-
             </button>
-
         </form>
 
         <hr>
 
-        <div class="text-center">
-
-            Already have an account?
-
-            <br><br>
-
-            <a
-                href="/login"
-                class="btn btn-outline-secondary w-100">
-
-                <i class="bi bi-box-arrow-in-right"></i>
-
-                Back to Login
-
-            </a>
-
+        <div class="text-center auth-footer">
+            <p class="mb-2">Already have an account?</p>
+            <a href="/login" class="btn btn-outline-secondary w-100">Back to Login</a>
         </div>
-
-    </div>
-
+    </section>
 </div>
 
 </body>

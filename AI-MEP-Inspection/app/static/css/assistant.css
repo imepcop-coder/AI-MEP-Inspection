@@ -5,7 +5,8 @@
 
 .sidebar {
   border-right: 1px solid rgba(15, 23, 42, 0.08);
-  background: #1f2937;
+  background: rgba(255, 255, 255, 0.92);
+  color: #111827;
 }
 
 .chat-list {
@@ -14,23 +15,24 @@
 }
 
 .chat-item.active {
-  background: rgba(59, 130, 246, 0.15);
+  background: rgba(37, 99, 235, 0.12);
+  color: #111827;
 }
 
 .chat-item:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(37, 99, 235, 0.08);
 }
 
 .chat-header {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .chat-messages {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .chat-input-area {
-  background: #fff;
+  background: rgba(255, 255, 255, 0.95);
 }
 
 .prompt-chip {

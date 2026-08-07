@@ -16,150 +16,91 @@
 
 <body class="auth-page">
 
-<div class="container auth-shell">
-
-<div class="auth-card login-card">
-
-<div class="text-center mb-4">
-
-<div class="brand-badge">
-
-<i class="bi bi-building"></i>
-
-</div>
-
-<h2 class="auth-title">
-
-AI-MEP Inspection Assistant
-
-</h2>
-
-<p class="auth-subtitle">
-
-Secure workspace access for your inspection team
-
-</p>
-
-</div>
-
-{% if error %}
-
-<div class="alert alert-danger">
-
-{{ error }}
-
-</div>
-
-{% endif %}
-
-{% if success %}
-
-<div class="alert alert-success">
-
-{{ success }}
-
-</div>
-
-{% endif %}
-
-<form method="POST" action="/login" novalidate>
-
-<div class="mb-3">
-
-<label class="form-label">
-
-Email Address
-
-</label>
-
-<div class="input-group">
-
-<span class="input-group-text">
-
-<i class="bi bi-envelope"></i>
-
-</span>
-
-<input
-type="email"
-name="email"
-class="form-control"
-placeholder="Enter your email"
-required>
-
-</div>
-<div class="field-error">Please enter a valid email address.</div>
-
-</div>
-
-<div class="mb-4">
-
-<label class="form-label">
-
-Password
-
-</label>
-
-<div class="input-group">
-
-<span class="input-group-text">
-
-<i class="bi bi-lock"></i>
-
-</span>
-
-<input
-type="password"
-name="password"
-class="form-control"
-placeholder="Enter your password"
-required>
-
-</div>
-<div class="field-error">Password is required.</div>
-
-</div>
-
-<button type="submit" class="btn btn-primary btn-login auth-btn w-100">
-
-<i class="bi bi-box-arrow-in-right"></i>
-
-Login
-
-</button>
-
-</form>
-
-<div class="text-center mt-4">
-
-<a href="/forgot-password" class="auth-link">
-
-Forgot Password?
-
-</a>
-
-</div>
-
-<hr>
-
-<div class="text-center">
-
-Don't have an account?
-
-<br><br>
-
-<a
-href="/register"
-class="btn btn-secondary w-100 auth-link">
-
-Create Account
-
-</a>
-
-</div>
-
-</div>
-
+<div class="auth-shell">
+    <section class="auth-panel">
+        <div>
+            <div class="brand-badge">
+                <i class="bi bi-building"></i>
+            </div>
+            <h2>Welcome back to AI MEP Suite</h2>
+            <p>Secure enterprise access for inspection teams, engineering workflows, and AI-powered reporting.</p>
+        </div>
+        <ul>
+            <li><i class="bi bi-check-circle"></i><span>Premium inspection analytics and reporting</span></li>
+            <li><i class="bi bi-chat-dots"></i><span>AI assistant for engineering documentation</span></li>
+            <li><i class="bi bi-shield-lock"></i><span>Secure role-based access and audit-ready workflows</span></li>
+        </ul>
+        <div class="auth-panel-footer">
+            <small class="text-muted">Designed for modern engineering teams that need speed, accuracy, and clarity.</small>
+        </div>
+    </section>
+
+    <section class="auth-card login-card">
+        <div class="text-center mb-4">
+            <div class="brand-badge">
+                <i class="bi bi-box-arrow-in-right"></i>
+            </div>
+            <h2 class="auth-title">Sign in to your workspace</h2>
+            <p class="auth-subtitle">Enter your workspace credentials to continue.</p>
+        </div>
+
+        {% if error %}
+        <div class="alert alert-danger">
+            {{ error }}
+        </div>
+        {% endif %}
+
+        {% if success %}
+        <div class="alert alert-success">
+            {{ success }}
+        </div>
+        {% endif %}
+
+        <form method="POST" action="/login" novalidate>
+            <div class="mb-3">
+                <label class="form-label">Email Address</label>
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text"><i class="bi bi-envelope"></i></span>
+                    <input type="email" name="email" class="form-control" placeholder="team.member@company.com" required>
+                </div>
+                <div class="field-error">Please enter a valid email address.</div>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label">Password</label>
+                <div class="input-group input-group-lg">
+                    <span class="input-group-text"><i class="bi bi-lock"></i></span>
+                    <input type="password" name="password" class="form-control" placeholder="Enter your password" required>
+                </div>
+                <div class="field-error">Password is required.</div>
+            </div>
+
+            <button type="submit" class="btn btn-primary auth-btn w-100">
+                <i class="bi bi-box-arrow-in-right"></i>
+                Continue
+            </button>
+        </form>
+
+        <div class="text-center my-3">
+            <span class="text-muted">or continue with</span>
+        </div>
+
+        <button type="button" class="btn btn-google w-100 mb-3">
+            <i class="bi bi-google"></i>
+            Continue with Google
+        </button>
+
+        <div class="text-center auth-footer">
+            <a href="/forgot-password">Forgot Password?</a>
+        </div>
+
+        <hr>
+
+        <div class="text-center auth-footer">
+            <p class="mb-2">New to AI MEP Suite?</p>
+            <a href="/register" class="btn btn-outline-secondary w-100">Create Account</a>
+        </div>
+    </section>
 </div>
 
 </body>

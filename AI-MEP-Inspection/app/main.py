@@ -74,9 +74,65 @@ ensure_sqlite_columns()
 app.add_middleware(
     SessionMiddleware,
     secret_key=SESSION_SECRET,
+    session_cookie="session",
+    max_age=1209600,  # 14 days
+    path='/',
     https_only=os.getenv("APP_ENV", "development").lower() == "production",
     same_site="lax",
 )
+
+# Temporary request/response session debug middleware (logs to session_debug.log)
+@app.middleware("http")
+async def session_debug_middleware(request: Request, call_next):
+    import json, time
+    log_path = Path(__file__).resolve().parents[1] / "session_debug.log"
+    try:
+        cookie_header = request.headers.get('cookie')
+    except Exception:
+        cookie_header = None
+    try:
+        cookies = dict(request.cookies)
+    except Exception:
+        cookies = None
+    try:
+        scope_session = request.scope.get('session') if hasattr(request, 'scope') else None
+    except Exception:
+        scope_session = None
+    try:
+        # accessing request.session may raise if SessionMiddleware not yet run, but it should be available
+        session_prop = dict(request.session) if request.session is not None else None
+    except Exception as e:
+        session_prop = f"<error: {e}>"
+    # initial current_user if present
+    cur_user = getattr(request.state, 'current_user', None)
+
+    entry = {
+        'ts': time.time(),
+        'path': str(request.url.path),
+        'query': str(request.url.query),
+        'cookie_header': cookie_header,
+        'cookies': cookies,
+        'scope_session': bool(scope_session) if scope_session is not None else None,
+        'session_prop': session_prop,
+        'state_current_user_before': repr(cur_user),
+    }
+    try:
+        with open(log_path, 'a', encoding='utf-8') as f:
+            f.write(json.dumps(entry) + "\n")
+    except Exception:
+        pass
+
+    response = await call_next(request)
+
+    # log response set-cookie
+    set_cookie = response.headers.get('set-cookie') if hasattr(response, 'headers') else None
+    try:
+        entry2 = {'ts': time.time(), 'path': str(request.url.path), 'set_cookie': set_cookie}
+        with open(log_path, 'a', encoding='utf-8') as f:
+            f.write(json.dumps(entry2) + "\n")
+    except Exception:
+        pass
+    return response
 
 
 def _is_safe_origin(origin: str | None, referer: str | None, host: str | None) -> bool:
@@ -97,91 +153,102 @@ def _is_safe_origin(origin: str | None, referer: str | None, host: str | None) -
 
 
 @app.middleware("http")
-async def authentication_context_middleware(request: Request, call_next):
+async def auth_middleware(request: Request, call_next):
+    """Combined middleware: populate authentication context and enforce auth for protected routes.
+    """
+    import logging
+    logger = logging.getLogger("ai_mep.auth")
+    path = request.url.path or "/"
     db = next(get_db())
     try:
-        current_user = get_session_user(request, db)
-        request.state.current_user = current_user
-        request.state.user = current_user
-
-        if current_user is None:
+        # populate current_user from session provided by SessionMiddleware when available
+        session_payload = None
+        try:
             session_payload = request.scope.get("session") if hasattr(request, "scope") else None
-            if not session_payload:
-                try:
-                    session_payload = request.session
-                except AssertionError:
-                    session_payload = None
-            if session_payload:
-                request.state.current_user = session_payload.get("user")
-                request.state.user = request.state.current_user
+        except Exception:
+            session_payload = None
+        if not session_payload:
+            try:
+                session_payload = request.session
+            except Exception:
+                session_payload = None
+
+        logger.info("auth_middleware: session_payload keys=%s", list(session_payload.keys()) if isinstance(session_payload, dict) else None)
+
+        if isinstance(session_payload, dict) and session_payload.get("user"):
+            request.state.current_user = session_payload.get("user")
+            request.state.user = request.state.current_user
+        else:
+            # fallback to DB lookup which may attempt to decode cookie
+            try:
+                current_user = get_session_user(request, db)
+            except Exception as e:
+                logger.info("auth_middleware: get_session_user error: %s", e)
+                current_user = None
+            request.state.current_user = current_user
+            request.state.user = current_user
+
+        logger.info("auth_middleware: current_user=%s", getattr(request.state, 'current_user', None))
+
+        # enforcement: allow public resources
+        if path.startswith("/static") or path.startswith("/uploads"):
+            return await call_next(request)
+
+        public_exact = {"/login", "/register", "/forgot-password", "/reset-password", "/favicon.ico", "/robots.txt"}
+        if path in public_exact:
+            if getattr(request.state, "current_user", None) and path in ("/login", "/register"):
+                return RedirectResponse(url="/dashboard", status_code=302)
+            return await call_next(request)
+
+        if path.endswith("/health") or "/health" in path:
+            return await call_next(request)
+
+        if getattr(request.state, "current_user", None):
+            return await call_next(request)
+
+        # not authenticated -> preserve next and respond
+        original = str(request.url.path)
+        if request.url.query:
+            original += "?" + request.url.query
+        try:
+            request.session["next"] = original
+        except Exception:
+            pass
+
+        accept = request.headers.get("accept", "")
+        is_api = request.url.path.startswith("/api/") or "application/json" in accept
+        if is_api:
+            return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
+
+        try:
+            next_q = quote(original, safe="")
+        except Exception:
+            next_q = original
+        login_url = "/login"
+        if next_q:
+            login_url = f"/login?next={next_q}"
+        return RedirectResponse(url=login_url, status_code=302)
     finally:
         db.close()
-    return await call_next(request)
-
-
-@app.middleware("http")
-async def auth_required_middleware(request: Request, call_next):
-    """Global auth enforcement middleware.
-    - Allows public routes (login/register/forgot/reset, static, uploads, health endpoints)
-    - For unauthenticated API callers: return JSON 401
-    - For unauthenticated HTML callers: store requested URL in session and redirect (302) to /login
-    - If authenticated and visiting /login or /register redirect to /dashboard (302)
-    """
-    path = request.url.path or "/"
-
-    # Always allow public static/uploads
-    if path.startswith("/static") or path.startswith("/uploads"):
-        return await call_next(request)
-
-    # Allow common public endpoints
-    public_exact = {"/login", "/register", "/forgot-password", "/reset-password", "/favicon.ico", "/robots.txt"}
-    if path in public_exact:
-        # If user already logged in, redirect login/register to dashboard
-        if getattr(request.state, "current_user", None) and path in ("/login", "/register"):
-            return RedirectResponse(url="/dashboard", status_code=302)
-        return await call_next(request)
-
-    # Allow health endpoints anywhere under a route that contains /health
-    if path.endswith("/health") or "/health" in path:
-        return await call_next(request)
-
-    # If user is authenticated allow access
-    if getattr(request.state, "current_user", None):
-        return await call_next(request)
-
-    # Not authenticated: preserve requested URL
-    original = str(request.url.path)
-    if request.url.query:
-        original += "?" + request.url.query
-
-    # Store intended destination in session when possible
-    try:
-        request.session["next"] = original
-    except Exception:
-        # ignore session write failures
-        pass
-
-    # Determine whether this is an API call (prefer JSON) or HTML
-    accept = request.headers.get("accept", "")
-    is_api = request.url.path.startswith("/api/") or "application/json" in accept
-
-    if is_api:
-        return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
-
-    # HTML page -> redirect to /login preserving next as query param
-    try:
-        next_q = quote(original, safe="")
-    except Exception:
-        next_q = original
-    login_url = "/login"
-    if next_q:
-        login_url = f"/login?next={next_q}"
-    return RedirectResponse(url=login_url, status_code=302)
 
 
 @app.middleware("http")
 async def security_middleware(request: Request, call_next):
+    path = request.url.path or "/"
+    # Exempt public/auth endpoints from CSRF protection
+    csrf_exempt = {
+        "/login",
+        "/register",
+        "/forgot-password",
+        "/reset-password",
+        "/favicon.ico",
+        "/robots.txt",
+    }
     if request.method in {"POST", "PUT", "PATCH", "DELETE"}:
+        # Skip CSRF for exempt paths, static/uploads, api, and health endpoints
+        if path in csrf_exempt or path.startswith("/static") or path.startswith("/uploads") or path.startswith("/api/") or "/health" in path:
+            return await call_next(request)
+
         content_type = request.headers.get("content-type", "")
         if "application/x-www-form-urlencoded" in content_type or "multipart/form-data" in content_type:
             if not _is_safe_origin(
@@ -196,6 +263,14 @@ async def security_middleware(request: Request, call_next):
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     return response
+
+# Ensure SessionMiddleware runs before custom HTTP middleware so request.session is available
+# to auth, debug, and security middleware handlers.
+for i, mw in enumerate(app.user_middleware):
+    if getattr(mw, 'cls', None) is SessionMiddleware:
+        app.user_middleware.insert(0, app.user_middleware.pop(i))
+        app.build_middleware_stack()
+        break
 
 app.mount("/static", StaticFiles(directory=BASE_DIR / "static"), name="static")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")

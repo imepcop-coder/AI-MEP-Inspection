@@ -1,58 +1,49 @@
-{% extends "layouts/base.html" %}
+﻿{% extends "layouts/base.html" %}
 
 {% block title %}Dashboard{% endblock %}
 
 {% block content %}
-
-<div class="container-fluid">
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
-        <div>
-            <span class="text-uppercase text-muted small">Engineering Command Center</span>
-            <h1 class="mb-2">AI Construction Inspection Dashboard</h1>
-            <p class="text-muted mb-0">Monitor projects, inspections, and AI workflows from a polished engineering workspace.</p>
-        </div>
-        <div class="d-flex flex-wrap gap-2">
-            <a href="/projects" class="btn btn-secondary">Projects</a>
-            <a href="/inspections" class="btn btn-secondary">Inspections</a>
-            <a href="/reports" class="btn btn-primary">Reports</a>
+<div class="container-fluid dashboard-shell">
+    <div class="dashboard-hero-panel mb-4 px-4 py-4">
+        <div class="row align-items-center gy-4">
+            <div class="col-lg-8">
+                <span class="eyebrow">Engineering Command Center</span>
+                <h1 class="display-6 fw-bold mb-2">AI Construction Inspection Dashboard</h1>
+                <p class="text-muted mb-0">Monitor projects, inspections, and AI workflows from a polished engineering workspace.</p>
+            </div>
+            <div class="col-lg-4 d-flex gap-2 flex-wrap justify-content-lg-end">
+                <a href="/projects" class="btn btn-outline-secondary btn-sm">Projects</a>
+                <a href="/inspections" class="btn btn-outline-secondary btn-sm">Inspections</a>
+                <a href="/reports" class="btn btn-primary btn-sm">Reports</a>
+            </div>
         </div>
     </div>
 
     <div class="row g-4 mb-4">
         <div class="col-lg-3 col-sm-6">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <small class="text-muted">Total Reports</small>
-                    <h2 class="fw-bold mt-2">{{ total_reports | default(0) }}</h2>
-                </div>
+            <div class="stat-card p-4 h-100">
+                <small class="text-uppercase text-muted">Total Reports</small>
+                <h2 class="mt-2 mb-0">{{ total_reports | default(0) }}</h2>
             </div>
         </div>
         <div class="col-lg-3 col-sm-6">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <small class="text-muted">Projects</small>
-                    <h2 class="fw-bold mt-2">{{ total_projects | default(0) }}</h2>
-                </div>
+            <div class="stat-card p-4 h-100">
+                <small class="text-uppercase text-muted">Projects</small>
+                <h2 class="mt-2 mb-0">{{ total_projects | default(0) }}</h2>
             </div>
         </div>
         <div class="col-lg-3 col-sm-6">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <small class="text-muted">Open Snags</small>
-                    <h2 class="fw-bold mt-2">{{ open_snags | default(0) }}</h2>
-                </div>
+            <div class="stat-card p-4 h-100">
+                <small class="text-uppercase text-muted">Open Snags</small>
+                <h2 class="mt-2 mb-0">{{ open_snags | default(0) }}</h2>
             </div>
         </div>
         <div class="col-lg-3 col-sm-6">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <small class="text-muted">AI Provider</small>
-                    <h2 class="fw-bold mt-2">{{ ai_provider | default('Bedrock') }}</h2>
-                </div>
+            <div class="stat-card p-4 h-100">
+                <small class="text-uppercase text-muted">AI Provider</small>
+                <h2 class="mt-2 mb-0">{{ ai_provider | default('Bedrock') }}</h2>
             </div>
         </div>
     </div>
 </div>
-
-
 {% endblock %}

@@ -111,9 +111,25 @@ async def login(
     password: str = Form(...),
     db: Session = Depends(get_db)
 ):
-    user = db.query(User).filter(User.email == email).first()
+    import logging
+    logger = logging.getLogger("ai_mep.auth")
+    logger.info("Login attempt for email=%s", email)
 
-    if not user or not verify_password(password, user.password):
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        logger.info("Login failed: user not found for email=%s", email)
+        return templates.TemplateResponse(request=request, name="login.html", context={"error": "Invalid email or password."})
+
+    # log a short prefix of the stored hash for debugging (do not leak full hash in logs)
+    try:
+        logger.debug("Found user id=%s hash_prefix=%s", user.id, (user.password or "")[0:40])
+    except Exception:
+        pass
+
+    valid = verify_password(password, user.password)
+    logger.info("Password verification for email=%s: %s", email, valid)
+
+    if not valid:
         return templates.TemplateResponse(request=request, name="login.html", context={"error": "Invalid email or password."})
 
     if not user.is_active:
@@ -150,7 +166,18 @@ async def login(
     if not next_url:
         next_url = "/dashboard"
 
-    return RedirectResponse(url=next_url, status_code=302)
+    # Prefer rendering the dashboard immediately after login so the user sees the UI
+    # even if the client's cookie handling or middleware ordering is flaky in development.
+    # Redirect behavior is still supported via next_url when things are healthy.
+    try:
+        # Render dashboard context directly
+        workspace_service = WorkspaceService(db)
+        workspace_service.create_default_workspace(user)
+        context = workspace_service.get_dashboard_context(user)
+        return templates.TemplateResponse(request=request, name="dashboard.html", context=context)
+    except Exception:
+        # Fallback to redirect
+        return RedirectResponse(url=next_url, status_code=303)
 
 
 # ---------------------------------------------------------

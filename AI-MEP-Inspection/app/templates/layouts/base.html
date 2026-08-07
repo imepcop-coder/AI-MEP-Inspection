@@ -28,7 +28,7 @@
                 {% include "layouts/sidebar.html" %}
             </aside>
                 <div class="sidebar-backdrop" id="sidebarBackdrop" aria-hidden="true"></div>
-                <main class="col main-content px-4 py-4">
+                <main class="col main-content px-4 py-4" role="main">
                 {% set current_path = request.url.path if request and request.url else '' %}
                 {% if current_path.startswith('/calculators') and current_path != '/calculators' %}
                 <div class="d-flex justify-content-start mb-3">

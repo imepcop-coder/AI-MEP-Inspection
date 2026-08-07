@@ -4,10 +4,19 @@
             <span>AI</span>
         </div>
         <div>
-            <div class="brand-name">AI MEP Engineering</div>
-            <div class="brand-subtitle">Inspection + Calculators Hub</div>
+            <div class="brand-name">AI MEP Suite</div>
+            <div class="brand-subtitle">Enterprise Inspection Platform</div>
         </div>
     </div>
+
+    <ul class="nav flex-column sidebar-nav mb-4">
+        <li class="nav-item">
+            <a href="/dashboard" class="nav-link">
+                <i class="bi bi-speedometer2"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+    </ul>
 
     <div class="sidebar-section">
         <div class="sidebar-section-title">Inspection Hub</div>
@@ -26,7 +35,7 @@
             </li>
             <li class="nav-item">
                 <a href="/reports" class="nav-link">
-                    <i class="bi bi-file-earmark-excel"></i>
+                    <i class="bi bi-file-earmark-text"></i>
                     <span>Reports</span>
                 </a>
             </li>
@@ -40,20 +49,38 @@
     </div>
 
     <div class="sidebar-section">
-        <div class="sidebar-section-title">Engineering Hub</div>
+        <div class="sidebar-section-title">Engineering</div>
         <ul class="nav flex-column sidebar-nav">
-            <li class="nav-item">
-                <a href="/analytics" class="nav-link">
-                    <i class="bi bi-bar-chart-line"></i>
-                    <span>Analytics</span>
-                </a>
-            </li>
             <li class="nav-item">
                 <a href="/calculators" class="nav-link">
                     <i class="bi bi-calculator"></i>
-                    <span>MEP Calculators</span>
+                    <span>Calculators</span>
                 </a>
             </li>
+            <li class="nav-item">
+                <a href="/calculators/electrical" class="nav-link">
+                    <i class="bi bi-plug"></i>
+                    <span>Electrical</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/calculators/plumbing" class="nav-link">
+                    <i class="bi bi-droplet"></i>
+                    <span>Plumbing</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/calculators/fire-fighting" class="nav-link">
+                    <i class="bi bi-fire"></i>
+                    <span>Fire Fighting</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-section-title">AI Workspace</div>
+        <ul class="nav flex-column sidebar-nav">
             <li class="nav-item">
                 <a href="/assistant" class="nav-link">
                     <i class="bi bi-robot"></i>
@@ -61,9 +88,33 @@
                 </a>
             </li>
             <li class="nav-item">
+                <a href="/assistant" class="nav-link">
+                    <i class="bi bi-clock-history"></i>
+                    <span>Chat History</span>
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <div class="sidebar-section">
+        <div class="sidebar-section-title">Administration</div>
+        <ul class="nav flex-column sidebar-nav">
+            <li class="nav-item">
                 <a href="/settings" class="nav-link">
                     <i class="bi bi-gear"></i>
                     <span>Settings</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/admin" class="nav-link">
+                    <i class="bi bi-people"></i>
+                    <span>Users</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a href="/notifications" class="nav-link">
+                    <i class="bi bi-bell"></i>
+                    <span>Notifications</span>
                 </a>
             </li>
         </ul>

@@ -1,18 +1,43 @@
 from __future__ import annotations
 
+import base64
+import json
 import os
 import secrets
 from typing import Any
 
 from fastapi import Request, Depends
-from itsdangerous import BadSignature, URLSafeSerializer
+from itsdangerous import BadSignature, TimestampSigner
 from sqlalchemy.orm import Query, Session
 from app.database.db import get_db
 
 from app.models.user import User
 
-SESSION_SECRET = os.getenv("SESSION_SECRET") or secrets.token_hex(32)
-SESSION_SERIALIZER = URLSafeSerializer(SESSION_SECRET, salt="starlette.sessions")
+# Ensure a persistent session secret so reloading the app doesn't invalidate existing session cookies.
+_env_secret = os.getenv("SESSION_SECRET")
+if _env_secret:
+    SESSION_SECRET = _env_secret
+else:
+    # Use a file in the project root to persist the secret between restarts in development
+    from pathlib import Path
+
+    _project_root = Path(__file__).resolve().parents[1].parents[0]
+    _secret_file = _project_root / "session_secret.txt"
+    try:
+        if _secret_file.exists():
+            SESSION_SECRET = _secret_file.read_text(encoding="utf-8").strip()
+        else:
+            SESSION_SECRET = secrets.token_hex(32)
+            try:
+                _secret_file.write_text(SESSION_SECRET, encoding="utf-8")
+            except Exception:
+                # If writing fails, fall back to in-memory secret (less ideal)
+                pass
+    except Exception:
+        SESSION_SECRET = secrets.token_hex(32)
+
+SESSION_SIGNER = TimestampSigner(SESSION_SECRET)
+SESSION_MAX_AGE = 1209600  # Match SessionMiddleware default (14 days)
 
 
 class TenantContextError(PermissionError):
@@ -79,11 +104,15 @@ def get_session_payload(request: Request) -> dict[str, Any] | None:
         return None
 
     try:
-        decoded_session = SESSION_SERIALIZER.loads(session_cookie)
-    except (BadSignature, Exception):
+        signed_data = SESSION_SIGNER.unsign(session_cookie.encode("utf-8"), max_age=SESSION_MAX_AGE)
+        decoded_json = json.loads(base64.b64decode(signed_data))
+    except (BadSignature, ValueError, TypeError, json.JSONDecodeError):
         return None
 
-    user_data = decoded_session.get("user") if isinstance(decoded_session, dict) else None
+    if not isinstance(decoded_json, dict):
+        return None
+
+    user_data = decoded_json.get("user")
     if not isinstance(user_data, dict):
         return None
     return user_data
