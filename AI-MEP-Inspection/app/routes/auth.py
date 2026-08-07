@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Form, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from urllib.parse import urlparse, unquote
 
 from app.auth.security import hash_password, verify_password
 from app.database.db import get_db
@@ -23,6 +24,9 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 # ---------------------------------------------------------
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
+    # If already authenticated, redirect to dashboard
+    if getattr(request.state, "current_user", None):
+        return RedirectResponse(url="/dashboard", status_code=302)
     return templates.TemplateResponse(
         request=request,
         name="login.html",
@@ -35,6 +39,9 @@ async def login_page(request: Request):
 # ---------------------------------------------------------
 @router.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):
+    # If already authenticated, redirect to dashboard
+    if getattr(request.state, "current_user", None):
+        return RedirectResponse(url="/dashboard", status_code=302)
     return templates.TemplateResponse(
         request=request,
         name="register.html",
@@ -133,7 +140,17 @@ async def login(
     workspace = WorkspaceService(db)
     workspace.log_action(user, "login", "User logged in")
 
-    return RedirectResponse(url="/dashboard", status_code=303)
+    # Determine where to redirect after login
+    next_url = request.query_params.get("next") or request.session.pop("next", None)
+    # Validate next_url to prevent open redirects: only allow relative paths
+    if next_url and isinstance(next_url, str):
+        parsed = urlparse(next_url)
+        if parsed.scheme or parsed.netloc or not next_url.startswith("/"):
+            next_url = None
+    if not next_url:
+        next_url = "/dashboard"
+
+    return RedirectResponse(url=next_url, status_code=302)
 
 
 # ---------------------------------------------------------
@@ -185,5 +202,12 @@ async def forgot_password(
 # ---------------------------------------------------------
 @router.get("/logout")
 async def logout(request: Request):
-    request.session.clear()
-    return RedirectResponse(url="/login", status_code=303)
+    # Clear server-side session data
+    try:
+        request.session.clear()
+    except Exception:
+        pass
+    # Return redirect and delete the session cookie to ensure the browser discards it
+    response = RedirectResponse(url="/login", status_code=302)
+    response.delete_cookie("session")
+    return response

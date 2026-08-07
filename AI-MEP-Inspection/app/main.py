@@ -1,7 +1,7 @@
 import os
 import secrets
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlparse, quote
 
 from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -117,6 +117,66 @@ async def authentication_context_middleware(request: Request, call_next):
     finally:
         db.close()
     return await call_next(request)
+
+
+@app.middleware("http")
+async def auth_required_middleware(request: Request, call_next):
+    """Global auth enforcement middleware.
+    - Allows public routes (login/register/forgot/reset, static, uploads, health endpoints)
+    - For unauthenticated API callers: return JSON 401
+    - For unauthenticated HTML callers: store requested URL in session and redirect (302) to /login
+    - If authenticated and visiting /login or /register redirect to /dashboard (302)
+    """
+    path = request.url.path or "/"
+
+    # Always allow public static/uploads
+    if path.startswith("/static") or path.startswith("/uploads"):
+        return await call_next(request)
+
+    # Allow common public endpoints
+    public_exact = {"/login", "/register", "/forgot-password", "/reset-password", "/favicon.ico", "/robots.txt"}
+    if path in public_exact:
+        # If user already logged in, redirect login/register to dashboard
+        if getattr(request.state, "current_user", None) and path in ("/login", "/register"):
+            return RedirectResponse(url="/dashboard", status_code=302)
+        return await call_next(request)
+
+    # Allow health endpoints anywhere under a route that contains /health
+    if path.endswith("/health") or "/health" in path:
+        return await call_next(request)
+
+    # If user is authenticated allow access
+    if getattr(request.state, "current_user", None):
+        return await call_next(request)
+
+    # Not authenticated: preserve requested URL
+    original = str(request.url.path)
+    if request.url.query:
+        original += "?" + request.url.query
+
+    # Store intended destination in session when possible
+    try:
+        request.session["next"] = original
+    except Exception:
+        # ignore session write failures
+        pass
+
+    # Determine whether this is an API call (prefer JSON) or HTML
+    accept = request.headers.get("accept", "")
+    is_api = request.url.path.startswith("/api/") or "application/json" in accept
+
+    if is_api:
+        return JSONResponse(status_code=401, content={"detail": "Unauthorized"})
+
+    # HTML page -> redirect to /login preserving next as query param
+    try:
+        next_q = quote(original, safe="")
+    except Exception:
+        next_q = original
+    login_url = "/login"
+    if next_q:
+        login_url = f"/login?next={next_q}"
+    return RedirectResponse(url=login_url, status_code=302)
 
 
 @app.middleware("http")
