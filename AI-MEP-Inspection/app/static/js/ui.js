@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', () => {
+const initializeAppUI = () => {
   const toastContainer = document.getElementById('appToastContainer');
 
   const showToast = (message, type = 'info') => {
@@ -27,26 +27,56 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const saveSidebarState = (isOpen) => localStorage.setItem('sidebarOpen', isOpen ? 'true' : 'false');
-  const loadSidebarState = () => localStorage.getItem('sidebarOpen') === 'true';
-
+  const isMobileWidth = () => window.matchMedia('(max-width: 991px)').matches || document.documentElement.clientWidth <= 991;
+ 
+  const loadSidebarState = () => {
+    if (isMobileWidth()) {
+      return false;
+    }
+    return localStorage.getItem('sidebarOpen') === 'true';
+  };
+ 
   const toggleSidebar = () => {
-    if (window.innerWidth <= 991) {
-      document.body.classList.toggle('sidebar-open');
-      saveSidebarState(document.body.classList.contains('sidebar-open'));
+    if (isMobileWidth()) {
+      const isOpen = document.body.classList.toggle('sidebar-open');
+      saveSidebarState(isOpen);
     } else {
       document.body.classList.toggle('sidebar-collapsed');
     }
   };
 
   const sidebarToggle = document.getElementById('sidebarToggle');
+  const sidebarBackdrop = document.getElementById('sidebarBackdrop');
+  const sidebarLinks = Array.from(document.querySelectorAll('.sidebar-nav .nav-link, .sidebar-footer a'));
+ 
+  const closeSidebar = () => {
+    document.body.classList.remove('sidebar-open');
+    saveSidebarState(false);
+  };
+ 
   if (sidebarToggle) {
     sidebarToggle.addEventListener('click', (event) => {
       event.preventDefault();
       toggleSidebar();
     });
   }
-
-  if (loadSidebarState()) {
+ 
+  if (sidebarBackdrop) {
+    sidebarBackdrop.addEventListener('click', () => {
+      closeSidebar();
+    });
+  }
+ 
+  sidebarLinks.forEach((link) => {
+    link.addEventListener('click', () => {
+      if (isMobileWidth()) {
+        closeSidebar();
+      }
+    });
+  });
+ 
+  document.body.classList.remove('sidebar-open');
+  if (!isMobileWidth() && loadSidebarState()) {
     document.body.classList.add('sidebar-open');
   }
 
@@ -199,4 +229,10 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('[data-action="close-toast"]').forEach((element) => {
     element.addEventListener('click', () => showToast('Action completed successfully.', 'success'));
   });
-});
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initializeAppUI);
+} else {
+  initializeAppUI();
+}
