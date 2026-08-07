@@ -15,3 +15,15 @@ reports/*
 .idea/
 
 .DS_Store
+
+# Database
+ai_mep_inspection.db
+
+# Runtime data
+uploads/
+reports/
+
+# Virtual environments
+venv/
+.venv/
+.env
