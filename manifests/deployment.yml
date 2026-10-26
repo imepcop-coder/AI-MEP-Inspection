@@ -1,0 +1,19 @@
+apiVersion : apps/v1
+kind: Deployment
+metadata:
+  name: devopslab 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: devopslab
+  template:
+    metadata:
+      labels:
+        app: devopslab 
+    spec:
+      containers:
+        - name: devopslab 
+          image: aimep55923.azurecr.io/devopslab
+          ports:
+          - containerPort: 8000
