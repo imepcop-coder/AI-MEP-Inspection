@@ -905,7 +905,6 @@ body[data-theme="dark"] .dashboard-empty-state span {
         width: 100%;
         flex-wrap: wrap;
     }
-
     .inspection-search {
         flex: 1 1 145px;
     }
@@ -922,4 +921,43 @@ body[data-theme="dark"] .dashboard-empty-state span {
     .inspection-tools > .btn {
         width: auto;
     }
+}
+
+.quick-actions a i,
+.dashboard-empty-state > i {
+    color: #7541c8;
+}
+
+.quick-actions a:hover,
+.quick-actions a:focus-visible {
+    border-color: #e2d6f2;
+    background: #f3eef9;
+    color: #4b238e;
+}
+
+.live-controls {
+    color: #e0d5e9;
+}
+
+.live-indicator,
+.live-updated {
+    color: #e0d5e9;
+}
+
+.live-refresh-button {
+    border-color: rgba(230, 211, 247, 0.28);
+    color: #f0e7f7;
+}
+
+.live-refresh-button:hover,
+.live-refresh-button:focus {
+    border-color: rgba(230, 211, 247, 0.52);
+    background: rgba(248, 239, 255, 0.12);
+}
+
+body[data-theme="dark"] .quick-actions a:hover,
+body[data-theme="dark"] .quick-actions a:focus-visible {
+    border-color: #514063;
+    background: #38284b;
+    color: #e4d3ff;
 }

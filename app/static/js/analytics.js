@@ -15,13 +15,13 @@ document.addEventListener('DOMContentLoaded', () => {
   let activeRequest = null;
 
   const chartDefinitions = [
-    { key: 'inspection_trend', id: 'trendChart', type: 'line', label: 'Inspections', color: '#087f78' },
+    { key: 'inspection_trend', id: 'trendChart', type: 'line', label: 'Inspections', color: '#7541c8' },
     { key: 'inspection_status', id: 'inspectionStatusChart', type: 'doughnut' },
-    { key: 'ncr_severity', id: 'ncrSeverityChart', type: 'bar', label: 'NCRs', color: '#c28b3c' },
+    { key: 'ncr_severity', id: 'ncrSeverityChart', type: 'bar', label: 'NCRs', color: '#ed7845' },
     { key: 'ncr_status', id: 'ncrStatusChart', type: 'doughnut' },
     { key: 'discipline_performance', id: 'disciplineChart', type: 'stacked' },
     { key: 'project_progress', id: 'projectChart', type: 'horizontal' },
-    { key: 'ai_usage', id: 'aiChart', type: 'line', label: 'AI requests', color: '#3976a8' },
+    { key: 'ai_usage', id: 'aiChart', type: 'line', label: 'AI requests', color: '#9a70cf' },
     { key: 'compliance_status', id: 'complianceChart', type: 'doughnut' },
   ];
 
@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   const colorsFor = (labels) => {
-    const palette = ['#087f78', '#c28b3c', '#3976a8', '#8b6bb5', '#5a9b68', '#d56b58', '#64878c'];
+    const palette = ['#7541c8', '#ed7845', '#5176b8', '#a36ac1', '#63966b', '#d65f65', '#73808f'];
     return labels.map((_, index) => palette[index % palette.length]);
   };
 
@@ -114,7 +114,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       return;
     }
-    charts.get(definition.id)?.destroy();
+    const themeStyles = getComputedStyle(document.body);
+    Chart.defaults.color = themeStyles.getPropertyValue('--text-muted').trim();
+    Chart.defaults.borderColor = themeStyles.getPropertyValue('--border').trim();
     charts.get(definition.id)?.destroy();
     let config;
     if (definition.type === 'line') {
@@ -159,8 +161,8 @@ document.addEventListener('DOMContentLoaded', () => {
         data: {
           labels: chartData.labels,
           datasets: [
-            { label: 'Closed', data: chartData.completed, backgroundColor: '#087f78', borderRadius: 4 },
-            { label: 'Not closed', data: chartData.total.map((value, index) => value - chartData.completed[index]), backgroundColor: '#dce6e3', borderRadius: 4 },
+            { label: 'Closed', data: chartData.completed, backgroundColor: '#7541c8', borderRadius: 4 },
+            { label: 'Not closed', data: chartData.total.map((value, index) => value - chartData.completed[index]), backgroundColor: themeStyles.getPropertyValue('--border').trim(), borderRadius: 4 },
           ],
         },
         options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } }, scales: { x: { stacked: true }, y: { stacked: true, beginAtZero: true, ticks: { precision: 0 } } } },
@@ -170,7 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
         type: 'bar',
         data: {
           labels: chartData.labels,
-          datasets: [{ label: 'Completion %', data: chartData.data, backgroundColor: '#087f78', borderRadius: 5 }],
+          datasets: [{ label: 'Completion %', data: chartData.data, backgroundColor: '#7541c8', borderRadius: 5 }],
         },
         options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { beginAtZero: true, max: 100 } } },
       };
