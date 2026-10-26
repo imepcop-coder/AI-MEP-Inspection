@@ -1,0 +1,145 @@
+# AI-MEP Inspection Helm configuration
+
+replicaCount: 3
+
+image:
+  repository: aimep55923.azurecr.io/aimep-inspection
+  pullPolicy: IfNotPresent
+  tag: "v1"
+
+imagePullSecrets: []
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: false
+  automount: false
+  annotations: {}
+  name: "default"
+
+podAnnotations: {}
+
+podLabels:
+  app.kubernetes.io/name: ai-mep-inspection
+
+podSecurityContext:
+  fsGroup: 10001
+  fsGroupChangePolicy: OnRootMismatch
+  seccompProfile:
+    type: RuntimeDefault
+
+securityContext:
+  allowPrivilegeEscalation: false
+  capabilities:
+    drop:
+      - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 10001
+  runAsGroup: 10001
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts: []
+  tls: []
+
+httpRoute:
+  enabled: false
+  annotations: {}
+  parentRefs: []
+  hostnames: []
+  rules: []
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 512Mi
+  limits:
+    cpu: "1"
+    memory: 2Gi
+
+startupProbe:
+  httpGet:
+    path: /login
+    port: http
+  periodSeconds: 5
+  failureThreshold: 30
+
+livenessProbe:
+  httpGet:
+    path: /login
+    port: http
+  periodSeconds: 20
+  timeoutSeconds: 3
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /login
+    port: http
+  periodSeconds: 10
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+volumes:
+  - name: data
+    persistentVolumeClaim:
+      claimName: ai-mep-data
+  - name: tmp
+    emptyDir:
+      sizeLimit: 512Mi
+
+volumeMounts:
+  - name: data
+    mountPath: /data
+    subPath: db
+  - name: data
+    mountPath: /app/uploads
+    subPath: uploads
+  - name: data
+    mountPath: /app/reports
+    subPath: reports
+  - name: tmp
+    mountPath: /tmp
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+extraEnv:
+  - name: APP_ENV
+    valueFrom:
+      configMapKeyRef:
+        name: ai-mep-config
+        key: APP_ENV
+  - name: DATABASE_URL
+    valueFrom:
+      configMapKeyRef:
+        name: ai-mep-config
+        key: DATABASE_URL
+  - name: SESSION_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: ai-mep-secrets
+        key: SESSION_SECRET
+  - name: JWT_SECRET
+    valueFrom:
+      secretKeyRef:
+        name: ai-mep-secrets
+        key: JWT_SECRET
+  - name: MPLCONFIGDIR
+    value: /tmp/matplotlib
