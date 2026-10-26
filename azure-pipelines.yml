@@ -1,3 +1,4 @@
+```yaml
 trigger:
   branches:
     include:
@@ -8,29 +9,41 @@ pool:
 
 variables:
   imageRepository: ai-mep-inspection
-  containerRegistry: myacr.azurecr.io
+  containerRegistry: aimep55923.azurecr.io
   dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
 
 stages:
   - stage: Build
+    displayName: Build and Push Image
     jobs:
       - job: BuildAndPush
+        displayName: Build and Push to ACR
         steps:
-          - task: Docker@2
+          - task: AzureCLI@2
+            displayName: Login to ACR and Push Image
             inputs:
-              containerRegistry: 'acrServiceConnection'
-              repository: '$(imageRepository)'
-              command: 'buildAndPush'
-              Dockerfile: '$(dockerfilePath)'
-              tags: |
-                $(Build.BuildId)
-                latest
+              azureSubscription: 'acrServiceConnection'
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az acr login --name aimep55923
+
+                docker build \
+                  -t $(containerRegistry)/$(imageRepository):$(Build.BuildId) \
+                  -t $(containerRegistry)/$(imageRepository):latest \
+                  -f "$(dockerfilePath)" \
+                  "$(Build.SourcesDirectory)"
+
+                docker push $(containerRegistry)/$(imageRepository):$(Build.BuildId)
+                docker push $(containerRegistry)/$(imageRepository):latest
 
   - stage: Deploy
+    displayName: Deploy
     dependsOn: Build
     jobs:
       - job: DeployToAzureVM
         steps:
           - script: |
               echo "Deploying application to Azure VM"
-            displayName: 'Deploy placeholder'
+            displayName: Deploy placeholder
+```
