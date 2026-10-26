@@ -1,4 +1,3 @@
-```yaml
 trigger:
   branches:
     include:
@@ -46,4 +45,3 @@ stages:
           - script: |
               echo "Deploying application to Azure VM"
             displayName: Deploy placeholder
-```
