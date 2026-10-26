@@ -5,7 +5,7 @@ replicaCount: 3
 image:
   repository: aimep55923.azurecr.io/aimep-inspection
   pullPolicy: IfNotPresent
-  tag: "v1"
+  tag: "b1de79cb097550e9bcd303ff382761dc2b9ac77b"
 
 imagePullSecrets: []
 
