@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+    name: devopslab
+spec:
+    type: LoadBalancer
+    ports:
+    - port: 8000 
+    selector:
+        app: devopslab
