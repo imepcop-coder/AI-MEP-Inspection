@@ -1,0 +1,37 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}New Inspection{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="page-header-section">
+        <div>
+            <span class="page-kicker">Inspection</span>
+            <h1>New AI Inspection</h1>
+            <p>Upload site images to generate a structured engineering report.</p>
+        </div>
+        <div class="page-actions">
+            <a href="/reports" class="btn btn-outline-primary">View Reports</a>
+        </div>
+    </div>
+
+    <div class="upload-panel">
+        <form action="/upload" method="post" enctype="multipart/form-data">
+            <div class="upload-dropzone">
+                <div>
+                    <div class="upload-icon"><i class="bi bi-cloud-upload"></i></div>
+                    <h4 class="mb-2">Drop inspection images here</h4>
+                    <p class="mb-3">Supported: JPG, PNG, WEBP</p>
+                    <label class="btn btn-primary mb-0" for="inspection-images">Choose Images</label>
+                    <input id="inspection-images" class="d-none" type="file" name="images" multiple accept="image/*,.jpg,.jpeg,.png,.webp" capture="environment" required>
+                </div>
+            </div>
+
+            <div class="mt-4 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div class="text-muted small">High-resolution images produce the most accurate AI analysis.</div>
+                <button class="btn btn-primary" type="submit">Generate Excel Report</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

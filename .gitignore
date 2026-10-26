@@ -1,0 +1,56 @@
+# Local databases and secrets
+*.db
+*.sqlite
+*.sqlite3
+session_secret.txt
+.env
+.env.*
+
+# Session and response artifacts
+cookie.txt
+cookies*.txt
+*_response.html
+*_resp.txt
+*_after_logout*.txt
+calculators*.txt
+login*.txt
+logout*.txt
+projects*.txt
+report.txt
+dashboard_after_logout*.txt
+
+# Temporary diagnostic scripts
+diag_*.py
+tmp_*.py
+check_plumbing_snip.py
+fetch_nvidia_openapi.py
+test_*.py
+
+# Python cache and virtual environments
+__pycache__/
+.pytest_cache/
+.venv/
+venv/
+*.log
+session_secret.txt
+*.db
+*.sqlite
+*.sqlite3
+# Terraform local files and state
+**/.terraform/*
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
+# Terraform variable files may contain secrets
+*.tfvars
+*.tfvars.json
+
+# Terraform CLI configuration and local overrides
+.terraformrc
+terraform.rc
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json

@@ -1,0 +1,16 @@
+version: '3.9'
+services:
+  web:
+    build: .
+    container_name: ai-mep-inspection
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./ai_mep_inspection.db
+      - SESSION_SECRET=change-this-secret-key
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
+      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-}
+      - JWT_SECRET=change-this-jwt-secret
+    volumes:
+      - .:/app

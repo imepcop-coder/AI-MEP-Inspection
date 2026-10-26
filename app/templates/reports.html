@@ -1,0 +1,188 @@
+﻿{% extends "layouts/base.html" %}
+
+{% block title %}Inspection Reports{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <span class="text-uppercase text-muted small">Reporting Hub</span>
+            <h2 class="mb-1">Inspection Reports</h2>
+            <p class="text-muted mb-0">Manage templates and export inspection reports with modern tools designed for site delivery and QA workflows.</p>
+        </div>
+        <a href="/upload" class="btn btn-primary align-self-center">+ New Inspection</a>
+    </div>
+
+    {% if manage_templates %}
+    <div class="row g-4">
+        <div class="col-xl-7">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-4 gap-3 flex-column flex-sm-row">
+                        <div>
+                            <h5 class="mb-1">Template Builder</h5>
+                            <p class="text-muted mb-0">Create or update report templates for your inspection workflows.</p>
+                        </div>
+                        <a href="/reports" class="btn btn-secondary btn-sm">Back to Reports</a>
+                    </div>
+                    <form method="post" action="/reports/templates">
+                        <input type="hidden" name="template_id" value="{{ selected_template.id if selected_template else '' }}">
+                        <div class="row g-3">
+                            <div class="col-md-5">
+                                <label class="form-label">Template Name</label>
+                                <input class="form-control" name="name" value="{{ selected_template.name if selected_template else '' }}" required>
+                            </div>
+                            <div class="col-md-5">
+                                <label class="form-label">Description</label>
+                                <input class="form-control" name="description" value="{{ selected_template.description if selected_template else '' }}">
+                            </div>
+                            <div class="col-md-2 d-flex align-items-end">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="is_default" name="is_default" {% if selected_template and selected_template.is_default %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_default">Default</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <label class="form-label">Available Fields</label>
+                            <div class="row g-3">
+                                {% for field in ['image','project','location','discipline','category','severity','snag_description','recommendation','comments','ai_summary'] %}
+                                <div class="col-6 col-md-4 col-lg-3">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" name="fields" value="{{ field }}" {% if selected_template and field in selected_template.get_field_list() %}checked{% endif %}>
+                                        <label class="form-check-label">{{ field|replace('_',' ')|title }}</label>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <button class="btn btn-primary" type="submit">Save Template</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-5">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <h5 class="mb-4">Existing Templates</h5>
+                    {% if report_templates %}
+                    <div class="row g-3">
+                        {% for template in report_templates %}
+                        <div class="col-12">
+                            <div class="card card-sm p-3 border-0 shadow-sm h-100">
+                                <div class="d-flex justify-content-between align-items-start gap-3">
+                                    <div>
+                                        <h6 class="mb-1">{{ template.name }}</h6>
+                                        <p class="text-muted mb-2">{{ template.description or 'No description provided.' }}</p>
+                                        <small class="text-muted">Fields: {{ template.get_field_list()|join(', ') }}</small>
+                                    </div>
+                                    {% if template.is_default %}
+                                    <span class="badge bg-success align-self-start">Default</span>
+                                    {% endif %}
+                                </div>
+                                <div class="mt-3 d-flex flex-wrap gap-2">
+                                    <a href="/reports/templates?edit_id={{ template.id }}" class="btn btn-secondary btn-sm">Edit</a>
+                                    <form method="post" action="/reports/templates/duplicate/{{ template.id }}" class="d-inline">
+                                        <button class="btn btn-secondary btn-sm" type="submit">Duplicate</button>
+                                    </form>
+                                    <form method="post" action="/reports/templates/delete/{{ template.id }}" class="d-inline">
+                                        <button class="btn btn-danger btn-sm" type="submit">Delete</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-muted">No templates created yet.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+
+    <div class="row g-4">
+        <div class="col-lg-4">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <div>
+                            <h5 class="mb-1">Report Templates</h5>
+                            <p class="text-muted mb-0">Manage the format and fields for your inspection exports.</p>
+                        </div>
+                        <a href="/reports/templates" class="btn btn-secondary btn-sm">Manage</a>
+                    </div>
+                    {% if report_templates %}
+                    <div class="row g-3">
+                        {% for template in report_templates[:3] %}
+                        <div class="col-12">
+                            <div class="border rounded p-3 h-100">
+                                <h6 class="fw-bold mb-1">{{ template.name }}</h6>
+                                <p class="small text-muted mb-2">{{ template.description or 'No description provided.' }}</p>
+                                <div class="small text-muted">Fields: {{ template.get_field_list()|join(', ') }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-muted">No templates created yet.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8">
+            <div class="card shadow-sm border-0">
+                <div class="card-body">
+                    {% if reports %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Report Name</th>
+                                    <th>Size</th>
+                                    <th>Date</th>
+                                    <th>Time</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for report in reports %}
+                                <tr>
+                                    <td>{{ loop.index }}</td>
+                                    <td><i class="bi bi-file-earmark-excel text-success me-2"></i>{{ report.name }}</td>
+                                    <td>{{ report.size }}</td>
+                                    <td>{{ report.date }}</td>
+                                    <td>{{ report.time }}</td>
+                                    <td>
+                                        <a href="/reports/download/{{ report.name }}" class="btn btn-success btn-sm">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center p-5">
+                        <h4>No reports found.</h4>
+                        <p class="text-muted">Create your first AI inspection and generate your first report.</p>
+                        <a href="/upload" class="btn btn-primary">Upload Images</a>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+{% endblock %}

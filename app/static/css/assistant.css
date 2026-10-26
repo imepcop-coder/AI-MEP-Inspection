@@ -1,0 +1,54 @@
+.copilot-container {
+  min-height: calc(100vh - 4rem);
+  background: #f8fafc;
+}
+
+.sidebar {
+  border-right: 1px solid rgba(15, 23, 42, 0.08);
+  background: rgba(255, 255, 255, 0.92);
+  color: #111827;
+}
+
+.chat-list {
+  max-height: calc(100vh - 280px);
+  overflow-y: auto;
+}
+
+.chat-item.active {
+  background: rgba(37, 99, 235, 0.12);
+  color: #111827;
+}
+
+.chat-item:hover {
+  background: rgba(37, 99, 235, 0.08);
+}
+
+.chat-header {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.chat-messages {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.chat-input-area {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.prompt-chip {
+  transition: all 0.2s ease;
+}
+
+.prompt-chip:hover {
+  transform: translateY(-1px);
+}
+
+.file-upload-area {
+  border-radius: 14px;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    display: none;
+  }
+}

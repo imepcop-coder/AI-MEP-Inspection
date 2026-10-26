@@ -1,0 +1,48 @@
+﻿{# Calculator card component - HTML fragment #}
+<div class="calculator-card h-100"
+     data-calculator-id="{{ item.url }}"
+     data-name="{{ item.name|lower }}"
+     data-description="{{ item.description|lower if item.description is defined else '' }}"
+     data-category="{{ card_category_slug }}"
+     data-url="{{ item.url }}">
+
+    <div class="calculator-card__header">
+        <button class="favorite-toggle" aria-label="Favorite" title="Save to favorites">
+            <i class="bi bi-heart"></i>
+        </button>
+    </div>
+
+    <div class="calculator-card__body d-flex flex-column">
+
+        <div class="calculator-card__icon">
+            {# icon can be a bootstrap icon class or font-awesome class provided in item.icon #}
+            <i class="{{ item.icon }}" aria-hidden="true"></i>
+        </div>
+
+        <div class="calculator-card__meta-row">
+            <span class="calculator-card__category">{{ card_category }}</span>
+        </div>
+
+        <h4 class="calculator-card__title">{{ item.name }}</h4>
+
+        <p class="calculator-card__description">{{ item.description }}</p>
+
+        <div class="calculator-card__meta">
+            {# example meta; keep empty or populate if provided in item.meta #}
+            {% if item.meta %}
+            {% for m in item.meta %}
+            <span><i class="bi bi-info-circle"></i> {{ m }}</span>
+            {% endfor %}
+            {% endif %}
+        </div>
+
+        <div class="calculator-card__primary-row mt-auto">
+           <a href="{{ item.url }}" class="calculator-card__primary calculator-card__primary-link"
+              data-calculator-id="{{ item.url }}" data-name="{{ item.name }}" data-url="{{ item.url }}" data-category="{{ card_category_slug }}">
+                Open
+            </a>
+        </div>
+
+    </div>
+
+</div>

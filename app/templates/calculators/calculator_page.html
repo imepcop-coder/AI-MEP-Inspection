@@ -1,0 +1,219 @@
+﻿{% extends "layouts/base.html" %}
+
+{% block title %}{{ page.title }}{% endblock %}
+
+{% block content %}
+
+{% from 'partials/result_renderer.html' import render_result, format_value %}
+
+<div class="container-fluid py-4">
+
+    <div class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-center gap-3 mb-4">
+        <div>
+            <h1 class="mb-1 fw-bold text-dark">
+                <i class="bi bi-calculator me-2"></i>{{ page.title }}
+            </h1>
+            <p class="mb-0 text-muted">{{ page.description }}</p>
+        </div>
+        <span class="badge-standard">
+            <i class="bi bi-shield-check"></i>
+            Engineering Standard
+        </span>
+    </div>
+
+    <div class="row g-4">
+        <div class="col-lg-4 order-lg-1">
+            <div class="professional-card">
+                <div class="professional-header">
+                    <h3><i class="bi bi-sliders me-2"></i>Engineering Inputs</h3>
+                    <p class="page-subtitle">Provide key design parameters and input data for the calculation.</p>
+                </div>
+                <div class="card-body p-4">
+                    <form id="calculatorForm" method="POST" novalidate>
+                        {% for field in page.fields %}
+                        {# derive unit from label if present, e.g. "Room Length (m)" -> unit = m #}
+                        {% if '(' in field.label and ')' in field.label %}
+                        {% set unit = field.label.split('(')[1].split(')')[0] %}
+                        {% else %}
+                        {% set unit = '' %}
+                        {% endif %}
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold" for="{{ field.name }}">
+                                {{ field.label }}
+                                {% if field.required %}<span class="text-danger">*</span>{% endif %}
+                            </label>
+                            {% if field.type == 'select' %}
+                            <select
+                                class="form-select form-select-lg"
+                                id="{{ field.name }}"
+                                name="{{ field.name }}"
+                                data-unit="{{ unit }}"
+                                data-required="{{ '1' if field.required else '0' }}"
+                                aria-describedby="helper-{{ field.name }} error-{{ field.name }}"
+                                aria-invalid="false"
+                                >
+                                <option value="">Select {{ field.label }}</option>
+                                {% for option in field.options %}
+                                <option value="{{ option }}" {% if values.get(field.name)==option %}selected{% endif %}>
+                                    {{ option }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            {% else %}
+                            {# compute whether decimals are allowed by step containing a decimal point #}
+                            {% set decimals_allowed = '1' if (field.step is defined and '.' in (field.step|string)) or (field.min is defined and '.' in (field.min|string)) else '0' %}
+                            <input
+                                class="form-control form-control-lg"
+                                id="{{ field.name }}"
+                                name="{{ field.name }}"
+                                type="{{ field.type }}"
+                                value="{{ values.get(field.name, '') }}"
+                                {% if field.min is defined %}min="{{ field.min }}" data-min="{{ field.min }}"{% endif %}
+                                {% if field.max is defined %}max="{{ field.max }}" data-max="{{ field.max }}"{% endif %}
+                                {% if field.step is defined %}step="{{ field.step }}" data-step="{{ field.step }}"{% endif %}
+                                data-unit="{{ unit }}"
+                                data-decimals="{{ decimals_allowed }}"
+                                data-required="{{ '1' if field.required else '0' }}"
+                                aria-describedby="helper-{{ field.name }} error-{{ field.name }}"
+                                aria-invalid="false"
+                                {% if field.placeholder is defined %}placeholder="{{ field.placeholder }}"{% else %}
+                                {# generate a helpful placeholder: if unit known and min/step exists, use example #}
+                                placeholder="Example: {% if field.sample is defined %}{{ field.sample }}{% elif field.step is defined %}{{ (field.min | default('')) or (field.step) }}{% else %}Enter value{% endif %} {{ unit }}"
+                                {% endif %}
+                                {% if field.required %}required{% endif %}>
+                            {% endif %}
+
+                            {# Helper text and structured guidance for users #}
+                            <div class="form-text text-muted field-helper" id="helper-{{ field.name }}">
+                                {% set example_value = field.placeholder if field.placeholder is defined else (field.sample if field.sample is defined else (field.min if field.min is defined else '')) %}
+                                {% if example_value %}
+                                <div class="helper-example">Example: <strong>{{ example_value }} {{ unit }}</strong></div>
+                                {% endif %}
+                                <div class="helper-allowed">Allowed: <strong>{% if field.type=='number' %}Positive {{ 'decimal' if decimals_allowed=='1' else 'whole number' }}{% else %}Select option{% endif %}</strong></div>
+                                {% if field.min is defined or field.max is defined %}
+                                <div class="helper-range">Range: <strong>{% if field.min is defined %}{{ field.min }}{% else %}-{% endif %} – {% if field.max is defined %}{{ field.max }}{% else %}-{% endif %} {{ unit }}</strong></div>
+                                {% endif %}
+                                {% if field.typical_range is defined %}
+                                <div class="helper-typical">Typical range: <strong>{{ field.typical_range }} {{ unit }}</strong></div>
+                                {% endif %}
+                            </div>
+
+                            <div class="field-error text-danger mt-1" id="error-{{ field.name }}" aria-live="polite"></div>
+                        </div>
+                        {% endfor %}
+
+                        {% if error %}
+                        <div class="alert alert-danger mt-3 mb-0" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i>{{ error }}
+                        </div>
+                        {% endif %}
+
+                        <div class="d-flex flex-wrap gap-2 mt-4">
+                            <button type="submit" class="btn btn-primary flex-fill d-flex align-items-center justify-content-center" style="min-height: 48px;">
+                                <i class="bi bi-calculator me-2"></i>Calculate
+                            </button>
+                            <button type="button" id="resetCalculator" class="btn btn-secondary flex-fill d-flex align-items-center justify-content-center" style="min-height: 48px;">
+                                <i class="bi bi-arrow-counterclockwise me-2"></i>Reset
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="professional-card">
+                <div class="professional-header">
+                    <h3><i class="bi bi-function me-2"></i>Engineering Formula</h3>
+                    <p class="page-subtitle">Reference formula used for the current calculation.</p>
+                </div>
+                <div class="card-body p-4">
+                    <div class="bg-white border rounded p-3">
+                        <code>{{ page.formula }}</code>
+                    </div>
+                    <div class="mt-4">
+                        <h6 class="mb-2">Reference Standard</h6>
+                        <p class="mb-0 text-muted">{{ page.reference }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-8 order-lg-2">
+            {% if result %}
+                {{ render_result(result, page) }}
+            {% else %}
+            <div class="professional-card h-100">
+                <div class="professional-header">
+                    <h3><i class="bi bi-clipboard-data me-2"></i>Results / Engineering Summary</h3>
+                    <p class="page-subtitle">Calculation results appear after submitting inputs.</p>
+                </div>
+                <div class="card-body p-4 text-center">
+                    <i class="bi bi-calculator display-1 text-muted"></i>
+                    <h4 class="mt-3 mb-2">No result available yet</h4>
+                    <p class="text-muted mb-0">Complete the engineering inputs and click Calculate to generate the summary.</p>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% block extra_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        if (!form) return;
+        const exportPdfButton = document.getElementById('exportPdf');
+        const exportExcelButton = document.getElementById('exportExcel');
+        const hasResult = !!document.querySelector('.result-value');
+        if (!hasResult) {
+            exportPdfButton?.setAttribute('disabled', 'disabled');
+            exportExcelButton?.setAttribute('disabled', 'disabled');
+            exportPdfButton?.classList.add('disabled');
+            exportExcelButton?.classList.add('disabled');
+        }
+    });
+</script>
+{% if result %}
+<script>
+    const chartLabels = [
+        {% for key, value in result.items() if value is number %}
+            "{{ key.replace('_', ' ')|title }}"{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+    const chartData = [
+        {% for key, value in result.items() if value is number %}
+            {{ value }}{% if not loop.last %},{% endif %}
+        {% endfor %}
+    ];
+
+    if (chartLabels.length > 1) {
+        const ctx = document.getElementById('resultChart');
+        if (ctx) {
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        label: 'Calculation Output',
+                        data: chartData,
+                        backgroundColor: ['#2563eb', '#16a34a', '#f59e0b', '#8b5cf6', '#0ea5e9'],
+                        borderRadius: 8,
+                        borderWidth: 0,
+                    }],
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, title: { display: true, text: 'Value' } } },
+                },
+            });
+        }
+    }
+</script>
+{% endif %}
+<script src="{{ url_for('static', path='js/calculators.js') }}"></script>
+{% endblock %}
+
+{% endblock %}

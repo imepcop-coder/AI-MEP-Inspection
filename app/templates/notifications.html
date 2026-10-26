@@ -1,0 +1,40 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Notifications{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-start gap-3 mb-4">
+        <div>
+            <span class="text-uppercase text-muted small">Activity Feed</span>
+            <h2 class="mb-1">Notifications</h2>
+            <p class="text-muted mb-0">Stay informed with inspection updates, AI report alerts, and workflow reminders.</p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
+            {% if notifications %}
+                <div class="list-group list-group-flush">
+                    {% for item in notifications %}
+                    <div class="list-group-item px-0 py-3 border-bottom">
+                        <div class="d-flex justify-content-between align-items-start gap-3">
+                            <div>
+                                <strong>{{ item.title }}</strong>
+                                <p class="text-muted mb-0">{{ item.message }}</p>
+                            </div>
+                            <small class="text-muted">{{ item.timestamp if item.timestamp else '' }}</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <h5 class="mb-2">No notifications yet</h5>
+                    <p class="text-muted mb-0">Your notification feed will display updates from projects, inspections, and AI workflows.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,36 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  imageRepository: ai-mep-inspection
+  containerRegistry: myacr.azurecr.io
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+
+stages:
+  - stage: Build
+    jobs:
+      - job: BuildAndPush
+        steps:
+          - task: Docker@2
+            inputs:
+              containerRegistry: 'acrServiceConnection'
+              repository: '$(imageRepository)'
+              command: 'buildAndPush'
+              Dockerfile: '$(dockerfilePath)'
+              tags: |
+                $(Build.BuildId)
+                latest
+
+  - stage: Deploy
+    dependsOn: Build
+    jobs:
+      - job: DeployToAzureVM
+        steps:
+          - script: |
+              echo "Deploying application to Azure VM"
+            displayName: 'Deploy placeholder'

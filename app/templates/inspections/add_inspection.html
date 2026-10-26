@@ -1,0 +1,175 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Add Inspection{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <div class="card shadow">
+
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">New Inspection</h4>
+        </div>
+
+        <div class="card-body">
+
+            {% if error %}
+            <div class="alert alert-danger">
+                {{ error }}
+            </div>
+            {% endif %}
+
+            <form method="POST" action="/inspections/new">
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Inspection Number</label>
+                        <input type="text"
+                               name="inspection_no"
+                               class="form-control"
+                               required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Project</label>
+
+                        <select name="project_id"
+                                class="form-select"
+                                required>
+
+                            <option value="">Select Project</option>
+
+                            {% for project in projects %}
+                            <option value="{{ project.id }}">
+                                {{ project.project_name }}
+                            </option>
+                            {% endfor %}
+
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Discipline</label>
+
+                        <select name="discipline"
+                                class="form-select"
+                                required>
+
+                            <option value="">Select</option>
+                            <option>MEP</option>
+                            <option>Mechanical</option>
+                            <option>Electrical</option>
+                            <option>Plumbing</option>
+                            <option>HVAC</option>
+                            <option>Civil</option>
+
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Inspection Date</label>
+
+                        <input type="date"
+                               name="inspection_date"
+                               class="form-control"
+                               required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Inspector</label>
+
+                        <input type="text"
+                               name="inspector"
+                               class="form-control"
+                               required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Inspection Type</label>
+
+                        <select name="inspection_type"
+                                class="form-select"
+                                required>
+
+                            <option value="">Select</option>
+                            <option>Incoming Material</option>
+                            <option>Installation</option>
+                            <option>Testing</option>
+                            <option>Pre-Commissioning</option>
+                            <option>Final Inspection</option>
+
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Location</label>
+
+                        <input type="text"
+                               name="location"
+                               class="form-control"
+                               required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Drawing Number</label>
+
+                        <input type="text"
+                               name="drawing_no"
+                               class="form-control">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Specification</label>
+
+                        <input type="text"
+                               name="specification"
+                               class="form-control">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Status</label>
+
+                        <select name="status"
+                                class="form-select"
+                                required>
+
+                            <option>Open</option>
+                            <option>In Progress</option>
+                            <option>Closed</option>
+
+                        </select>
+                    </div>
+
+                    <div class="col-12 mb-3">
+
+                        <label class="form-label">Description</label>
+
+                        <textarea name="description"
+                                  rows="5"
+                                  class="form-control"></textarea>
+
+                    </div>
+
+                </div>
+
+                <button type="submit"
+                        class="btn btn-primary">
+                    Save Inspection
+                </button>
+
+                <a href="/inspections"
+                   class="btn btn-secondary">
+                    Cancel
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

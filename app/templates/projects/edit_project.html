@@ -1,0 +1,149 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Edit Project{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <div class="card shadow">
+
+        <div class="card-header bg-warning">
+            <h4 class="mb-0">Edit Project</h4>
+        </div>
+
+        <div class="card-body">
+
+            <form method="POST" action="/projects/edit/{{ project.id }}">
+
+                <div class="row">
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Project Code</label>
+                        <input type="text"
+                               class="form-control"
+                               name="project_code"
+                               value="{{ project.project_code }}"
+                               required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Project Name</label>
+                        <input type="text"
+                               class="form-control"
+                               name="project_name"
+                               value="{{ project.project_name }}"
+                               required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Client Name</label>
+                        <input type="text"
+                               class="form-control"
+                               name="client_name"
+                               value="{{ project.client_name }}"
+                               required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Consultant Name</label>
+                        <input type="text"
+                               class="form-control"
+                               name="consultant_name"
+                               value="{{ project.consultant_name or '' }}">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Contractor Name</label>
+                        <input type="text"
+                               class="form-control"
+                               name="contractor_name"
+                               value="{{ project.contractor_name or '' }}">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Location</label>
+                        <input type="text"
+                               class="form-control"
+                               name="location"
+                               value="{{ project.location }}"
+                               required>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Discipline</label>
+
+                        <select class="form-select"
+                                name="discipline">
+
+                            <option value="MEP" {% if project.discipline=="MEP" %}selected{% endif %}>MEP</option>
+                            <option value="Mechanical" {% if project.discipline=="Mechanical" %}selected{% endif %}>Mechanical</option>
+                            <option value="Electrical" {% if project.discipline=="Electrical" %}selected{% endif %}>Electrical</option>
+                            <option value="Plumbing" {% if project.discipline=="Plumbing" %}selected{% endif %}>Plumbing</option>
+                            <option value="HVAC" {% if project.discipline=="HVAC" %}selected{% endif %}>HVAC</option>
+                            <option value="Civil" {% if project.discipline=="Civil" %}selected{% endif %}>Civil</option>
+
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Status</label>
+
+                        <select class="form-select"
+                                name="status">
+
+                            <option value="Planning" {% if project.status=="Planning" %}selected{% endif %}>Planning</option>
+                            <option value="Active" {% if project.status=="Active" %}selected{% endif %}>Active</option>
+                            <option value="Completed" {% if project.status=="Completed" %}selected{% endif %}>Completed</option>
+                            <option value="On Hold" {% if project.status=="On Hold" %}selected{% endif %}>On Hold</option>
+
+                        </select>
+
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">Start Date</label>
+                        <input type="date"
+                               class="form-control"
+                               name="start_date"
+                               value="{{ project.start_date }}">
+                    </div>
+
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">End Date</label>
+                        <input type="date"
+                               class="form-control"
+                               name="end_date"
+                               value="{{ project.end_date }}">
+                    </div>
+
+                    <div class="col-12 mb-3">
+                        <label class="form-label">Description</label>
+
+                        <textarea class="form-control"
+                                  rows="4"
+                                  name="description">{{ project.description }}</textarea>
+
+                    </div>
+
+                </div>
+
+                <button type="submit"
+                        class="btn btn-success">
+                    Update Project
+                </button>
+
+                <a href="/projects"
+                   class="btn btn-secondary">
+                    Cancel
+                </a>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

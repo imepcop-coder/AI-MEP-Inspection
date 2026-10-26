@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plumbing Calculators</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', path='css/calculator-card.css') }}">
+</head>
+<body class="bg-light">
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="display-4 fw-bold">🚰 Plumbing Engineering Calculators</h1>
+        <p class="lead text-muted">Professional MEP Plumbing Design Toolkit</p>
+    </div>
+    {% set card_category = 'Plumbing' %}
+    {% set card_category_slug = 'plumbing' %}
+    {% set card_items = [
+      {'name': 'Water Demand', 'icon': 'bi-water', 'description': 'Calculate daily and peak water demand.', 'url': '/plumbing/water-demand-page'},
+      {'name': 'Fixture Units', 'icon': 'bi-list-ol', 'description': 'Calculate total fixture loading.', 'url': '/plumbing/fixture-units-page'},
+      {'name': 'Pipe Size', 'icon': 'bi-bezier2', 'description': 'Pipe diameter calculation.', 'url': '/plumbing/pipe-size-page'},
+      {'name': 'Drainage', 'icon': 'bi-droplet-half', 'description': 'Drainage pipe sizing.', 'url': '/plumbing/drainage-page'},
+      {'name': 'Rainwater', 'icon': 'bi-cloud-drizzle', 'description': 'Roof rainwater calculations.', 'url': '/plumbing/rainwater-page'},
+      {'name': 'Water Tank', 'icon': 'bi-houses', 'description': 'Tank capacity calculator.', 'url': '/plumbing/tank-page'},
+      {'name': 'Underground Sump', 'icon': 'bi-droplet', 'description': 'Sump capacity calculator.', 'url': '/plumbing/sump-page'},
+      {'name': 'Pump Head & Power', 'icon': 'bi-pump', 'description': 'Pump selection calculator.', 'url': '/plumbing/pump-page'}
+    ] %}
+    <div class="row g-4">
+        {% for item in card_items %}
+        <div class="col-lg-3 col-md-6 d-flex">
+            {% include 'components/calculator-card.html' %}
+        </div>
+        {% endfor %}
+    </div>
+</div>
+</body>
+</html>

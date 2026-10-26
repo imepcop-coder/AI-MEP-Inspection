@@ -1,0 +1,36 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Admin{% endblock %}
+
+{% block content %}
+<div class="container-fluid mt-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-white">
+            <h4 class="mb-0">Admin Panel</h4>
+        </div>
+        <div class="card-body">
+            <p class="text-muted">Manage users and monitor workspace activity from one place.</p>
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Name</th>
+                        <th>Email</th>
+                        <th>Role</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for member in users %}
+                    <tr>
+                        <td>{{ member.full_name }}</td>
+                        <td>{{ member.email }}</td>
+                        <td>{{ member.role }}</td>
+                        <td>{{ 'Active' if member.is_active else 'Inactive' }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,531 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Engineering Copilot{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/assistant.css') }}">
+
+<div class="assistant-shell">
+  <aside class="assistant-sidebar">
+    <button class="btn btn-primary btn-sm new-chat-btn" id="newChatBtn">+ New Chat</button>
+    <h5>Recent Chats</h5>
+    <ul class="assistant-list" id="chatList">
+      <li class="assistant-item text-muted small" data-chat-id="">No chats yet</li>
+    </ul>
+    <div class="prompts-section">
+      <h6>Quick Prompts</h6>
+      <div class="prompt-chips" id="disciplineChips">
+        <!-- Discipline chips (sets discipline) -->
+        <span class="assistant-chip" data-discipline="hvac">HVAC</span>
+        <span class="assistant-chip" data-discipline="electrical">Electrical</span>
+        <span class="assistant-chip" data-discipline="plumbing">Plumbing</span>
+        <span class="assistant-chip" data-discipline="fire_fighting">Fire Fighting</span>
+        <span class="assistant-chip" data-discipline="mechanical">Mechanical</span>
+        <span class="assistant-chip" data-discipline="civil">Civil</span>
+      </div>
+
+      <div class="prompt-chips" id="quickPrompts">
+        <!-- Quick prompts populate the input with templates -->
+        <span class="assistant-chip" data-prompt="Generate a professional site inspection report with headings: Executive Summary, Observations, Non-conformances, Recommendations, Photographs, Actions." data-label="Inspection Report">Inspection Report</span>
+        <span class="assistant-chip" data-prompt="Write a professional email to the client informing them the project is complete. Include subject, greeting, completion statement, inspection summary, and request for final walkthrough." data-label="Email to Client">Email</span>
+        <span class="assistant-chip" data-prompt="Prepare a method statement including scope, sequence of works, safety measures, required resources, and quality checks." data-label="Method Statement">Method Statement</span>
+        <span class="assistant-chip" data-prompt="Create a risk assessment table identifying hazards, likelihood, severity, controls, and residual risk." data-label="Risk Assessment">Risk Assessment</span>
+        <span class="assistant-chip" data-prompt="Draft a daily progress report with site summary, works completed, manpower, materials, delays, and next day plan." data-label="Daily Progress Report">Daily Progress</span>
+        <span class="assistant-chip" data-prompt="Write meeting minutes: attendees, agenda items, decisions, actions, owners, and deadlines." data-label="Meeting Minutes">Meeting Minutes</span>
+        <span class="assistant-chip" data-prompt="Prepare an RFI listing the issue, relevant drawings/specs, requested clarification, and proposed change if applicable." data-label="RFI">RFI</span>
+        <span class="assistant-chip" data-prompt="Draft a material approval letter including material description, specification references, compliant items, and recommended vendor or sample approval steps." data-label="Material Approval">Material Approval</span>
+      </div>
+    </div>
+  </aside>
+
+  <div class="assistant-main">
+    <div class="assistant-header">
+      <h4 id="chatTitle">Engineering Copilot</h4>
+      <p>Draft professional engineering documents and get expert guidance.</p>
+    </div>
+
+    <div class="assistant-messages" id="chatMessages">
+      <div class="assistant-empty">
+        <i class="bi bi-chat-dots"></i>
+        <h5>Start a new chat</h5>
+        <p>Select a document type and ask for assistance, or upload a file for analysis.</p>
+      </div>
+    </div>
+
+    <div class="assistant-input-card">
+      <div class="assistant-controls">
+        <select id="docTypeSelect" class="form-select">
+          <option value="">Select Document Type...</option>
+          <option value="inspection_report">Inspection Report</option>
+          <option value="ncr">NCR (Non-Conformance Report)</option>
+          <option value="site_observation">Site Observation Report</option>
+          <option value="method_statement">Method Statement</option>
+          <option value="itp">ITP (Inspection Test Plan)</option>
+          <option value="risk_assessment">Risk Assessment</option>
+          <option value="daily_progress">Daily Progress Report</option>
+          <option value="weekly_report">Weekly Report</option>
+          <option value="monthly_report">Monthly Report</option>
+          <option value="material_inspection">Material Inspection Request</option>
+          <option value="email_client">Email to Client</option>
+          <option value="email_contractor">Email to Contractor</option>
+          <option value="email_consultant">Email to Consultant</option>
+          <option value="rfi">RFI (Request for Information)</option>
+          <option value="meeting_minutes">Meeting Minutes</option>
+          <option value="technical_letter">Technical Letter</option>
+          <option value="qa_qc">QA/QC Summary</option>
+        </select>
+        <select id="disciplineSelect" class="form-select">
+          <option value="">Select Discipline...</option>
+          <option value="hvac">HVAC</option>
+          <option value="electrical">Electrical</option>
+          <option value="plumbing">Plumbing</option>
+          <option value="fire_fighting">Fire Fighting</option>
+          <option value="mechanical">Mechanical</option>
+          <option value="civil">Civil</option>
+          <option value="structural">Structural</option>
+          <option value="commissioning">Commissioning</option>
+        </select>
+      </div>
+
+      <form class="assistant-form" id="chatForm" data-skip-processing="true">
+        <textarea id="promptInput" class="form-control" placeholder="Ask the Engineering Copilot to draft a report, analyze a file, or provide guidance..."></textarea>
+        <button type="submit" class="btn btn-primary">Send</button>
+      </form>
+
+      <label class="assistant-file-uploader" for="fileInput">
+        <input type="file" id="fileInput" accept="image/*,.pdf,.docx,.xlsx,.jpg,.jpeg,.png" capture="environment">
+        <i class="bi bi-cloud-upload fs-3"></i>
+        <p class="mb-0">Drag files here or click to upload</p>
+        <small class="text-muted">PDF, Word, Excel, Images</small>
+      </label>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Markdown rendering (basic)
+  function renderMarkdown(text) {
+    if (!text) return '';
+    
+    // Convert markdown to HTML
+    let html = text
+      .replace(/^### (.*?)$/gm, '<h3>$1</h3>')
+      .replace(/^## (.*?)$/gm, '<h2>$1</h2>')
+      .replace(/^# (.*?)$/gm, '<h1>$1</h1>')
+      .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+      .replace(/\*(.*?)\*/g, '<em>$1</em>')
+      .replace(/\n/g, '<br>');
+    
+    return html;
+  }
+  
+  const chatMessages = document.getElementById('chatMessages');
+  const promptInput = document.getElementById('promptInput');
+  const chatForm = document.getElementById('chatForm');
+  const docTypeSelect = document.getElementById('docTypeSelect');
+  const disciplineSelect = document.getElementById('disciplineSelect');
+  const uploadArea = document.querySelector('.assistant-file-uploader');
+  const fileInput = document.getElementById('fileInput');
+  const newChatBtn = document.getElementById('newChatBtn');
+  const chatList = document.getElementById('chatList');
+  
+  let currentChatId = null;
+  
+  // Initialize
+  async function init() {
+    await loadChats();
+  }
+  
+  // Load chat list
+  async function loadChats() {
+    try {
+      const res = await fetch('/api/chats');
+      const chats = await res.json();
+      
+      chatList.innerHTML = '';
+      if (chats.length === 0) {
+        chatList.innerHTML = '<li class="assistant-item text-muted small" data-chat-id="">No chats yet</li>';
+      } else {
+        chats.forEach(chat => {
+          const li = document.createElement('li');
+          li.className = 'assistant-item';
+          li.dataset.chatId = chat.id;
+          li.textContent = chat.title;
+          li.onclick = () => selectChat(chat.id);
+          chatList.appendChild(li);
+        });
+      }
+    } catch (err) {
+      console.error('Error loading chats:', err);
+    }
+  }
+  
+  async function createNewChat() {
+    const docType = docTypeSelect.value || 'General';
+    const title = docTypeSelect.options[docTypeSelect.selectedIndex].text || 'New Chat';
+
+    try {
+      const res = await fetch('/api/chats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, document_type: docType })
+      });
+      if (!res.ok) {
+        console.error('Error creating chat:', res.statusText);
+        return null;
+      }
+
+      const chat = await res.json();
+      currentChatId = chat.id;
+
+      document.getElementById('chatTitle').textContent = title;
+      chatMessages.innerHTML = '<div class="empty-state"><i class="bi bi-chat-dots"></i><h5>New chat started</h5></div>';
+
+      await loadChats();
+      selectChatUI(chat.id);
+      return chat.id;
+    } catch (err) {
+      console.error('Error creating chat:', err);
+      return null;
+    }
+  }
+
+  // Create new chat
+  newChatBtn.addEventListener('click', async () => {
+    await createNewChat();
+  });
+  
+  // Select chat
+  async function selectChat(chatId) {
+    currentChatId = chatId;
+    selectChatUI(chatId);
+    
+    try {
+      const res = await fetch(`/api/chats/${chatId}/messages`);
+      const messages = await res.json();
+      
+      chatMessages.innerHTML = '';
+      messages.forEach(msg => {
+        addMessageToUI(msg.role, msg.content);
+      });
+    } catch (err) {
+      console.error('Error loading messages:', err);
+    }
+  }
+  
+  function selectChatUI(chatId) {
+    document.querySelectorAll('.assistant-item').forEach(item => {
+      item.classList.remove('active');
+    });
+    const items = chatList.querySelectorAll('.assistant-item');
+    items.forEach(item => {
+      if (String(item.dataset.chatId) === String(chatId)) {
+        item.classList.add('active');
+      }
+    });
+  }
+  
+  // Add message to UI
+  function addMessageToUI(role, content) {
+    const msgDiv = document.createElement('div');
+    msgDiv.className = `message ${role}`;
+    
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.innerHTML = renderMarkdown(content);
+    
+    msgDiv.appendChild(bubble);
+    
+    if (role === 'assistant') {
+      const actions = document.createElement('div');
+      actions.className = 'message-actions';
+      actions.innerHTML = `
+        <button class="btn btn-sm btn-link" onclick="copyToClipboard(this)">Copy</button>
+      <button class="btn btn-sm btn-link" onclick="downloadAsDocx(this)">Download (.docx)</button>
+      <button class="btn btn-sm btn-link" onclick="downloadAsPdf(this)">Download (.pdf)</button>
+      <button class="btn btn-sm btn-link" onclick="regenerateResponse(this)">Regenerate</button>
+    `;
+    msgDiv.appendChild(actions);
+    }
+    
+    chatMessages.appendChild(msgDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  
+  // Send message (streaming-friendly)
+  let lastUserPrompt = '';
+  async function postStream(promptToSend) {
+    // create UI user message
+    addMessageToUI('user', promptToSend);
+
+    // create assistant placeholder
+    const assistantDiv = document.createElement('div');
+    assistantDiv.className = 'message assistant';
+    const bubble = document.createElement('div');
+    bubble.className = 'message-bubble';
+    bubble.innerHTML = '<div class="loading-indicator"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>';
+    assistantDiv.appendChild(bubble);
+
+    // actions placeholder (buttons will be added when response completes)
+    const actions = document.createElement('div');
+    actions.className = 'message-actions';
+    assistantDiv.appendChild(actions);
+
+    chatMessages.appendChild(assistantDiv);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+
+    const submitButton = chatForm.querySelector('button[type="submit"]');
+    if (submitButton) {
+      submitButton.disabled = true;
+    }
+
+    // Use abort controller for timeout handling
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 120000); // 2 minutes
+
+    try {
+      const res = await fetch(`/api/chats/${currentChatId}/stream`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: promptToSend, document_type: docTypeSelect.value, discipline: disciplineSelect.value }),
+        signal: controller.signal,
+      });
+
+      if (!res.ok) {
+        // Friendly message when AI provider unavailable or other server issue
+        const errPayload = await safeJson(res);
+        const friendly = errPayload && (errPayload.detail || errPayload.message) ? errPayload.detail || errPayload.message : 'AI service is temporarily unavailable. You can retry or continue working while we reconnect.';
+        bubble.innerText = friendly;
+
+        const retryBtn = document.createElement('button');
+        retryBtn.className = 'btn btn-sm btn-link';
+        retryBtn.textContent = 'Retry';
+        retryBtn.onclick = () => {
+          bubble.innerHTML = '<div class="loading-indicator"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>';
+          postStream(promptToSend);
+        };
+        actions.appendChild(retryBtn);
+        return;
+      }
+
+      // Stream reader
+      const reader = res.body.getReader();
+      const decoder = new TextDecoder('utf-8');
+      let done = false;
+      let accumulated = '';
+
+      // Immediately show typing indicator (already present)
+      while (!done) {
+        const { value, done: streamDone } = await reader.read();
+        if (value) {
+          const chunkText = decoder.decode(value, { stream: true });
+          accumulated += chunkText;
+
+          // update bubble progressively
+          // render markdown-like (basic) safely by setting textContent then converting newlines to <br>
+          bubble.innerHTML = renderMarkdown(accumulated);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+        done = streamDone;
+      }
+
+      // stream complete — add actions (copy/download/regenerate)
+      const copyBtn = document.createElement('button');
+      copyBtn.className = 'btn btn-sm btn-link';
+      copyBtn.textContent = 'Copy';
+      copyBtn.onclick = function() { navigator.clipboard.writeText(bubble.innerText); copyBtn.textContent = 'Copied!'; setTimeout(() => copyBtn.textContent = 'Copy', 2000); };
+
+      const docxBtn = document.createElement('button');
+      docxBtn.className = 'btn btn-sm btn-link';
+      docxBtn.textContent = 'Download (.docx)';
+      docxBtn.onclick = () => downloadBlobAs(bubble.innerText, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', `document_${Date.now()}.docx`);
+
+      const pdfBtn = document.createElement('button');
+      pdfBtn.className = 'btn btn-sm btn-link';
+      pdfBtn.textContent = 'Download (.pdf)';
+      pdfBtn.onclick = () => downloadBlobAs(bubble.innerText, 'application/pdf', `document_${Date.now()}.pdf`);
+
+      const regenBtn = document.createElement('button');
+      regenBtn.className = 'btn btn-sm btn-link';
+      regenBtn.textContent = 'Regenerate';
+      regenBtn.onclick = () => { promptInput.value = lastUserPrompt; promptInput.focus(); };
+
+      actions.appendChild(copyBtn);
+      actions.appendChild(docxBtn);
+      actions.appendChild(pdfBtn);
+      actions.appendChild(regenBtn);
+
+      // Store the final content on the assistant message element for downloads/copy
+      assistantDiv.dataset.content = accumulated;
+
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        bubble.innerText = 'AI response timed out. You can retry or continue working while we reconnect.';
+      } else {
+        bubble.innerText = 'AI service is temporarily unavailable. You can retry or continue working while we reconnect.';
+      }
+      const retryBtn = document.createElement('button');
+      retryBtn.className = 'btn btn-sm btn-link';
+      retryBtn.textContent = 'Retry';
+      retryBtn.onclick = () => {
+        bubble.innerHTML = '<div class="loading-indicator"><div class="loading-dot"></div><div class="loading-dot"></div><div class="loading-dot"></div></div>';
+        postStream(promptToSend);
+      };
+      actions.appendChild(retryBtn);
+    } finally {
+      clearTimeout(timeout);
+      if (submitButton) {
+        submitButton.disabled = false;
+      }
+    }
+  }
+
+  chatForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!currentChatId) {
+      const chatId = await createNewChat();
+      if (!chatId) {
+        addMessageToUI('assistant', 'Error: Unable to create a new chat. Please try again.');
+        return;
+      }
+    }
+
+    const prompt = promptInput.value.trim();
+    if (!prompt) return;
+    lastUserPrompt = prompt;
+    promptInput.value = '';
+
+    // start streaming post
+    postStream(prompt);
+  });
+
+  async function safeJson(res) {
+    try { return await res.json(); } catch (e) { return null; }
+  }
+
+  function downloadBlobAs(text, mime, filename) {
+    const blob = new Blob([text], { type: mime });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  // Regenerate handler for legacy buttons
+  window.regenerateResponse = function(btn) {
+    // Use last user prompt if available
+    if (!lastUserPrompt) {
+      alert('No previous prompt available to regenerate.');
+      return;
+    }
+    promptInput.value = lastUserPrompt;
+    promptInput.focus();
+  }
+  
+  // File upload
+  if (uploadArea) {
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      if (e.dataTransfer.files.length) {
+        handleFileUpload(e.dataTransfer.files[0]);
+      }
+    });
+    
+    uploadArea.addEventListener('click', () => {
+      fileInput.click();
+    });
+  }
+  
+  fileInput.addEventListener('change', (e) => {
+    if (e.target.files.length) {
+      handleFileUpload(e.target.files[0]);
+    }
+  });
+  
+  async function handleFileUpload(file) {
+    if (!currentChatId) {
+      newChatBtn.click();
+      return;
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    try {
+      const res = await fetch(`/api/chats/${currentChatId}/upload`, {
+        method: 'POST',
+        body: formData
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        addMessageToUI('user', `[File uploaded: ${data.filename}]`);
+        addMessageToUI('assistant', data.message);
+      }
+    } catch (err) {
+      console.error('Upload error:', err);
+    }
+  }
+  
+  // Utility functions
+  window.copyToClipboard = function(btn) {
+    const text = btn.closest('.message').querySelector('.message-bubble').innerText;
+    navigator.clipboard.writeText(text).then(() => {
+      const original = btn.textContent;
+      btn.textContent = 'Copied!';
+      setTimeout(() => btn.textContent = original, 2000);
+    });
+  };
+  
+  window.downloadAsText = function(btn) {
+    const text = btn.closest('.message').querySelector('.message-bubble').innerText;
+    const blob = new Blob([text], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `document_${new Date().getTime()}.txt`;
+    a.click();
+  };
+
+  window.downloadAsDocx = function(btn) {
+    const text = btn.closest('.message').querySelector('.message-bubble').innerText;
+    downloadBlobAs(text, 'application/vnd.openxmlformats-officedocument.wordprocessingml.document', `document_${Date.now()}.docx`);
+  };
+
+  window.downloadAsPdf = function(btn) {
+    const text = btn.closest('.message').querySelector('.message-bubble').innerText;
+    downloadBlobAs(text, 'application/pdf', `document_${Date.now()}.pdf`);
+  };
+  
+  // Quick chips: set discipline or populate prompt
+  document.querySelectorAll('.assistant-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      const discipline = chip.dataset.discipline;
+      const prompt = chip.dataset.prompt;
+      if (discipline) {
+        disciplineSelect.value = discipline;
+        // Provide quick hint in input
+        promptInput.value = promptInput.value || `Please draft a professional summary for ${discipline.toUpperCase()} discipline.`;
+      } else if (prompt) {
+        promptInput.value = prompt;
+      }
+      promptInput.focus();
+    });
+  });
+  
+  // Initialize
+  init();
+</script>
+{% endblock %}

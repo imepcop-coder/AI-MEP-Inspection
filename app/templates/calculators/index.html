@@ -1,0 +1,107 @@
+﻿{% extends "layouts/base.html" %}
+
+{% block title %}MEP Engineering Calculators{% endblock %}
+
+{% block content %}
+
+<div class="calculator-dashboard">
+    <section class="dashboard-hero">
+        <div class="hero-top">
+            <div class="hero-copy">
+                <span class="hero-eyebrow">Engineering Calculator Hub</span>
+                <h1>MEP Calculators for HVAC, Plumbing, Fire Fighting, Electrical, ELV and Inspection</h1>
+                <p>Small, professional calculator modules designed for fast engineering decisions and seamless inspection workflows.</p>
+            </div>
+            <div class="hero-meta">
+                <div class="search-field">
+                    <i class="bi bi-search"></i>
+                    <input id="calculatorSearch" type="search" class="form-control" placeholder="Search calculators, modules, or categories..." aria-label="Search calculators">
+                </div>
+                <div class="hero-stats">
+                    <div class="stat-pill"><strong>{{ total_calculators }}</strong> Tools</div>
+                    <div class="stat-pill"><strong>{{ total_categories }}</strong> Modules</div>
+                    <div class="stat-pill"><strong id="heroFavoriteCount">0</strong> Favorites</div>
+                    <div class="stat-pill"><strong id="heroRecentCount">0</strong> Recent</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-bottom">
+            <div class="module-header-row">
+                <span class="standards-tag">
+                    <i class="bi bi-shield-check me-2"></i>UAE / GCC • ASHRAE • SMACNA • Local Authority
+                </span>
+            </div>
+            <div class="module-pill-grid">
+                {% for category in calculators %}
+                <span class="module-pill">{{ category.category }}</span>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <div class="category-nav mb-4">
+        <ul class="nav flex-wrap">
+            <li class="nav-item">
+                <a class="nav-link category-pill {% if selected_category == 'all' %}active{% endif %}" href="/calculators" data-category="all">All Modules</a>
+            </li>
+            {% for category in calculators %}
+            <li class="nav-item">
+                <a class="nav-link category-pill {% if selected_category == category.category|lower|replace(' ', '-') %}active{% endif %}" href="/calculators?category={{ category.category|lower|replace(' ', '-') }}" data-category="{{ category.category|lower|replace(' ', '-') }}">{{ category.category }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <div id="noResults" class="empty-state d-none">
+        <div class="empty-icon"><i class="bi bi-emoji-frown"></i></div>
+        <h3>No calculators match your search.</h3>
+        <p>Update your search terms or change the category filter to discover more tools.</p>
+    </div>
+
+    <section class="calculator-section mb-4">
+        <div class="calculator-grid">
+            {% for category in calculators %}
+            {% set category_slug = category.category|lower|replace(' ', '-') %}
+            {% for item in category['items'] %}
+            {% set card_category = category.category %}
+            {% set card_category_slug = category_slug %}
+            <div class="calculator-grid__cell">
+                <div class="h-100">
+                    {% include 'components/calculator-card.html' %}
+                </div>
+            </div>
+            {% endfor %}
+            {% endfor %}
+        </div>
+    </section>
+
+    <div class="dashboard-panels row g-4">
+        <div class="col-lg-6">
+            <div class="mini-panel favorite-panel">
+                <div class="panel-header">
+                    <div>
+                        <h4>Favorites</h4>
+                        <p>Use the heart icon to pin your most-used calculators.</p>
+                    </div>
+                    <span id="favoriteCount" class="panel-counter">0</span>
+                </div>
+                <div id="favoritesList" class="panel-list"></div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="mini-panel recent-panel">
+                <div class="panel-header">
+                    <div>
+                        <h4>Recently Used</h4>
+                        <p>Quick access to your most recently opened tools.</p>
+                    </div>
+                    <span id="recentCount" class="panel-counter">0</span>
+                </div>
+                <div id="recentList" class="panel-list"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

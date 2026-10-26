@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-mep-config
+  namespace: ai-mep
+data:
+  APP_ENV: "development"
+  DATABASE_URL: "sqlite:////data/ai_mep_inspection.db"

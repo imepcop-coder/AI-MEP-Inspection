@@ -1,0 +1,158 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Inspections{% endblock %}
+
+{% block content %}
+
+<div class="container-fluid mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+
+        <div>
+            <h2 class="fw-bold">
+                <i class="bi bi-clipboard-check"></i>
+                Inspection Management
+            </h2>
+
+            <p class="text-muted mb-0">
+                Manage all inspection reports.
+            </p>
+        </div>
+
+        <a href="/inspections/new" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i>
+            New Inspection
+        </a>
+
+    </div>
+
+    {% if inspections %}
+
+    <div class="card shadow-sm border-0">
+
+        <div class="card-body">
+
+            <div class="table-responsive">
+
+                <table class="table table-hover align-middle">
+
+                    <thead class="table-dark">
+
+                    <tr>
+
+                        <th>ID</th>
+                        <th>Inspection No</th>
+                        <th>Project ID</th>
+                        <th>Discipline</th>
+                        <th>Inspector</th>
+                        <th>Date</th>
+                        <th>Status</th>
+                        <th width="220">Actions</th>
+
+                    </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                    {% for inspection in inspections %}
+
+                    <tr>
+
+                        <td>{{ inspection.id }}</td>
+
+                        <td>{{ inspection.inspection_no }}</td>
+
+                        <td>{{ inspection.project_id }}</td>
+
+                        <td>{{ inspection.discipline }}</td>
+
+                        <td>{{ inspection.inspector }}</td>
+
+                        <td>{{ inspection.inspection_date }}</td>
+
+                        <td>
+
+                            {% if inspection.status == "Open" %}
+                                <span class="badge bg-warning text-dark">
+                                    {{ inspection.status }}
+                                </span>
+
+                            {% elif inspection.status == "Closed" %}
+                                <span class="badge bg-success">
+                                    {{ inspection.status }}
+                                </span>
+
+                            {% elif inspection.status == "In Progress" %}
+                                <span class="badge bg-primary">
+                                    {{ inspection.status }}
+                                </span>
+
+                            {% else %}
+                                <span class="badge bg-secondary">
+                                    {{ inspection.status }}
+                                </span>
+                            {% endif %}
+
+                        </td>
+
+                        <td>
+
+                            <a href="/inspections/{{ inspection.id }}"
+                               class="btn btn-info btn-sm text-white">
+                                View
+                            </a>
+
+                            <a href="/inspections/edit/{{ inspection.id }}"
+                               class="btn btn-warning btn-sm">
+                                Edit
+                            </a>
+
+                            <a href="/inspections/delete/{{ inspection.id }}"
+                               class="btn btn-danger btn-sm"
+                               onclick="return confirm('Delete this inspection?')">
+                                Delete
+                            </a>
+
+                        </td>
+
+                    </tr>
+
+                    {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    {% else %}
+
+    <div class="card shadow">
+
+        <div class="card-body text-center py-5">
+
+            <h3>No Inspections Found</h3>
+
+            <p class="text-muted">
+                Click below to create your first inspection.
+            </p>
+
+            <a href="/inspections/new"
+               class="btn btn-primary">
+                Create Inspection
+            </a>
+
+        </div>
+
+    </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

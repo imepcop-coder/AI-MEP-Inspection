@@ -1,0 +1,224 @@
+{% extends "layouts/base.html" %}
+
+{% block title %}Engineering Analytics{% endblock %}
+
+{% block head_extra %}
+<link rel="stylesheet" href="{{ url_for('static', path='css/analytics.css') }}?v=2">
+{% endblock %}
+
+{% block content %}
+<div class="analytics-shell" id="analyticsDashboard">
+  <header class="analytics-header">
+    <div>
+      <span class="analytics-eyebrow"><i class="bi bi-activity" aria-hidden="true"></i> Engineering intelligence</span>
+      <h1>MEP performance analytics</h1>
+      <p>Monitor inspection delivery, quality issues, corrective actions, and compliance using your workspace records.</p>
+    </div>
+    <div class="analytics-header-actions">
+      <span class="analytics-updated" id="analyticsUpdatedAt">Generated {{ analytics_data.generated_at[:16].replace('T', ' ') }}</span>
+      <button class="btn btn-outline-secondary" id="refreshAnalytics" type="button">
+        <i class="bi bi-arrow-clockwise" aria-hidden="true"></i> Refresh
+      </button>
+      <a class="btn btn-primary" id="exportAnalytics" href="/analytics/export.csv">
+        <i class="bi bi-download" aria-hidden="true"></i> Export CSV
+      </a>
+    </div>
+  </header>
+
+  <div class="analytics-message d-none" id="analyticsLoading" role="status" aria-live="polite">
+    <span class="spinner-border spinner-border-sm" aria-hidden="true"></span> Updating analytics…
+  </div>
+  <div class="analytics-message analytics-error d-none" id="analyticsError" role="alert"></div>
+
+  <form class="analytics-filters" id="analyticsFilters">
+    <div class="filter-heading">
+      <div>
+        <h2>Report filters</h2>
+        <p>Dates apply to inspections, NCRs, and AI requests. Inspection and NCR filters refine their own records; compliance and overdue actions show current state.</p>
+      </div>
+      <button class="btn btn-link" id="clearAnalyticsFilters" type="button">Clear filters</button>
+    </div>
+    <div class="filter-grid">
+      <div class="filter-group">
+        <label for="periodFilter">Date range</label>
+        <select id="periodFilter" name="period" class="form-select">
+          <option value="7d">Last 7 days</option>
+          <option value="30d">Last 30 days</option>
+          <option value="90d" selected>Last 90 days</option>
+          <option value="year">This year</option>
+          <option value="custom">Custom range</option>
+          <option value="all">All available dates</option>
+        </select>
+      </div>
+      <div class="filter-group custom-date d-none" id="customDateStart">
+        <label for="startDateFilter">From</label>
+        <input id="startDateFilter" name="start_date" class="form-control" type="date">
+      </div>
+      <div class="filter-group custom-date d-none" id="customDateEnd">
+        <label for="endDateFilter">To</label>
+        <input id="endDateFilter" name="end_date" class="form-control" type="date">
+      </div>
+      <div class="filter-group">
+        <label for="projectFilter">Project</label>
+        <select id="projectFilter" name="project_id" class="form-select">
+          <option value="">All permitted projects</option>
+          {% for project in filter_options.projects %}
+          <option value="{{ project.id }}">{{ project.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="disciplineFilter">MEP discipline</label>
+        <select id="disciplineFilter" name="discipline" class="form-select">
+          <option value="">All disciplines</option>
+          {% for value in filter_options.disciplines %}
+          <option value="{{ value }}">{{ value }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="inspectorFilter">Inspector</label>
+        <select id="inspectorFilter" name="inspector" class="form-select">
+          <option value="">All inspectors</option>
+          {% for value in filter_options.inspectors %}
+          <option value="{{ value }}">{{ value }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="inspectionStatusFilter">Inspection status</label>
+        <select id="inspectionStatusFilter" name="inspection_status" class="form-select">
+          <option value="">All statuses</option>
+          {% for value in filter_options.inspection_statuses %}
+          <option value="{{ value }}">{{ value }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="ncrStatusFilter">NCR status</label>
+        <select id="ncrStatusFilter" name="ncr_status" class="form-select">
+          <option value="">All NCR statuses</option>
+          {% for value in filter_options.ncr_statuses %}
+          <option value="{{ value }}">{{ value }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="filter-group">
+        <label for="ncrSeverityFilter">NCR severity</label>
+        <select id="ncrSeverityFilter" name="ncr_severity" class="form-select">
+          <option value="">All severities</option>
+          {% for value in filter_options.ncr_severities %}
+          <option value="{{ value }}">{{ value }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="filter-actions">
+      <span class="filter-hint">Inspection dates use the recorded inspection date. Corrective actions show currently overdue items.</span>
+      <button class="btn btn-primary" id="applyAnalyticsFilters" type="submit">Apply filters</button>
+    </div>
+  </form>
+
+  <section class="kpi-grid" id="analyticsKpis" aria-label="Key performance indicators">
+    {% set kpis = analytics_data.kpis %}
+    {% set reasons = analytics_data.unavailable %}
+    <article class="kpi-card"><span class="kpi-icon"><i class="bi bi-buildings" aria-hidden="true"></i></span><div><span class="kpi-label">Projects with inspections</span><strong class="kpi-value" data-kpi="projects_with_inspections">{{ kpis.projects_with_inspections }}</strong></div></article>
+    <article class="kpi-card"><span class="kpi-icon"><i class="bi bi-clipboard2-check" aria-hidden="true"></i></span><div><span class="kpi-label">Total inspections</span><strong class="kpi-value" data-kpi="total_inspections">{{ kpis.total_inspections }}</strong></div></article>
+    <article class="kpi-card"><span class="kpi-icon"><i class="bi bi-check2-circle" aria-hidden="true"></i></span><div><span class="kpi-label">Completed (closed)</span><strong class="kpi-value" data-kpi="completed_inspections">{{ kpis.completed_inspections }}</strong></div></article>
+    <article class="kpi-card"><span class="kpi-icon"><i class="bi bi-hourglass-split" aria-hidden="true"></i></span><div><span class="kpi-label">Pending / in progress</span><strong class="kpi-value" data-kpi="pending_inspections">{{ kpis.pending_inspections }}</strong></div></article>
+    <article class="kpi-card kpi-unavailable" title="{{ reasons.overdue_inspections }}"><span class="kpi-icon"><i class="bi bi-calendar-x" aria-hidden="true"></i></span><div><span class="kpi-label">Overdue inspections <i class="bi bi-info-circle" aria-hidden="true"></i></span><strong class="kpi-value" data-kpi="overdue_inspections">{{ kpis.overdue_inspections if kpis.overdue_inspections is not none else '—' }}</strong><small class="kpi-note">Due dates are not stored</small></div></article>
+    <article class="kpi-card kpi-unavailable" title="{{ reasons.inspection_pass_rate }}"><span class="kpi-icon"><i class="bi bi-speedometer2" aria-hidden="true"></i></span><div><span class="kpi-label">Pass rate <i class="bi bi-info-circle" aria-hidden="true"></i></span><strong class="kpi-value" data-kpi="inspection_pass_rate">{{ kpis.inspection_pass_rate if kpis.inspection_pass_rate is not none else '—' }}</strong><small class="kpi-note">No pass / fail outcome field</small></div></article>
+    <article class="kpi-card"><span class="kpi-icon"><i class="bi bi-exclamation-octagon" aria-hidden="true"></i></span><div><span class="kpi-label">Open NCRs</span><strong class="kpi-value" data-kpi="open_ncrs">{{ kpis.open_ncrs }}</strong></div></article>
+    <article class="kpi-card"><span class="kpi-icon"><i class="bi bi-shield-exclamation" aria-hidden="true"></i></span><div><span class="kpi-label">High / critical NCRs</span><strong class="kpi-value" data-kpi="high_severity_ncrs">{{ kpis.high_severity_ncrs }}</strong></div></article>
+    <article class="kpi-card"><span class="kpi-icon"><i class="bi bi-wrench-adjustable-circle" aria-hidden="true"></i></span><div><span class="kpi-label">Overdue corrective actions</span><strong class="kpi-value" data-kpi="overdue_corrective_actions">{{ kpis.overdue_corrective_actions }}</strong></div></article>
+    <article class="kpi-card"><span class="kpi-icon"><i class="bi bi-robot" aria-hidden="true"></i></span><div><span class="kpi-label">AI requests</span><strong class="kpi-value" data-kpi="ai_requests">{{ kpis.ai_requests if kpis.ai_requests is not none else '—' }}</strong><small class="kpi-note" data-kpi-note="ai_requests">{{ reasons.ai_requests or 'Workspace request records' }}</small></div></article>
+    <article class="kpi-card"><span class="kpi-icon"><i class="bi bi-patch-check" aria-hidden="true"></i></span><div><span class="kpi-label">Projects with compliance gaps</span><strong class="kpi-value" data-kpi="compliance_gaps">{{ kpis.compliance_gaps }}</strong></div></article>
+    <article class="kpi-card"><span class="kpi-icon"><i class="bi bi-file-earmark-medical" aria-hidden="true"></i></span><div><span class="kpi-label">Expired / expiring licenses</span><strong class="kpi-value" data-kpi="expiring_licenses">{{ kpis.expiring_licenses }}</strong><small class="kpi-note">Expired or due within 30 days</small></div></article>
+  </section>
+
+  <section class="analytics-chart-grid" aria-label="Analytics charts">
+    <article class="analytics-panel chart-panel">
+      <div class="panel-heading"><div><h2>Inspection trend</h2><p>Recorded inspections over the selected period</p></div></div>
+      <div class="chart-wrapper"><canvas id="trendChart" aria-label="Inspection trend chart"></canvas><div class="chart-empty d-none">No inspection activity in this range.</div></div>
+    </article>
+    <article class="analytics-panel chart-panel">
+      <div class="panel-heading"><div><h2>Inspection status</h2><p>Actual workflow statuses</p></div></div>
+      <div class="chart-wrapper"><canvas id="inspectionStatusChart" aria-label="Inspection status chart"></canvas><div class="chart-empty d-none">No inspection status data.</div></div>
+    </article>
+    <article class="analytics-panel chart-panel">
+      <div class="panel-heading"><div><h2>NCR severity</h2><p>Non-conformance records in the selected scope</p></div></div>
+      <div class="chart-wrapper"><canvas id="ncrSeverityChart" aria-label="NCR severity chart"></canvas><div class="chart-empty d-none">No NCR records in this scope.</div></div>
+    </article>
+    <article class="analytics-panel chart-panel">
+      <div class="panel-heading"><div><h2>NCR status</h2><p>Open and other recorded workflow states</p></div></div>
+      <div class="chart-wrapper"><canvas id="ncrStatusChart" aria-label="NCR status chart"></canvas><div class="chart-empty d-none">No NCR status data.</div></div>
+    </article>
+    <article class="analytics-panel chart-panel">
+      <div class="panel-heading"><div><h2>Discipline performance</h2><p>Closed inspections compared with total</p></div></div>
+      <div class="chart-wrapper"><canvas id="disciplineChart" aria-label="Discipline performance chart"></canvas><div class="chart-empty d-none">No discipline data.</div></div>
+    </article>
+    <article class="analytics-panel chart-panel">
+      <div class="panel-heading"><div><h2>Project completion</h2><p>Closed inspections as a share of each project's filtered inspections</p></div></div>
+      <div class="chart-wrapper"><canvas id="projectChart" aria-label="Project completion chart"></canvas><div class="chart-empty d-none">No project inspection data.</div></div>
+    </article>
+    <article class="analytics-panel chart-panel">
+      <div class="panel-heading"><div><h2>AI request activity</h2><p>Workspace-level requests; project filters may make this unavailable</p></div></div>
+      <div class="chart-wrapper"><canvas id="aiChart" aria-label="AI request activity chart"></canvas><div class="chart-empty d-none">AI activity is unavailable for this filter or period.</div></div>
+    </article>
+    <article class="analytics-panel chart-panel">
+      <div class="panel-heading"><div><h2>Compliance readiness</h2><p>Projects with a record and the three authority approvals recorded</p></div></div>
+      <div class="chart-wrapper"><canvas id="complianceChart" aria-label="Compliance readiness chart"></canvas><div class="chart-empty d-none">No projects in this scope.</div></div>
+    </article>
+  </section>
+
+  <section class="analytics-lower-grid">
+    <article class="analytics-panel">
+      <div class="panel-heading"><div><h2>Items requiring attention</h2><p>Factual alerts derived from current records</p></div></div>
+      <ul class="attention-list" id="analyticsInsights">
+        {% for insight in analytics_data.insights %}
+        <li class="attention-item attention-{{ insight.kind }}">
+          <span class="attention-icon"><i class="bi {% if insight.kind == 'critical' %}bi-exclamation-triangle{% elif insight.kind == 'warning' %}bi-exclamation-circle{% else %}bi-check-circle{% endif %}" aria-hidden="true"></i></span>
+          <a href="{{ insight.url }}">{{ insight.text }}</a>
+        </li>
+        {% endfor %}
+      </ul>
+    </article>
+    <article class="analytics-panel">
+      <div class="panel-heading"><div><h2>Project progress</h2><p>Calculated from filtered inspection statuses</p></div></div>
+      <div class="table-responsive">
+        <table class="table analytics-table">
+          <thead><tr><th>Project</th><th>Closed / total</th><th>Complete</th></tr></thead>
+          <tbody id="projectProgressTable">
+            {% for project in analytics_data.project_progress %}
+            <tr><td><a href="{{ project.url }}">{{ project.name }}</a></td><td>{{ project.completed }} / {{ project.total }}</td><td>{{ project.completion_rate }}%</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <p class="table-empty {% if analytics_data.project_progress %}d-none{% endif %}" id="projectProgressEmpty">No project inspections match these filters.</p>
+    </article>
+  </section>
+
+  <section class="analytics-panel recent-inspections-panel">
+    <div class="panel-heading"><div><h2>Recent inspections</h2><p>Latest records in the selected analytics scope</p></div><a href="/inspections" class="btn btn-outline-secondary btn-sm">Open inspections</a></div>
+    <div class="table-responsive">
+      <table class="table analytics-table">
+        <thead><tr><th>Inspection</th><th>Project</th><th>Inspector</th><th>Discipline</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody id="recentInspectionsTable">
+          {% for inspection in analytics_data.recent_inspections %}
+          <tr><td><a href="{{ inspection.url }}">{{ inspection.inspection_no }}</a></td><td>{{ inspection.project }}</td><td>{{ inspection.inspector }}</td><td>{{ inspection.discipline }}</td><td>{{ inspection.status }}</td><td>{{ inspection.date }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <p class="table-empty {% if analytics_data.recent_inspections %}d-none{% endif %}" id="recentInspectionsEmpty">No inspections match these filters.</p>
+  </section>
+
+  <p class="analytics-footnote">Metrics are calculated from records available to your signed-in workspace. Inspection pass rate and overdue inspections are unavailable because the current inspection model has no pass/fail result or separate due date.</p>
+</div>
+<script>
+  window.analyticsData = {{ analytics_data | tojson }};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{{ url_for('static', path='js/analytics.js') }}?v=2"></script>
+{% endblock %}
