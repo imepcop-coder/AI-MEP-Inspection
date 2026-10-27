@@ -10,11 +10,12 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.auth.tenant import apply_tenant_filter, get_authenticated_user, get_session_user, SESSION_SECRET
-from app.database.db import Base, engine, get_db, ensure_sqlite_columns
+from app.database.db import engine, get_db, initialize_database
 from app.models.ai_request import AIRequest
 from app.models.audit_log import AuditLog
 from app.models.document import Document
@@ -72,8 +73,7 @@ app = FastAPI(
     version="1.0.0"
 )
 
-Base.metadata.create_all(bind=engine)
-ensure_sqlite_columns()
+initialize_database()
 
 app.add_middleware(
     SessionMiddleware,
@@ -505,6 +505,22 @@ async def home(request: Request):
         name="index.html",
         context={}
     )
+
+
+@app.get("/health/live")
+async def liveness():
+    return {"status": "ok"}
+
+
+@app.get("/health/ready")
+async def readiness():
+    try:
+        with engine.connect() as connection:
+            connection.execute(text("SELECT 1"))
+    except SQLAlchemyError:
+        logger.exception("Readiness check failed: database is unavailable")
+        return JSONResponse(status_code=503, content={"status": "unavailable"})
+    return {"status": "ok"}
 
 
 @app.get("/dashboard", response_class=HTMLResponse)

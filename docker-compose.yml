@@ -1,16 +1,68 @@
-version: '3.9'
 services:
-  web:
-    build: .
-    container_name: ai-mep-inspection
-    ports:
-      - "8000:8000"
+  database:
+    image: postgres:16-alpine
     environment:
-      - DATABASE_URL=sqlite:///./ai_mep_inspection.db
-      - SESSION_SECRET=change-this-secret-key
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID:-}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET:-}
-      - GOOGLE_REDIRECT_URI=${GOOGLE_REDIRECT_URI:-}
-      - JWT_SECRET=change-this-jwt-secret
+      POSTGRES_DB: ai_mep
+      POSTGRES_USER: ${POSTGRES_USER:-ai_mep}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-local-dev-only-change-this-password}
     volumes:
-      - .:/app
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$${POSTGRES_USER}\" -d \"$${POSTGRES_DB}\""]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      APP_ENV: development
+      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://${POSTGRES_USER:-ai_mep}:${POSTGRES_PASSWORD:-local-dev-only-change-this-password}@database:5432/ai_mep}
+      SESSION_SECRET: ${SESSION_SECRET:-local-dev-only-change-this-session-secret}
+      JWT_SECRET: ${JWT_SECRET:-local-dev-only-change-this-jwt-secret}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-}
+      MPLCONFIGDIR: /tmp/matplotlib
+    volumes:
+      - uploads:/app/uploads
+      - reports:/app/reports
+    depends_on:
+      database:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/health/ready', timeout=2)"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+    networks:
+      default:
+        aliases:
+          - ai-mep-backend
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    ports:
+      - "8000:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1:8080/health/ready"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+  uploads:
+  reports:

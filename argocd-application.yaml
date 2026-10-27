@@ -1,0 +1,19 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ai-mep-inspection
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://dev.azure.com/nehaluddinkh/DevOpsLab/_git/DevOpsLab
+    targetRevision: main
+    path: helm/ai-mep-inspection
+    helm:
+      releaseName: ai-mep-inspection
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ai-mep
+  syncPolicy:
+    syncOptions:
+      - CreateNamespace=false

@@ -1,21 +1,27 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: ai-mep-inspection
+  name: ai-mep-backend
   namespace: ai-mep
   labels:
     app.kubernetes.io/name: ai-mep-inspection
+    app.kubernetes.io/component: backend
 spec:
-  replicas: 1
+  replicas: 2
   strategy:
-    type: Recreate
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
   selector:
     matchLabels:
       app.kubernetes.io/name: ai-mep-inspection
+      app.kubernetes.io/component: backend
   template:
     metadata:
       labels:
         app.kubernetes.io/name: ai-mep-inspection
+        app.kubernetes.io/component: backend
     spec:
       automountServiceAccountToken: false
       securityContext:
@@ -28,7 +34,7 @@ spec:
           image: YOUR_ACR_NAME.azurecr.io/ai-mep-inspection:REPLACE_ME
           imagePullPolicy: IfNotPresent
           ports:
-            - name: http
+            - name: app-port
               containerPort: 8000
               protocol: TCP
           env:
@@ -39,8 +45,8 @@ spec:
                   key: APP_ENV
             - name: DATABASE_URL
               valueFrom:
-                configMapKeyRef:
-                  name: ai-mep-config
+                secretKeyRef:
+                  name: ai-mep-secrets
                   key: DATABASE_URL
             - name: SESSION_SECRET
               valueFrom:
@@ -63,20 +69,20 @@ spec:
               memory: 2Gi
           startupProbe:
             httpGet:
-              path: /login
-              port: http
+              path: /health/live
+              port: app-port
             periodSeconds: 5
             failureThreshold: 30
           readinessProbe:
             httpGet:
-              path: /login
-              port: http
+              path: /health/ready
+              port: app-port
             periodSeconds: 10
             timeoutSeconds: 3
           livenessProbe:
             httpGet:
-              path: /login
-              port: http
+              path: /health/live
+              port: app-port
             periodSeconds: 20
             timeoutSeconds: 3
             failureThreshold: 3
@@ -90,21 +96,18 @@ spec:
               drop:
                 - ALL
           volumeMounts:
-            - name: persistent-data
-              mountPath: /data
-              subPath: db
-            - name: persistent-data
+            - name: shared-files
               mountPath: /app/uploads
               subPath: uploads
-            - name: persistent-data
+            - name: shared-files
               mountPath: /app/reports
               subPath: reports
             - name: temporary-files
               mountPath: /tmp
       volumes:
-        - name: persistent-data
+        - name: shared-files
           persistentVolumeClaim:
-            claimName: ai-mep-data
+            claimName: ai-mep-shared-files
         - name: temporary-files
           emptyDir:
             sizeLimit: 512Mi

@@ -81,6 +81,7 @@ pydantic_core==2.46.4
 PyJWT==2.13.0
 
 PyMySQL==1.2.0
+psycopg[binary]==3.2.9
 
 pyparsing==3.3.2
 
@@ -117,4 +118,3 @@ urllib3==2.7.0
 uvicorn==0.51.0
 
 websockets==16.1.1
-

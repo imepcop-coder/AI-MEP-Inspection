@@ -2,7 +2,7 @@
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "ai-mep-inspection.fullname" . }}
+  name: {{ include "ai-mep-inspection.fullname" . }}-backend
   labels:
     {{- include "ai-mep-inspection.labels" . | nindent 4 }}
 spec:

@@ -7,8 +7,9 @@ spec:
   type: ClusterIP
   selector:
     app.kubernetes.io/name: ai-mep-inspection
+    app.kubernetes.io/component: frontend
   ports:
     - name: http
       port: 80
-      targetPort: http
+      targetPort: frontend-port
       protocol: TCP

@@ -1,6 +1,11 @@
 # AI-MEP Inspection Helm configuration
 
-replicaCount: 3
+replicaCount: 2
+frontend:
+  replicaCount: 2
+  image:
+    repository: aimep55923.azurecr.io/ai-mep-frontend
+    pullPolicy: IfNotPresent
 
 image:
   repository: aimep55923.azurecr.io/aimep-inspection
@@ -41,7 +46,23 @@ securityContext:
 service:
   type: ClusterIP
   port: 80
-  targetPort: 8000
+  targetPort: frontend
+
+backendService:
+  port: 8000
+
+postgres:
+  enabled: true
+  image: postgres:16-alpine
+  database: ai_mep
+  secretName: ai-mep-secrets
+  persistence:
+    storageClassName: managed-csi
+    size: 16Gi
+
+sharedFiles:
+  storageClassName: azurefile-csi
+  size: 20Gi
 
 ingress:
   enabled: false
@@ -67,14 +88,14 @@ resources:
 
 startupProbe:
   httpGet:
-    path: /login
+    path: /health/live
     port: http
   periodSeconds: 5
   failureThreshold: 30
 
 livenessProbe:
   httpGet:
-    path: /login
+    path: /health/live
     port: http
   periodSeconds: 20
   timeoutSeconds: 3
@@ -82,32 +103,26 @@ livenessProbe:
 
 readinessProbe:
   httpGet:
-    path: /login
+    path: /health/ready
     port: http
   periodSeconds: 10
 
 autoscaling:
   enabled: false
-  minReplicas: 1
+  minReplicas: 2
   maxReplicas: 100
   targetCPUUtilizationPercentage: 80
 
 volumes:
-  - name: data
-    persistentVolumeClaim:
-      claimName: ai-mep-data
   - name: tmp
     emptyDir:
       sizeLimit: 512Mi
 
 volumeMounts:
-  - name: data
-    mountPath: /data
-    subPath: db
-  - name: data
+  - name: shared-files
     mountPath: /app/uploads
     subPath: uploads
-  - name: data
+  - name: shared-files
     mountPath: /app/reports
     subPath: reports
   - name: tmp
@@ -121,14 +136,11 @@ affinity: {}
 
 extraEnv:
   - name: APP_ENV
-    valueFrom:
-      configMapKeyRef:
-        name: ai-mep-config
-        key: APP_ENV
+    value: "development"
   - name: DATABASE_URL
     valueFrom:
-      configMapKeyRef:
-        name: ai-mep-config
+      secretKeyRef:
+        name: ai-mep-secrets
         key: DATABASE_URL
   - name: SESSION_SECRET
     valueFrom:

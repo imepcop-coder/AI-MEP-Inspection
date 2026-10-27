@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ai-mep-postgres
+  namespace: ai-mep
+spec:
+  clusterIP: None
+  selector:
+    app.kubernetes.io/name: ai-mep-inspection
+    app.kubernetes.io/component: database
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
+      protocol: TCP

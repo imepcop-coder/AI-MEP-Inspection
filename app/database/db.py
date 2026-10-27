@@ -63,6 +63,17 @@ def ensure_sqlite_columns():
                 conn.commit()
 
 
+def initialize_database():
+    if engine.dialect.name == "postgresql":
+        with engine.begin() as connection:
+            connection.execute(text("SELECT pg_advisory_xact_lock(741205184)"))
+            Base.metadata.create_all(bind=connection)
+    else:
+        Base.metadata.create_all(bind=engine)
+
+    ensure_sqlite_columns()
+
+
 def get_db():
     db = SessionLocal()
     try:
