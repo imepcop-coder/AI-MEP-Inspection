@@ -1,0 +1,67 @@
+
+replicaCount: 1
+
+image:
+  repository: aksacr19905.azurecr.io/devopslab
+  pullPolicy: Always
+  tag: "17"
+
+imagePullSecrets:
+  - name: aksacr199055f8a-auth
+
+nameOverride: "devopslab"
+fullnameOverride: "devopslab"
+
+serviceAccount:
+  create: false
+  automount: false
+  annotations: {}
+  name: default
+
+podAnnotations: {}
+podLabels:
+  app: devopslab
+
+podSecurityContext: {}
+securityContext: {}
+
+service:
+  type: LoadBalancer
+  port: 8000
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts: []
+  tls: []
+
+httpRoute:
+  enabled: false
+  parentRefs: []
+  hostnames: []
+  rules: []
+
+resources: {}
+
+livenessProbe:
+  httpGet:
+    path: /
+    port: http
+
+readinessProbe:
+  httpGet:
+    path: /
+    port: http
+
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 100
+  targetCPUUtilizationPercentage: 80
+
+volumes: []
+volumeMounts: []
+nodeSelector: {}
+tolerations: []
+affinity: {}

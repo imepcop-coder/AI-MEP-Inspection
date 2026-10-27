@@ -1,0 +1,22 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: devopslab
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://dev.azure.com/nehaluddinkh/DevOpsLab/_git/DevOpsLab
+    targetRevision: main
+    path: helm/devopslab-chart
+    helm:
+      releaseName: devopslab
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: app-demo
+  syncPolicy:
+    automated:
+      prune: false
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=false
