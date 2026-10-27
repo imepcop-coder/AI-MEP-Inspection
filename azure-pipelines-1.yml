@@ -13,7 +13,7 @@ variables:
   # Container registry service connection established during pipeline creation
   dockerRegistryServiceConnection: '873bb22b-c9f7-4d11-8bc3-5b509a9dc353'
   imageRepository: 'devopslab'
-  containerRegistry: 'aimep55923.azurecr.io'
+  containerRegistry: 'aksacr19905.azurecr.io'
   dockerfilePath: '**/Dockerfile'
   tag: '$(Build.BuildId)'
   imagePullSecret: 'aimep559231418-auth'
