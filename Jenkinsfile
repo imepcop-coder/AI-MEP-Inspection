@@ -12,7 +12,7 @@ pipeline {
 
         stage('Secret Detection') {
             steps {
-                gitleaksScan()
+                gitleaksScan([:])
             }
         }
 
