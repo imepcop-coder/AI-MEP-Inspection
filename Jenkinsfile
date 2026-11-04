@@ -31,11 +31,12 @@ pipeline {
             }
         }
 
-        stage('Unit Testing') {
-            steps {
-                bat 'python -m pytest -v'
-            }
-        }
+       stage('Unit Testing') {
+    steps {
+        bat 'python -m pip install -r requirements.txt'
+        bat 'python -m pytest -v'
+    }
+}
 
         stage('Pipeline Summary') {
             steps {
