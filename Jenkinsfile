@@ -1,3 +1,4 @@
+
 @Library('devsecops') _
 
 pipeline {
@@ -8,7 +9,12 @@ pipeline {
         skipDefaultCheckout(true)
     }
 
+    environment {
+        IMAGE_NAME = 'ai-mep-inspection'
+    }
+
     stages {
+
         stage('Checkout') {
             steps {
                 checkout scm
@@ -21,6 +27,7 @@ pipeline {
                 bat 'git --version'
                 bat 'python --version'
                 bat 'docker --version'
+                bat 'trivy --version'
             }
         }
 
@@ -30,12 +37,12 @@ pipeline {
             }
         }
 
-
         stage('SonarQube Analysis') {
             steps {
                 dir('AI-MEP-Inspection') {
                     script {
                         def scannerHome = tool 'SonarScanner'
+
                         withSonarQubeEnv('SonarQube Scanner') {
                             bat "\"${scannerHome}\\bin\\sonar-scanner.bat\""
                         }
@@ -43,6 +50,7 @@ pipeline {
                 }
             }
         }
+
         stage('Unit Testing') {
             steps {
                 dir('AI-MEP-Inspection') {
@@ -52,11 +60,43 @@ pipeline {
             }
         }
 
+        stage('SCA - Dependency Scan') {
+            steps {
+                dir('AI-MEP-Inspection') {
+                    bat 'python -m pip install pip-audit'
+                    bat 'python -m pip_audit -r requirements.txt'
+                }
+            }
+        }
+
+        stage('Docker Build') {
+            steps {
+                dir('AI-MEP-Inspection') {
+                    bat "docker build -t %IMAGE_NAME%:${env.BUILD_NUMBER} ."
+                    bat 'docker image ls %IMAGE_NAME%'
+                }
+            }
+        }
+
+        stage('Trivy Filesystem Scan') {
+            steps {
+                dir('AI-MEP-Inspection') {
+                    bat 'trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 0 .'
+                }
+            }
+        }
+
+        stage('Trivy Image Scan') {
+            steps {
+                bat "trivy image --severity HIGH,CRITICAL --exit-code 0 %IMAGE_NAME%:${env.BUILD_NUMBER}"
+            }
+        }
+
         stage('Pipeline Summary') {
             steps {
                 echo 'CI pipeline completed successfully'
+                echo "Docker image: ${env.IMAGE_NAME}:${env.BUILD_NUMBER}"
             }
         }
     }
 }
-
