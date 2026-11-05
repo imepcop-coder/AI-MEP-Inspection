@@ -1,4 +1,4 @@
-
+```groovy
 @Library('devsecops') _
 
 pipeline {
@@ -11,6 +11,7 @@ pipeline {
 
     environment {
         IMAGE_NAME = 'ai-mep-inspection'
+        TRIVY = 'C:\\Users\\nk618\\AppData\\Local\\Microsoft\\WinGet\\Packages\\AquaSecurity.Trivy_Microsoft.Winget.Source_8wekyb3d8bbwe\\trivy.exe'
     }
 
     stages {
@@ -27,7 +28,7 @@ pipeline {
                 bat 'git --version'
                 bat 'python --version'
                 bat 'docker --version'
-                bat 'trivy --version'
+                bat '"%TRIVY%" --version'
             }
         }
 
@@ -69,34 +70,4 @@ pipeline {
             }
         }
 
-        stage('Docker Build') {
-            steps {
-                dir('AI-MEP-Inspection') {
-                    bat "docker build -t %IMAGE_NAME%:${env.BUILD_NUMBER} ."
-                    bat 'docker image ls %IMAGE_NAME%'
-                }
-            }
-        }
-
-        stage('Trivy Filesystem Scan') {
-            steps {
-                dir('AI-MEP-Inspection') {
-                    bat 'trivy fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 0 .'
-                }
-            }
-        }
-
-        stage('Trivy Image Scan') {
-            steps {
-                bat "trivy image --severity HIGH,CRITICAL --exit-code 0 %IMAGE_NAME%:${env.BUILD_NUMBER}"
-            }
-        }
-
-        stage('Pipeline Summary') {
-            steps {
-                echo 'CI pipeline completed successfully'
-                echo "Docker image: ${env.IMAGE_NAME}:${env.BUILD_NUMBER}"
-            }
-        }
-    }
-}
+        stage('
