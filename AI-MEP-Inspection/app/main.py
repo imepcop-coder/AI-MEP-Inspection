@@ -194,10 +194,21 @@ async def auth_middleware(request: Request, call_next):
         if path.startswith("/static") or path.startswith("/uploads"):
             return await call_next(request)
 
-        public_exact = {"/login", "/register", "/forgot-password", "/reset-password", "/favicon.ico", "/robots.txt"}
+        public_exact = {
+            "/login",
+            "/register",
+            "/forgot-password",
+            "/reset-password",
+            "/favicon.ico",
+            "/robots.txt",
+            "/assistant/chat",
+        }
         if path in public_exact:
             if getattr(request.state, "current_user", None) and path in ("/login", "/register"):
                 return RedirectResponse(url="/dashboard", status_code=302)
+            return await call_next(request)
+
+        if path == "/calculators" or path.startswith("/calculators/"):
             return await call_next(request)
 
         if path.endswith("/health") or "/health" in path:
@@ -640,5 +651,4 @@ async def analytics(request: Request, db: Session = Depends(get_db)):
         "analytics_data": analytics_data,
     }
     return templates.TemplateResponse(request=request, name="analytics.html", context=context)
-
 

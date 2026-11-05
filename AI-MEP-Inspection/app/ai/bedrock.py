@@ -156,7 +156,8 @@ def analyze_image(image_path: str) -> str | dict[str, Any]:
         ],
     }
 
-    request_url = str(client.base_url).rstrip("/") + "/v1/messages" if client is not None else None
+    base_url = getattr(client, "base_url", ANTHROPIC_BASE_URL) if client is not None else None
+    request_url = str(base_url).rstrip("/") + "/v1/messages" if base_url else None
     print("[Bedrock] AI provider selected:", selected_provider)
     print("[Bedrock] Model name:", ANTHROPIC_MODEL)
     print("[Bedrock] Base URL:", ANTHROPIC_BASE_URL)
@@ -207,7 +208,7 @@ def analyze_image(image_path: str) -> str | dict[str, Any]:
                 print("[Bedrock] Exception raw body:", http_response.text)
             except Exception as inner_exc:
                 print("[Bedrock] Failed to read exception http_response:", repr(inner_exc))
-        raise
+        return _fallback_payload()
 
 
 class AIUnavailable(Exception):
@@ -232,7 +233,8 @@ def generate_text(prompt: str, system_prompt: str | None = None) -> str:
         ],
     }
 
-    request_url = str(client.base_url).rstrip("/") + "/v1/messages"
+    base_url = getattr(client, "base_url", ANTHROPIC_BASE_URL)
+    request_url = str(base_url).rstrip("/") + "/v1/messages" if base_url else None
     print("[Bedrock] AI provider selected:", "bedrock")
     print("[Bedrock] Model name:", ANTHROPIC_MODEL)
     print("[Bedrock] Base URL:", ANTHROPIC_BASE_URL)
@@ -277,4 +279,4 @@ def generate_text(prompt: str, system_prompt: str | None = None) -> str:
                 print("[Bedrock] Exception raw body:", http_response.text)
             except Exception as inner_exc:
                 print("[Bedrock] Failed to read exception http_response:", repr(inner_exc))
-        raise
+        raise AIUnavailable("Anthropic AI provider request failed") from exc

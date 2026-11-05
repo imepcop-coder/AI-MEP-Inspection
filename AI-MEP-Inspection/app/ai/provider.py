@@ -43,6 +43,12 @@ if _impl is None:
     # Try bedrock as last resort
     _impl = _import_module("app.ai.bedrock")
 
+if _impl is not None and hasattr(_impl, "AIUnavailable"):
+    AIUnavailable = getattr(_impl, "AIUnavailable")
+else:
+    class AIUnavailable(RuntimeError):
+        """Raised when the selected AI provider is unavailable."""
+
 
 # Bind analyze_image to the concrete implementation (or provide a clear error)
 if _impl is not None and hasattr(_impl, "analyze_image"):
