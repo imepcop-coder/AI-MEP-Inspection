@@ -70,4 +70,34 @@ pipeline {
             }
         }
 
-        stage('
+        stage('Docker Build') {
+            steps {
+                dir('AI-MEP-Inspection') {
+                    bat 'docker build -t %IMAGE_NAME%:%BUILD_NUMBER% .'
+                    bat 'docker image ls %IMAGE_NAME%'
+                }
+            }
+        }
+
+        stage('Trivy Filesystem Scan') {
+            steps {
+                dir('AI-MEP-Inspection') {
+                    bat '"%TRIVY%" fs --scanners vuln,misconfig --severity HIGH,CRITICAL --exit-code 0 .'
+                }
+            }
+        }
+
+        stage('Trivy Image Scan') {
+            steps {
+                bat '"%TRIVY%" image --severity HIGH,CRITICAL --exit-code 0 %IMAGE_NAME%:%BUILD_NUMBER%'
+            }
+        }
+
+        stage('Pipeline Summary') {
+            steps {
+                echo 'CI pipeline completed successfully'
+                echo "Docker image: ${env.IMAGE_NAME}:${env.BUILD_NUMBER}"
+            }
+        }
+    }
+}
