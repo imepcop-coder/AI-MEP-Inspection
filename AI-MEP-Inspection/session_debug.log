@@ -828,3 +828,33 @@
 {"ts": 1786130406.0362756, "path": "/projects", "set_cookie": null}
 {"ts": 1786130412.4357932, "path": "/calculators/fire-fighting", "query": "", "cookie_header": "session=eyJ1c2VyIjogeyJpZCI6IDQsICJmdWxsX25hbWUiOiAiQXJzaSBBbGkga2hhbiIsICJlbWFpbCI6ICJraGFuYXJzaTEwOEBnbWFpbC5jb20iLCAicGhvbmUiOiAiKzkxODczMDA1MjE4NCIsICJyb2xlIjogIkluc3BlY3RvciIsICJjb21wYW55X2lkIjogNCwgIndvcmtzcGFjZV9pZCI6IDR9fQ==.anYvxw.c2THXsJxDr52VHBmZT6OfiShj9g", "cookies": {"session": "eyJ1c2VyIjogeyJpZCI6IDQsICJmdWxsX25hbWUiOiAiQXJzaSBBbGkga2hhbiIsICJlbWFpbCI6ICJraGFuYXJzaTEwOEBnbWFpbC5jb20iLCAicGhvbmUiOiAiKzkxODczMDA1MjE4NCIsICJyb2xlIjogIkluc3BlY3RvciIsICJjb21wYW55X2lkIjogNCwgIndvcmtzcGFjZV9pZCI6IDR9fQ==.anYvxw.c2THXsJxDr52VHBmZT6OfiShj9g"}, "scope_session": true, "session_prop": {"user": {"id": 4, "full_name": "Arsi Ali khan", "email": "khanarsi108@gmail.com", "phone": "+918730052184", "role": "Inspector", "company_id": 4, "workspace_id": 4}}, "state_current_user_before": "{'id': 4, 'full_name': 'Arsi Ali khan', 'email': 'khanarsi108@gmail.com', 'phone': '+918730052184', 'role': 'Inspector', 'company_id': 4, 'workspace_id': 4}"}
 {"ts": 1786130412.466152, "path": "/calculators/fire-fighting", "set_cookie": null}
+{"ts": 1793903691.8931406, "path": "/assistant/chat", "query": "", "cookie_header": null, "cookies": {}, "scope_session": false, "session_prop": {}, "state_current_user_before": "None"}
+{"ts": 1793903691.9767191, "path": "/assistant/chat", "set_cookie": null}
+{"ts": 1793903692.0122652, "path": "/calculators", "query": "", "cookie_header": null, "cookies": {}, "scope_session": false, "session_prop": {}, "state_current_user_before": "None"}
+{"ts": 1793903692.2226858, "path": "/calculators", "set_cookie": null}
+{"ts": 1793903692.241731, "path": "/calculators/plumbing", "query": "", "cookie_header": null, "cookies": {}, "scope_session": false, "session_prop": {}, "state_current_user_before": "None"}
+{"ts": 1793903692.271229, "path": "/calculators/plumbing", "set_cookie": null}
+{"ts": 1793903692.324037, "path": "/calculators/electrical", "query": "", "cookie_header": null, "cookies": {}, "scope_session": false, "session_prop": {}, "state_current_user_before": "None"}
+{"ts": 1793903692.3545856, "path": "/calculators/electrical", "set_cookie": null}
+{"ts": 1793903692.3710313, "path": "/calculators/fire-fighting", "query": "", "cookie_header": null, "cookies": {}, "scope_session": false, "session_prop": {}, "state_current_user_before": "None"}
+{"ts": 1793903692.3994787, "path": "/calculators/fire-fighting", "set_cookie": null}
+{"ts": 1793903692.4238322, "path": "/calculators/fire/fire-flow", "query": "", "cookie_header": null, "cookies": {}, "scope_session": false, "session_prop": {}, "state_current_user_before": "None"}
+{"ts": 1793903692.7374575, "path": "/calculators/fire/fire-flow", "set_cookie": null}
+{"ts": 1793903692.7578843, "path": "/calculators/heat-load", "query": "", "cookie_header": null, "cookies": {}, "scope_session": false, "session_prop": {}, "state_current_user_before": "None"}
+{"ts": 1793903692.9165933, "path": "/calculators/heat-load", "set_cookie": null}
+{"ts": 1793903692.9419985, "path": "/calculators/static-pressure", "query": "", "cookie_header": null, "cookies": {}, "scope_session": false, "session_prop": {}, "state_current_user_before": "None"}
+{"ts": 1793903692.9974806, "path": "/calculators/static-pressure", "set_cookie": null}
+{"ts": 1793903693.035003, "path": "/calculators/airflow", "query": "", "cookie_header": null, "cookies": {}, "scope_session": false, "session_prop": {}, "state_current_user_before": "None"}
+{"ts": 1793903693.1031773, "path": "/calculators/airflow", "set_cookie": null}
+{"ts": 1793903693.1243625, "path": "/calculators/chilled-water", "query": "", "cookie_header": null, "cookies": {}, "scope_session": false, "session_prop": {}, "state_current_user_before": "None"}
+{"ts": 1793903693.1844962, "path": "/calculators/chilled-water", "set_cookie": null}
+{"ts": 1793903693.2107031, "path": "/calculators/duct-sizing", "query": "", "cookie_header": null, "cookies": {}, "scope_session": false, "session_prop": {}, "state_current_user_before": "None"}
+{"ts": 1793903693.269332, "path": "/calculators/duct-sizing", "set_cookie": null}
+{"ts": 1793903693.3238072, "path": "/calculators/fresh-air", "query": "", "cookie_header": null, "cookies": {}, "scope_session": false, "session_prop": {}, "state_current_user_before": "None"}
+{"ts": 1793903693.388757, "path": "/calculators/fresh-air", "set_cookie": null}
+{"ts": 1793903693.4127712, "path": "/calculators/pump-head", "query": "", "cookie_header": null, "cookies": {}, "scope_session": false, "session_prop": {}, "state_current_user_before": "None"}
+{"ts": 1793903693.4875185, "path": "/calculators/pump-head", "set_cookie": null}
+{"ts": 1793903694.15607, "path": "/calculators", "query": "", "cookie_header": null, "cookies": {}, "scope_session": false, "session_prop": {}, "state_current_user_before": "None"}
+{"ts": 1793903694.1704826, "path": "/calculators", "set_cookie": null}
+{"ts": 1793903694.187696, "path": "/calculators/airflow", "query": "", "cookie_header": null, "cookies": {}, "scope_session": false, "session_prop": {}, "state_current_user_before": "None"}
+{"ts": 1793903694.2068446, "path": "/calculators/airflow", "set_cookie": null}
