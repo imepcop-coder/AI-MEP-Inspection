@@ -1,4 +1,4 @@
-```groovy
+groovy
 @Library('devsecops') _
 
 pipeline {
