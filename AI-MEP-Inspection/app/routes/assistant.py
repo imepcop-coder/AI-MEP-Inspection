@@ -10,7 +10,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.ai.prompts import DISCIPLINE_PROMPTS, DOCUMENT_PROMPTS
-from app.ai.provider import analyze_image, generate_text
+from app.ai.provider import AIUnavailable, analyze_image, generate_text
 from app.auth.tenant import apply_tenant_filter, get_authenticated_user
 from app.database.db import get_db
 from app.models.ai_request import AIRequest
@@ -444,13 +444,16 @@ async def assistant_chat_legacy(request: Request, db: Session = Depends(get_db))
     if not prompt:
         raise HTTPException(status_code=400, detail="Prompt is required")
 
-    answer = generate_text(
-        prompt,
-        system_prompt=(
-            "You are a practical engineering QA/QC assistant. "
-            "Draft concise, structured guidance for construction and inspection work."
-        ),
-    )
+    try:
+        answer = generate_text(
+            prompt,
+            system_prompt=(
+                "You are a practical engineering QA/QC assistant. "
+                "Draft concise, structured guidance for construction and inspection work."
+            ),
+        )
+    except AIUnavailable:
+        answer = "AI service is temporarily unavailable. You can retry or continue working while we reconnect."
 
     if user:
         ai_request = AIRequest(
