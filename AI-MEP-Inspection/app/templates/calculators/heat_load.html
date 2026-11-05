@@ -106,7 +106,9 @@
                     <p class="page-subtitle">Provide room data, internal loads, and design conditions.</p>
                 </div>
                 <div class="card-body p-4">
-                    <form method="POST" novalidate>
+                    <form method="POST" novalidate
+                          data-calculation-complete="{{ 'true' if result else 'false' }}"
+                          data-calculator-title="Professional HVAC Heat Load Calculator">
                         <div class="section-label">Project Information</div>
 
                         <div class="mb-3">
@@ -451,4 +453,3 @@
 </script>
 
 {% endblock %}
-

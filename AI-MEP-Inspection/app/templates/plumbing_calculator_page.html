@@ -67,7 +67,9 @@
 
                 <div class="card-body">
 
-                    <form id="calculatorForm" method="post" novalidate>
+                    <form id="calculatorForm" method="post" novalidate
+                          data-calculation-complete="{{ 'true' if result else 'false' }}"
+                          data-calculator-title="{{ page.title }}">
 
                         {% for field in page.fields %}
 

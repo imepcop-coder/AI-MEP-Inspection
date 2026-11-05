@@ -2,6 +2,7 @@ const initializeCalculatorCardScript = () => {
   const storage = {
     favorites: 'mepCalculatorFavorites',
     recent: 'mepCalculatorRecent',
+    history: 'mepCalculatorHistory',
   };
   
   const getArray = (key) => {
@@ -10,6 +11,73 @@ const initializeCalculatorCardScript = () => {
     } catch (error) {
       return [];
     }
+  };
+
+  const renderHistoryItems = () => {
+    if (!historyList || !historyCount) return;
+
+    const history = getArray(storage.history);
+    historyCount.textContent = String(history.length);
+    historyList.replaceChildren();
+
+    if (!history.length) {
+      historyList.innerHTML = '<div class="panel-empty">Completed calculations will appear here.</div>';
+      return;
+    }
+
+    history.slice(0, 6).forEach((item) => {
+      const row = document.createElement('a');
+      row.href = item.url;
+      row.className = 'panel-item';
+      row.dataset.historyId = item.id;
+      const date = new Date(item.createdAt);
+      row.textContent = `${item.name} · ${date.toLocaleString()}`;
+      historyList.appendChild(row);
+    });
+  };
+
+  const recordCompletedCalculation = () => {
+    const form = document.querySelector('form[data-calculation-complete="true"]');
+    if (!form) return;
+
+    const inputs = {};
+    new FormData(form).forEach((value, key) => {
+      if (key && !key.toLowerCase().includes('csrf')) inputs[key] = value;
+    });
+    const url = window.location.pathname;
+    const name = form.dataset.calculatorTitle || document.querySelector('h1')?.textContent.trim() || document.title;
+    const history = getArray(storage.history);
+    history.unshift({
+      id: `${Date.now()}-${url}`,
+      name,
+      url,
+      inputs,
+      createdAt: new Date().toISOString(),
+    });
+    if (history.length > 10) history.length = 10;
+    saveArray(storage.history, history);
+  };
+
+  const restoreCalculationInputs = () => {
+    const saved = sessionStorage.getItem('mepCalculatorRestore');
+    if (!saved) return;
+    let item;
+    try {
+      item = JSON.parse(saved);
+    } catch (error) {
+      sessionStorage.removeItem('mepCalculatorRestore');
+      return;
+    }
+    if (!item || typeof item !== 'object' || item.url !== window.location.pathname) return;
+
+    const form = document.querySelector('form[data-calculation-complete]');
+    if (form) {
+      Object.entries(item.inputs || {}).forEach(([name, value]) => {
+        const field = form.elements.namedItem(name);
+        if (field) field.value = value;
+      });
+    }
+    sessionStorage.removeItem('mepCalculatorRestore');
   };
 
   const saveArray = (key, value) => {
@@ -22,10 +90,14 @@ const initializeCalculatorCardScript = () => {
   const recentCount = document.getElementById('recentCount');
   const heroFavoriteCount = document.getElementById('heroFavoriteCount');
   const heroRecentCount = document.getElementById('heroRecentCount');
+  const historyList = document.getElementById('calculationHistoryList');
+  const historyCount = document.getElementById('calculationHistoryCount');
   const noResults = document.getElementById('noResults');
   const calculatorCards = Array.from(document.querySelectorAll('.calculator-card'));
   const searchInput = document.getElementById('calculatorSearch');
+  const favoritesOnlyToggle = document.getElementById('favoritesOnlyToggle');
   const categoryPills = Array.from(document.querySelectorAll('.category-pill'));
+  let favoritesOnly = false;
 
   const getSelectedCategory = () => {
     const params = new URLSearchParams(window.location.search);
@@ -106,6 +178,7 @@ const initializeCalculatorCardScript = () => {
     saveArray(storage.favorites, favorites);
     updateFavoriteButtons();
     renderFavoriteItems();
+    applyFilters();
   };
 
   const recordRecent = (item) => {
@@ -135,7 +208,9 @@ const initializeCalculatorCardScript = () => {
       const category = card.dataset.category || 'all';
       const matchesCategory = activeCategory === 'all' || category === activeCategory;
       const matchesSearch = !searchValue || name.includes(searchValue) || description.includes(searchValue) || category.includes(searchValue);
-      const visible = matchesCategory && matchesSearch;
+      const favorites = getArray(storage.favorites);
+      const isFavorite = favorites.some((item) => item.id === card.dataset.calculatorId);
+      const visible = matchesCategory && matchesSearch && (!favoritesOnly || isFavorite);
       const cell = card.closest('.calculator-grid__cell');
       const displayValue = visible ? '' : 'none';
       if (cell) {
@@ -205,6 +280,26 @@ const initializeCalculatorCardScript = () => {
   if (searchInput) {
     searchInput.addEventListener('input', applyFilters);
   }
+  if (favoritesOnlyToggle) {
+    favoritesOnlyToggle.addEventListener('click', () => {
+      favoritesOnly = !favoritesOnly;
+      favoritesOnlyToggle.setAttribute('aria-pressed', String(favoritesOnly));
+      favoritesOnlyToggle.classList.toggle('active', favoritesOnly);
+      favoritesOnlyToggle.innerHTML = favoritesOnly
+        ? '<i class="bi bi-heart-fill me-1"></i>Showing favorites'
+        : '<i class="bi bi-heart me-1"></i>Show favorites only';
+      applyFilters();
+    });
+  }
+  if (historyList) {
+    historyList.addEventListener('click', (event) => {
+      const link = event.target.closest('a[data-history-id]');
+      if (!link) return;
+      const item = getArray(storage.history).find((entry) => entry.id === link.dataset.historyId);
+      if (!item) return;
+      sessionStorage.setItem('mepCalculatorRestore', JSON.stringify(item));
+    });
+  }
 
   categoryPills.forEach((pill) => {
     pill.addEventListener('click', () => {
@@ -224,6 +319,9 @@ const initializeCalculatorCardScript = () => {
   updateFavoriteButtons();
   renderFavoriteItems();
   renderRecentItems();
+  renderHistoryItems();
+  restoreCalculationInputs();
+  recordCompletedCalculation();
   applyFilters();
 };
 

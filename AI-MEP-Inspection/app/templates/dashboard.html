@@ -89,6 +89,39 @@
         </div>
     </div>
 
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h4 class="mb-1">Inspection Status</h4>
+                    <p class="text-muted mb-0">Current distribution across your workspace.</p>
+                </div>
+                <a href="/inspections" class="btn btn-outline-primary btn-sm">Review inspections</a>
+            </div>
+            {% if inspection_status_breakdown %}
+            <div class="row g-3">
+                {% for item in inspection_status_breakdown %}
+                <div class="col-sm-6 col-xl-3">
+                    <div class="border rounded-3 p-3 h-100">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="fw-semibold">{{ item.status }}</span>
+                            <span class="badge text-bg-light">{{ item.count }}</span>
+                        </div>
+                        <div class="progress" role="progressbar" aria-label="{{ item.status }} inspections"
+                             aria-valuenow="{{ item.percent }}" aria-valuemin="0" aria-valuemax="100" style="height: 8px;">
+                            <div class="progress-bar" style="width: {{ item.percent }}%"></div>
+                        </div>
+                        <small class="text-muted">{{ item.percent }}% of inspections</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="text-muted mb-0">Inspection status summaries will appear when inspections are added.</p>
+            {% endif %}
+        </div>
+    </div>
+
     <div class="row g-4">
         <div class="col-xl-8">
             <div class="card shadow-sm border-0">

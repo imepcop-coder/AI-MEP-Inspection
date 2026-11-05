@@ -1,16 +1,20 @@
+import csv
+import io
 from pathlib import Path
 from datetime import datetime
 
 from fastapi import APIRouter, Depends, HTTPException, Request
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import FileResponse, RedirectResponse, StreamingResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 
 from app.auth.tenant import apply_tenant_filter, ensure_tenant_access, get_authenticated_user
 from app.database.db import get_db
 from app.models.document import Document
+from app.models.inspection import Inspection
 from app.models.report_template import ReportTemplate
 from app.models.user import User
+from app.excel.report_generator import _field_labels
 
 router = APIRouter()
 
@@ -21,6 +25,27 @@ templates = Jinja2Templates(directory=BASE_DIR / "templates")
 
 REPORT_FOLDER = Path("reports")
 REPORT_FOLDER.mkdir(exist_ok=True)
+
+
+def _csv_safe_value(value) -> str:
+    if isinstance(value, (int, float)) and not isinstance(value, bool):
+        return str(value)
+    text = "" if value is None else str(value)
+    if text.lstrip().startswith(("=", "+", "-", "@", "\t", "\r")):
+        return "'" + text
+    return text
+
+
+def _inspection_export_value(inspection: Inspection, field: str) -> str:
+    if field == "project":
+        return inspection.project.project_name if inspection.project else ""
+    if field == "project_code":
+        return inspection.project.project_code if inspection.project else ""
+    if field == "client":
+        return inspection.project.client_name if inspection.project else ""
+    if field in {"snag_description", "finding", "observation"}:
+        return inspection.description or ""
+    return getattr(inspection, field, "") or ""
 
 
 def _is_admin_user(user: User) -> bool:
@@ -62,6 +87,61 @@ async def reports(request: Request, db: Session = Depends(get_db)):
             "reports": report_list,
             "report_templates": templates_db,
         },
+    )
+
+
+@router.get("/reports/export.csv")
+async def export_inspections_csv(
+    request: Request,
+    template_id: str | None = None,
+    db: Session = Depends(get_db),
+):
+    current_user = get_authenticated_user(request, db)
+    fields = [
+        "inspection_no",
+        "project",
+        "location",
+        "discipline",
+        "status",
+        "inspection_date",
+        "inspector",
+        "description",
+    ]
+    if template_id:
+        try:
+            parsed_template_id = int(template_id)
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail="Invalid report template") from exc
+        template = (
+            apply_tenant_filter(db.query(ReportTemplate), current_user)
+            .filter(ReportTemplate.id == parsed_template_id)
+            .first()
+        )
+        if not template:
+            raise HTTPException(status_code=404, detail="Report template not found")
+        fields = template.get_field_list()
+
+    inspections = (
+        apply_tenant_filter(db.query(Inspection), current_user)
+        .order_by(Inspection.created_at.desc())
+        .all()
+    )
+    output = io.StringIO(newline="")
+    writer = csv.writer(output)
+    writer.writerow([_csv_safe_value(_field_labels(field)) for field in fields])
+    for inspection in inspections:
+        writer.writerow(
+            [
+                _csv_safe_value(_inspection_export_value(inspection, field))
+                for field in fields
+            ]
+        )
+    csv_content = output.getvalue()
+    output.close()
+    return StreamingResponse(
+        iter([csv_content]),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": 'attachment; filename="inspection-export.csv"'},
     )
 
 

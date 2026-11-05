@@ -1,5 +1,6 @@
 from typing import Any
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.auth.tenant import apply_tenant_filter
@@ -23,6 +24,21 @@ class WorkspaceService:
         total_projects = apply_tenant_filter(self.db.query(Project), user).count()
         total_inspections = apply_tenant_filter(self.db.query(Inspection), user).count()
         ai_requests = apply_tenant_filter(self.db.query(AIRequest), user).count()
+        status_rows = (
+            apply_tenant_filter(self.db.query(Inspection), user)
+            .with_entities(Inspection.status, func.count(Inspection.id))
+            .group_by(Inspection.status)
+            .order_by(Inspection.status)
+            .all()
+        )
+        inspection_status_breakdown = [
+            {
+                "status": status or "Unspecified",
+                "count": count,
+                "percent": round(count / total_inspections * 100) if total_inspections else 0,
+            }
+            for status, count in status_rows
+        ]
 
         # Include available calculators for quick access on dashboard. Import locally to avoid import cycles.
         calculators = []
@@ -53,6 +69,7 @@ class WorkspaceService:
             "approved_inspections": approved_inspections,
             "total_projects": total_projects,
             "total_inspections": total_inspections,
+            "inspection_status_breakdown": inspection_status_breakdown,
             "ai_requests": ai_requests,
             "subscription_plan": user.subscription_plan,
             "ai_usage_count": user.ai_usage_count,

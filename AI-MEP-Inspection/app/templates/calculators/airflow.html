@@ -102,7 +102,8 @@
                     <div class="alert alert-danger mb-3">{{ error }}</div>
                     {% endif %}
 
-                    <form method="POST">
+                    <form method="POST" data-calculation-complete="{{ 'true' if result else 'false' }}"
+                          data-calculator-title="Professional HVAC Air Flow Calculator">
                         <div class="section-label">Room Data</div>
 
                         <div class="mb-3">

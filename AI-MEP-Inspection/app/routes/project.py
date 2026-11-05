@@ -3,6 +3,7 @@ from datetime import datetime
 from fastapi import APIRouter, Request, Form, Depends
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from app.auth.tenant import apply_tenant_filter, ensure_tenant_access, get_authenticated_user
@@ -44,18 +45,44 @@ async def project_list(
         )
 
     current_user = get_authenticated_user(request, db)
-    projects = (
-        apply_tenant_filter(db.query(Project), current_user)
-        .order_by(Project.id.desc())
+    search_query = (request.query_params.get("q") or "").strip()[:100]
+    selected_status = (request.query_params.get("status") or "").strip()[:50]
+    base_query = apply_tenant_filter(db.query(Project), current_user)
+    status_options = [
+        row[0]
+        for row in base_query.with_entities(Project.status)
+        .filter(Project.status.isnot(None))
+        .distinct()
+        .order_by(Project.status)
         .all()
-    )
+    ]
+
+    project_query = base_query
+    if search_query:
+        escaped_query = search_query.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
+        search_pattern = f"%{escaped_query}%"
+        project_query = project_query.filter(
+            or_(
+                Project.project_code.ilike(search_pattern, escape="\\"),
+                Project.project_name.ilike(search_pattern, escape="\\"),
+                Project.client_name.ilike(search_pattern, escape="\\"),
+                Project.location.ilike(search_pattern, escape="\\"),
+                Project.discipline.ilike(search_pattern, escape="\\"),
+            )
+        )
+    if selected_status:
+        project_query = project_query.filter(Project.status == selected_status)
+    projects = project_query.order_by(Project.id.desc()).all()
 
     return templates.TemplateResponse(
         request=request,
         name="projects/project_list.html",
         context={
             "user": user,
-            "projects": projects
+            "projects": projects,
+            "search_query": search_query,
+            "selected_status": selected_status,
+            "status_options": status_options,
         }
     )
 
