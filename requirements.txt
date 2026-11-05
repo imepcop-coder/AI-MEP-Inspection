@@ -81,7 +81,8 @@ pydantic_core==2.46.4
 PyJWT==2.13.0
 
 PyMySQL==1.2.0
-psycopg[binary]==3.2.9
+
+psycopg[binary]==3.2.10
 
 pyparsing==3.3.2
 
