@@ -50,6 +50,7 @@ pipeline {
                 dir('AI-MEP-Inspection') {
                     script {
                         def scannerHome = tool 'SonarScanner'
+
                         withSonarQubeEnv('SonarQube Scanner') {
                             bat "\"${scannerHome}\\bin\\sonar-scanner.bat\""
                         }
@@ -118,49 +119,46 @@ pipeline {
                 powershell '''
                     $ErrorActionPreference = "Stop"
 
-                    kubectl create namespace $env:K8S_NAMESPACE --dry-run=client -o yaml |
-                        kubectl apply -f -
+                    # Create or update namespace
+                    $namespaceYaml = & kubectl create namespace $env:K8S_NAMESPACE --dry-run=client -o yaml
+
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Namespace manifest generation failed"
+                    }
+
+                    $namespaceYaml | & kubectl apply -f -
 
                     if ($LASTEXITCODE -ne 0) {
                         throw "Namespace creation failed"
                     }
 
-                    $deployment = "$($env:DEPLOYMENT_NAME)"
-
-                    kubectl create deployment $deployment `
+                    # Generate deployment manifest
+                    $deploymentYaml = & kubectl create deployment $env:DEPLOYMENT_NAME `
                         --image="$($env:IMAGE_NAME):$($env:BUILD_NUMBER)" `
                         --namespace $env:K8S_NAMESPACE `
-                        --dry-run=client -o yaml |
-                        kubectl apply -f -
+                        --dry-run=client -o yaml
 
                     if ($LASTEXITCODE -ne 0) {
-                        throw "Deployment creation failed"
+                        throw "Deployment manifest generation failed"
                     }
 
-                    kubectl set image deployment/$deployment `
-                        "$deployment=$($env:IMAGE_NAME):$($env:BUILD_NUMBER)" `
-                        -n $env:K8S_NAMESPACE
+                    # Apply deployment manifest
+                    $deploymentYaml | & kubectl apply -f -
 
                     if ($LASTEXITCODE -ne 0) {
-                        throw "Image update failed"
+                        throw "Deployment apply failed"
                     }
 
-                    kubectl patch deployment $deployment `
-                        -n $env:K8S_NAMESPACE `
-                        --type=strategic `
-                        -p '{"spec":{"template":{"spec":{"containers":[{"name":"ai-mep-inspection","imagePullPolicy":"IfNotPresent"}]}}}}'
-
-                    if ($LASTEXITCODE -ne 0) {
-                        throw "Image pull policy update failed"
-                    }
-
-                    kubectl rollout status deployment/$deployment `
+                    # Verify rollout
+                    & kubectl rollout status deployment/$env:DEPLOYMENT_NAME `
                         -n $env:K8S_NAMESPACE --timeout=180s
 
                     if ($LASTEXITCODE -ne 0) {
-                        kubectl describe pods -n $env:K8S_NAMESPACE
+                        & kubectl describe pods -n $env:K8S_NAMESPACE
                         throw "Application rollout failed"
                     }
+
+                    Write-Host "Application deployment successful"
                 '''
             }
         }
@@ -168,18 +166,27 @@ pipeline {
         stage('Create Kubernetes Service') {
             steps {
                 powershell '''
-                    kubectl expose deployment $env:DEPLOYMENT_NAME `
+                    $ErrorActionPreference = "Stop"
+
+                    $serviceYaml = & kubectl expose deployment $env:DEPLOYMENT_NAME `
                         --name $env:SERVICE_NAME `
                         --namespace $env:K8S_NAMESPACE `
                         --type ClusterIP `
                         --port 8000 `
                         --target-port 8000 `
-                        --dry-run=client -o yaml |
-                        kubectl apply -f -
+                        --dry-run=client -o yaml
+
+                    if ($LASTEXITCODE -ne 0) {
+                        throw "Service manifest generation failed"
+                    }
+
+                    $serviceYaml | & kubectl apply -f -
 
                     if ($LASTEXITCODE -ne 0) {
                         throw "Service creation failed"
                     }
+
+                    Write-Host "Kubernetes Service created successfully"
                 '''
             }
         }
