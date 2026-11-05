@@ -29,7 +29,9 @@
                     <p class="page-subtitle">Provide key design parameters and input data for the calculation.</p>
                 </div>
                 <div class="card-body p-4">
-                    <form id="calculatorForm" method="POST" novalidate>
+                    <form id="calculatorForm" method="POST" novalidate
+                          data-calculation-complete="{{ 'true' if result else 'false' }}"
+                          data-calculator-title="{{ page.title }}">
                         {% for field in page.fields %}
                         {# derive unit from label if present, e.g. "Room Length (m)" -> unit = m #}
                         {% if '(' in field.label and ')' in field.label %}

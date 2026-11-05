@@ -26,11 +26,17 @@
         <div class="dropdown d-none d-lg-block">
             <button class="btn btn-icon" type="button" id="notificationsToggle" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
                 <i class="bi bi-bell"></i>
-                <span class="badge badge-notification">3</span>
+                {% if request.state.unread_notification_count %}
+                <span class="badge badge-notification">{{ request.state.unread_notification_count }}</span>
+                {% endif %}
             </button>
             <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                 <li><h6 class="dropdown-header">Notifications</h6></li>
-                <li><a class="dropdown-item" href="#">No new notifications</a></li>
+                {% if request.state.unread_notification_count %}
+                <li><a class="dropdown-item" href="/notifications">{{ request.state.unread_notification_count }} unread notification{% if request.state.unread_notification_count != 1 %}s{% endif %}</a></li>
+                {% else %}
+                <li><a class="dropdown-item" href="/notifications">No new notifications</a></li>
+                {% endif %}
             </ul>
         </div>
 

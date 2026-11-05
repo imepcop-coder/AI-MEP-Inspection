@@ -53,6 +53,12 @@
         </ul>
     </div>
 
+    <div class="d-flex justify-content-end mb-3">
+        <button id="favoritesOnlyToggle" class="btn btn-outline-primary btn-sm" type="button" aria-pressed="false">
+            <i class="bi bi-heart me-1"></i>Show favorites only
+        </button>
+    </div>
+
     <div id="noResults" class="empty-state d-none">
         <div class="empty-icon"><i class="bi bi-emoji-frown"></i></div>
         <h3>No calculators match your search.</h3>
@@ -77,7 +83,7 @@
     </section>
 
     <div class="dashboard-panels row g-4">
-        <div class="col-lg-6">
+        <div class="col-lg-4">
             <div class="mini-panel favorite-panel">
                 <div class="panel-header">
                     <div>
@@ -89,16 +95,28 @@
                 <div id="favoritesList" class="panel-list"></div>
             </div>
         </div>
-        <div class="col-lg-6">
+        <div class="col-lg-4">
             <div class="mini-panel recent-panel">
                 <div class="panel-header">
                     <div>
-                        <h4>Recently Used</h4>
+                        <h4>Recently Opened</h4>
                         <p>Quick access to your most recently opened tools.</p>
                     </div>
                     <span id="recentCount" class="panel-counter">0</span>
                 </div>
                 <div id="recentList" class="panel-list"></div>
+            </div>
+        </div>
+        <div class="col-lg-4">
+            <div class="mini-panel history-panel">
+                <div class="panel-header">
+                    <div>
+                        <h4>Calculation History</h4>
+                        <p>Recent successful calculations saved in this browser.</p>
+                    </div>
+                    <span id="calculationHistoryCount" class="panel-counter">0</span>
+                </div>
+                <div id="calculationHistoryList" class="panel-list"></div>
             </div>
         </div>
     </div>

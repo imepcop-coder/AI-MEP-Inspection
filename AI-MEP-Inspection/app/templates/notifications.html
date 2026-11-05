@@ -8,8 +8,13 @@
         <div>
             <span class="text-uppercase text-muted small">Activity Feed</span>
             <h2 class="mb-1">Notifications</h2>
-            <p class="text-muted mb-0">Stay informed with inspection updates, AI report alerts, and workflow reminders.</p>
+            <p class="text-muted mb-0">{{ unread_count }} unread notification{% if unread_count != 1 %}s{% endif %}</p>
         </div>
+        {% if unread_count %}
+        <form method="post" action="/notifications/read-all">
+            <button type="submit" class="btn btn-outline-primary">Mark all as read</button>
+        </form>
+        {% endif %}
     </div>
 
     <div class="card shadow-sm border-0">
@@ -17,13 +22,21 @@
             {% if notifications %}
                 <div class="list-group list-group-flush">
                     {% for item in notifications %}
-                    <div class="list-group-item px-0 py-3 border-bottom">
+                    <div class="list-group-item px-0 py-3 border-bottom {% if not item.is_read %}bg-light{% endif %}">
                         <div class="d-flex justify-content-between align-items-start gap-3">
                             <div>
                                 <strong>{{ item.title }}</strong>
+                                {% if not item.is_read %}<span class="badge text-bg-primary ms-2">New</span>{% endif %}
                                 <p class="text-muted mb-0">{{ item.message }}</p>
                             </div>
-                            <small class="text-muted">{{ item.timestamp if item.timestamp else '' }}</small>
+                            <div class="text-end">
+                                <small class="text-muted d-block">{{ item.created_at.strftime('%Y-%m-%d %H:%M') if item.created_at else '' }}</small>
+                                {% if not item.is_read %}
+                                <form method="post" action="/notifications/read/{{ item.id }}" class="mt-2">
+                                    <button type="submit" class="btn btn-sm btn-outline-secondary">Mark read</button>
+                                </form>
+                                {% endif %}
+                            </div>
                         </div>
                     </div>
                     {% endfor %}

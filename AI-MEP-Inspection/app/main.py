@@ -189,6 +189,19 @@ async def auth_middleware(request: Request, call_next):
             request.state.user = current_user
 
         logger.info("auth_middleware: current_user=%s", getattr(request.state, 'current_user', None))
+        current_user = getattr(request.state, "current_user", None)
+        if current_user:
+            current_user_id = (
+                current_user.get("id")
+                if isinstance(current_user, dict)
+                else current_user.id
+            )
+            request.state.unread_notification_count = db.query(Notification).filter(
+                Notification.user_id == current_user_id,
+                Notification.is_read.is_(False),
+            ).count()
+        else:
+            request.state.unread_notification_count = 0
 
         # enforcement: allow public resources
         if path.startswith("/static") or path.startswith("/uploads"):
@@ -651,4 +664,3 @@ async def analytics(request: Request, db: Session = Depends(get_db)):
         "analytics_data": analytics_data,
     }
     return templates.TemplateResponse(request=request, name="analytics.html", context=context)
-
