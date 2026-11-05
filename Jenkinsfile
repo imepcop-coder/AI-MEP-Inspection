@@ -1,4 +1,4 @@
-@Library('devsecops') _
+﻿@Library('devsecops') _
 
 pipeline {
     agent any
@@ -30,6 +30,19 @@ pipeline {
             }
         }
 
+
+        stage('SonarQube Analysis') {
+            steps {
+                dir('AI-MEP-Inspection') {
+                    script {
+                        def scannerHome = tool 'SonarScanner'
+                        withSonarQubeEnv('SonarQube-Local') {
+                            bat "\"${scannerHome}\\bin\\sonar-scanner.bat\""
+                        }
+                    }
+                }
+            }
+        }
         stage('Unit Testing') {
             steps {
                 dir('AI-MEP-Inspection') {
@@ -46,3 +59,4 @@ pipeline {
         }
     }
 }
+
