@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: web-app-ingress
+  namespace: app-demo
+spec:
+  ingressClassName: webapprouting.kubernetes.azure.com
+  rules:
+    - host: app.57-162-34-237.sslip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ai-mep-proxy
+                port:
+                  number: 80

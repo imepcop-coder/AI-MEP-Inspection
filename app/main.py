@@ -149,10 +149,14 @@ async def auth_middleware(request: Request, call_next):
             "/auth/google",
             "/auth/google/callback",
             "/auth/google/complete",
+            "/assistant/chat",
         }
         if path in public_exact:
             if getattr(request.state, "current_user", None) and path in ("/login", "/register"):
                 return RedirectResponse(url="/dashboard", status_code=302)
+            return await call_next(request)
+
+        if path == "/calculators" or path.startswith("/calculators/"):
             return await call_next(request)
 
         if path.endswith("/health") or "/health" in path:

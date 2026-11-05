@@ -76,8 +76,12 @@ def _field_labels(field: str) -> str:
     return labels.get(field, field.replace("_", " ").title())
 
 
-def filter_analysis_payload(payload: dict, fields: list[str] | None = None) -> dict:
-    selected_fields = fields or []
+def filter_analysis_payload(payload: dict, fields: list[str] | str | None = None) -> dict:
+    selected_fields = (
+        [field.strip() for field in fields.split(",") if field.strip()]
+        if isinstance(fields, str)
+        else fields or []
+    )
     if not selected_fields:
         return payload
     return {key: value for key, value in payload.items() if key in selected_fields}
@@ -119,20 +123,23 @@ def create_report(results, filename=None, template: ReportTemplate | None = None
     project_val = (results[0].get("project") if results and isinstance(results, (list, tuple)) and results[0] else "")
     inspection_date = (results[0].get("inspection_date") if results and isinstance(results, (list, tuple)) and results[0] else "")
 
-    # Row 2: Report Number / Project
-    ws.cell(row=2, column=1, value="Report Number")
-    ws.cell(row=2, column=2, value=report_number)
-    ws.cell(row=2, column=3, value="Project")
-    ws.cell(row=2, column=4, value=project_val)
+    if template:
+        header_row = 2
+    else:
+        # Row 2: Report Number / Project
+        ws.cell(row=2, column=1, value="Report Number")
+        ws.cell(row=2, column=2, value=report_number)
+        ws.cell(row=2, column=3, value="Project")
+        ws.cell(row=2, column=4, value=project_val)
 
-    # Row 3: Inspection Date / Generated Date
-    ws.cell(row=3, column=1, value="Inspection Date")
-    ws.cell(row=3, column=2, value=inspection_date)
-    ws.cell(row=3, column=3, value="Generated Date")
-    ws.cell(row=3, column=4, value=generated_date)
+        # Row 3: Inspection Date / Generated Date
+        ws.cell(row=3, column=1, value="Inspection Date")
+        ws.cell(row=3, column=2, value=inspection_date)
+        ws.cell(row=3, column=3, value="Generated Date")
+        ws.cell(row=3, column=4, value=generated_date)
 
-    # Header row index (leave a blank row at 4 for spacing)
-    header_row = 5
+        # Header row index (leave a blank row at 4 for spacing)
+        header_row = 5
 
     # Build headers using selected fields only
     headers = [_field_labels(field) for field in fields]

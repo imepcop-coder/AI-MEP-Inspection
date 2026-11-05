@@ -1,0 +1,18 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ai-mep-ingress
+  namespace: ai-mep
+spec:
+  ingressClassName: webapprouting.kubernetes.azure.com
+  rules:
+    - host: mep.57-162-34-237.sslip.io
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: ai-mep-inspection
+                port:
+                  number: 80
