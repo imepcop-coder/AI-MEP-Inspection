@@ -36,7 +36,7 @@ pipeline {
                 dir('AI-MEP-Inspection') {
                     script {
                         def scannerHome = tool 'SonarScanner'
-                        withSonarQubeEnv('SonarQube-Local') {
+                        withSonarQubeEnv('SonarQube Scanner') {
                             bat "\"${scannerHome}\\bin\\sonar-scanner.bat\""
                         }
                     }
