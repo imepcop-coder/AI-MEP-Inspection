@@ -12,37 +12,31 @@ const initializeAppUI = () => {
 
   const highlightActiveMenu = () => {
     const path = window.location.pathname.toLowerCase();
-    document.querySelectorAll('.sidebar-nav .nav-link').forEach((link) => {
+    const links = Array.from(document.querySelectorAll('.sidebar-nav .nav-link'));
+    const matchingLinks = links.filter((link) => {
       const href = link.getAttribute('href') || '';
-      if (href === '/' && path === '/') {
-        link.classList.add('active');
-        return;
-      }
-      if (href !== '/' && path.startsWith(href.toLowerCase())) {
-        link.classList.add('active');
+      const linkPath = new URL(href, window.location.origin).pathname.toLowerCase();
+      return linkPath === '/'
+        ? path === '/'
+        : path === linkPath || path.startsWith(`${linkPath}/`);
+    });
+    const activeLink = matchingLinks.reduce((best, link) => {
+      const linkPath = new URL(link.getAttribute('href'), window.location.origin).pathname;
+      const bestPath = best
+        ? new URL(best.getAttribute('href'), window.location.origin).pathname
+        : '';
+      return linkPath.length > bestPath.length ? link : best;
+    }, null);
+
+    links.forEach((link) => {
+      const isActive = link === activeLink;
+      link.classList.toggle('active', isActive);
+      if (isActive) {
+        link.setAttribute('aria-current', 'page');
       } else {
-        link.classList.remove('active');
+        link.removeAttribute('aria-current');
       }
     });
-  };
-
-  const saveSidebarState = (isOpen) => localStorage.setItem('sidebarOpen', isOpen ? 'true' : 'false');
-  const isMobileWidth = () => window.matchMedia('(max-width: 991px)').matches || document.documentElement.clientWidth <= 991;
- 
-  const loadSidebarState = () => {
-    if (isMobileWidth()) {
-      return false;
-    }
-    return localStorage.getItem('sidebarOpen') === 'true';
-  };
- 
-  const toggleSidebar = () => {
-    if (isMobileWidth()) {
-      const isOpen = document.body.classList.toggle('sidebar-open');
-      saveSidebarState(isOpen);
-    } else {
-      document.body.classList.toggle('sidebar-collapsed');
-    }
   };
 
   const sidebarToggle = document.getElementById('sidebarToggle');
@@ -51,13 +45,18 @@ const initializeAppUI = () => {
  
   const closeSidebar = () => {
     document.body.classList.remove('sidebar-open');
-    saveSidebarState(false);
+    if (sidebarToggle) {
+      sidebarToggle.setAttribute('aria-expanded', 'false');
+      sidebarToggle.setAttribute('aria-label', 'Open navigation menu');
+    }
   };
  
   if (sidebarToggle) {
     sidebarToggle.addEventListener('click', (event) => {
       event.preventDefault();
-      toggleSidebar();
+      const isOpen = document.body.classList.toggle('sidebar-open');
+      sidebarToggle.setAttribute('aria-expanded', String(isOpen));
+      sidebarToggle.setAttribute('aria-label', isOpen ? 'Close navigation menu' : 'Open navigation menu');
     });
   }
  
@@ -73,12 +72,16 @@ const initializeAppUI = () => {
         closeSidebar();
       }
     });
+
+    document.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape' && document.body.classList.contains('sidebar-open')) {
+        closeSidebar();
+        sidebarToggle?.focus();
+      }
+    });
   });
- 
+
   document.body.classList.remove('sidebar-open');
-  if (!isMobileWidth() && loadSidebarState()) {
-    document.body.classList.add('sidebar-open');
-  }
 
   const themeToggle = document.getElementById('themeToggle');
   const applyTheme = (theme) => {

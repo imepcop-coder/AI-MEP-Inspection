@@ -23,6 +23,11 @@ class WorkspaceService:
         approved_inspections = apply_tenant_filter(self.db.query(Inspection), user).filter(Inspection.status == "Approved").count()
         total_projects = apply_tenant_filter(self.db.query(Project), user).count()
         total_inspections = apply_tenant_filter(self.db.query(Inspection), user).count()
+        inspection_completion_percent = (
+            round(approved_inspections / total_inspections * 100)
+            if total_inspections
+            else 0
+        )
         ai_requests = apply_tenant_filter(self.db.query(AIRequest), user).count()
         status_rows = (
             apply_tenant_filter(self.db.query(Inspection), user)
@@ -67,6 +72,7 @@ class WorkspaceService:
             "notifications": notifications,
             "pending_inspections": pending_inspections,
             "approved_inspections": approved_inspections,
+            "inspection_completion_percent": inspection_completion_percent,
             "total_projects": total_projects,
             "total_inspections": total_inspections,
             "inspection_status_breakdown": inspection_status_breakdown,

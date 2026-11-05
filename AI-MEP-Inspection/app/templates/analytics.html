@@ -1,129 +1,141 @@
 {% extends "layouts/base.html" %}
 
-{% block title %}Engineering Intelligence Dashboard{% endblock %}
+{% block title %}Engineering Analytics{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{{ url_for('static', path='css/analytics.css') }}">
-<div class="analytics-shell">
-  <section class="hero-panel">
-    <div class="hero-copy">
-      <p class="eyebrow">Engineering Analytics</p>
-      <h1>Executive dashboard for MEP inspection and delivery performance.</h1>
-      <p class="hero-subtitle">Track project health, QA/QC outcomes, AI adoption, and discipline performance from a single premium command center.</p>
-      <div class="hero-action-pill-group" role="region" aria-label="Quick actions">
-        <button class="btn btn-outline-primary"><i class="bi bi-graph-up"></i> Live Insights</button>
-        <button class="btn btn-outline-primary"><i class="bi bi-people"></i> Team View</button>
-      </div>
-      <div class="hero-actions">
-        <button class="btn btn-secondary" type="button" aria-label="Refresh analytics"><i class="bi bi-arrow-clockwise"></i> Refresh</button>
-        <button class="btn btn-primary" type="button" aria-label="Export analytics report"><i class="bi bi-download"></i> Export Report</button>
-      </div>
-    </div>
+<div class="container-fluid analytics-shell">
+    <header class="d-flex flex-column flex-lg-row justify-content-between align-items-lg-end gap-3 mb-4">
+        <div>
+            <p class="text-uppercase text-primary fw-semibold small mb-1">Workspace overview</p>
+            <h1 class="mb-1">Engineering analytics</h1>
+            <p class="text-muted mb-0">Current project and inspection records for your workspace.</p>
+        </div>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="/projects" class="btn btn-outline-secondary">Projects</a>
+            <a href="/inspections" class="btn btn-outline-secondary">Inspections</a>
+            <a href="/reports" class="btn btn-primary">Reports</a>
+        </div>
+    </header>
 
-    <div class="hero-summary-panel">
-      <div class="summary-tag"><span>Current range</span><strong>Last 90 days</strong></div>
-      <div class="summary-controls">
-        <label for="dateRangeSelect">Date Range</label>
-        <button id="dateRangeSelect" class="date-select btn btn-outline-secondary" type="button" aria-haspopup="listbox">Last 90 days <i class="bi bi-chevron-down"></i></button>
-      </div>
-      <div class="summary-controls">
-        <label for="projectSelect">Project</label>
-        <button id="projectSelect" class="date-select btn btn-outline-secondary" type="button" aria-haspopup="listbox">All Projects <i class="bi bi-chevron-down"></i></button>
-      </div>
-      <div class="summary-panel-note">
-        <span class="panel-note-title">Delivery pulse</span>
-        <p>Inspectors and AI models processed 1,325 items in the current window.</p>
-      </div>
-    </div>
-  </section>
-
-  <section class="filters-card analytics-filters" aria-label="Analytics filters">
-    <div class="filter-group"><label for="filterDate">Date Range</label><input id="filterDate" class="form-control" type="text" value="Last 90 Days" aria-label="Date range"></div>
-    <div class="filter-group"><label for="filterProject">Project</label><input id="filterProject" class="form-control" type="text" value="All Projects" aria-label="Project filter"></div>
-    <div class="filter-group"><label for="filterEngineer">Engineer</label><input id="filterEngineer" class="form-control" type="text" value="All Engineers" aria-label="Engineer filter"></div>
-    <div class="filter-group"><label for="filterDiscipline">Discipline</label><input id="filterDiscipline" class="form-control" type="text" value="All Disciplines" aria-label="Discipline filter"></div>
-    <div class="filter-group"><label for="filterStatus">Status</label><input id="filterStatus" class="form-control" type="text" value="Active" aria-label="Status filter"></div>
-  </section>
-
-  <section class="kpi-grid">
-    {% for key, value in kpis.items() %}
-    <article class="kpi-card">
-      <div class="kpi-card-icon">
-        <i class="bi {% if key == 'total_projects' %}bi-building{% elif key == 'total_inspections' %}bi-clipboard-check{% elif key == 'completed_reports' %}bi-file-earmark-check{% elif key == 'pending_reports' %}bi-clock{% elif key == 'ai_requests' %}bi-robot{% elif key == 'engineers' %}bi-people-fill{% else %}bi-bar-chart-fill{% endif %}"></i>
-      </div>
-      <div class="kpi-card-body">
-        <div class="kpi-label">{{ key.replace('_', ' ') | title }}</div>
-        <div class="kpi-value" data-value="{{ value }}">{{ value }}</div>
-      </div>
-    </article>
-    {% endfor %}
-  </section>
-
-  <section class="dashboard-grid">
-    <article class="panel panel-chart">
-      <div class="panel-heading"><h3>Inspection Trend</h3><span>Daily / weekly performance</span></div>
-      <div class="chart-wrapper"><canvas id="trendChart"></canvas></div>
-    </article>
-    <article class="panel panel-chart">
-      <div class="panel-heading"><h3>Pass vs Fail</h3><span>Quality performance</span></div>
-      <div class="chart-wrapper"><canvas id="pieChart"></canvas></div>
-    </article>
-    <article class="panel panel-chart">
-      <div class="panel-heading"><h3>NCR Trend</h3><span>Issue velocity</span></div>
-      <div class="chart-wrapper"><canvas id="ncrChart"></canvas></div>
-    </article>
-    <article class="panel panel-chart">
-      <div class="panel-heading"><h3>AI Usage</h3><span>Automation requests</span></div>
-      <div class="chart-wrapper"><canvas id="aiChart"></canvas></div>
-    </article>
-    <article class="panel panel-chart large-panel">
-      <div class="panel-heading"><h3>Project Progress Timeline</h3><span>Delivery health across the portfolio</span></div>
-      <div class="chart-wrapper"><canvas id="timelineChart"></canvas></div>
-    </article>
-  </section>
-
-  <section class="insight-grid">
-    <article class="panel panel-timeline">
-      <div class="panel-heading"><h3>Recent activity</h3><span>Latest inspection and AI events</span></div>
-      <ul class="timeline-list" aria-label="Recent activity timeline">
-        {% for insight in insights %}
-        <li>
-          <span class="timeline-dot"></span>
-          <div>
-            <strong>{{ insight }}</strong>
-            <small>Updated moments ago</small>
-          </div>
-        </li>
-        {% endfor %}
-      </ul>
-    </article>
-    <article class="panel">
-      <div class="panel-heading"><h3>Leaderboard</h3><span>Top performing teams</span></div>
-      <div class="leaderboard-list">
-        {% for leader in leaders %}
-        <div class="leader-row">
-          <div>
-            <strong>{{ leader.name }}</strong>
-            <span>{{ leader.metric }}</span>
-          </div>
-          <em>{{ leader.delta }}</em>
+    <section class="row g-3 mb-4" aria-label="Workspace metrics">
+        {% for metric in kpis %}
+        <div class="col-12 col-sm-6 col-xl-3">
+            <article class="card h-100">
+                <div class="card-body d-flex align-items-center gap-3">
+                    <span class="icon-box bg-primary bg-opacity-10 text-primary flex-shrink-0" aria-hidden="true">
+                        <i class="bi {{ metric.icon }}"></i>
+                    </span>
+                    <div class="min-w-0">
+                        <p class="text-muted small mb-1">{{ metric.label }}</p>
+                        <p class="fs-4 fw-semibold mb-0">{{ metric.value }}</p>
+                    </div>
+                </div>
+            </article>
         </div>
         {% endfor %}
-      </div>
-    </article>
-    <article class="panel">
-      <div class="panel-heading"><h3>Predictive analytics</h3><span>Forecasts and risk signals</span></div>
-      <ul class="insight-list">
-        <li>Completion prediction: 87% on schedule.</li>
-        <li>Delay prediction: 2 likely slippage points.</li>
-        <li>Risk prediction: High for electrical commissioning.</li>
-      </ul>
-    </article>
-  </section>
+    </section>
+
+    <div class="row g-3 mb-4">
+        <div class="col-lg-7">
+            <section class="card h-100">
+                <div class="card-body">
+                    <div class="mb-3">
+                        <h2 class="h5 mb-1">Inspection status</h2>
+                        <p class="text-muted small mb-0">Distribution of inspections currently in your workspace.</p>
+                    </div>
+                    {% if inspection_status_breakdown %}
+                    <div class="d-grid gap-3">
+                        {% for item in inspection_status_breakdown %}
+                        <div>
+                            <div class="d-flex justify-content-between gap-3 mb-1">
+                                <span class="fw-medium">{{ item.status }}</span>
+                                <span class="text-muted">{{ item.count }} · {{ item.percent }}%</span>
+                            </div>
+                            <div class="progress" role="progressbar" aria-label="{{ item.status }} inspections"
+                                 aria-valuenow="{{ item.percent }}" aria-valuemin="0" aria-valuemax="100" style="height: 8px;">
+                                <div class="progress-bar" style="width: {{ item.percent }}%"></div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted mb-0">No inspections have been recorded yet.</p>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+        <div class="col-lg-5">
+            <section class="card h-100">
+                <div class="card-body">
+                    <h2 class="h5 mb-1">Approval rate</h2>
+                    <p class="text-muted small">Share of recorded inspections currently marked approved.</p>
+                    <div class="d-flex align-items-baseline gap-2 mb-2">
+                        <span class="display-6 fw-semibold">{{ inspection_approval_rate }}%</span>
+                        <span class="text-muted">approved</span>
+                    </div>
+                    <div class="progress mb-3" role="progressbar" aria-label="Inspection approval rate"
+                         aria-valuenow="{{ inspection_approval_rate }}" aria-valuemin="0" aria-valuemax="100" style="height: 10px;">
+                        <div class="progress-bar" style="width: {{ inspection_approval_rate }}%"></div>
+                    </div>
+                    {% if insights %}
+                    <ul class="list-unstyled border-top pt-3 mb-0">
+                        {% for insight in insights %}
+                        <li class="d-flex gap-2 mb-2">
+                            <i class="bi bi-info-circle text-primary" aria-hidden="true"></i>
+                            <span>{{ insight }}</span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <section class="card">
+        <div class="card-body">
+            <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center gap-2 mb-3">
+                <div>
+                    <h2 class="h5 mb-1">Recent inspections</h2>
+                    <p class="text-muted small mb-0">Latest inspection records in this workspace.</p>
+                </div>
+                <a href="/inspections" class="btn btn-outline-primary btn-sm">View all inspections</a>
+            </div>
+            {% if recent_inspections %}
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th scope="col">Inspection</th>
+                            <th scope="col">Project</th>
+                            <th scope="col">Discipline</th>
+                            <th scope="col">Inspector</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for inspection in recent_inspections %}
+                        <tr>
+                            <td><a href="/inspections/{{ inspection.id }}" class="fw-semibold">{{ inspection.inspection_no }}</a></td>
+                            <td>{{ inspection.project.project_name if inspection.project else "—" }}</td>
+                            <td>{{ inspection.discipline or "—" }}</td>
+                            <td>{{ inspection.inspector or "—" }}</td>
+                            <td><span class="badge text-bg-secondary">{{ inspection.status or "Unspecified" }}</span></td>
+                            <td>{{ inspection.inspection_date or "—" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="border rounded-2 bg-light p-4 text-center">
+                <p class="fw-semibold mb-1">No inspections to show</p>
+                <p class="text-muted mb-3">Create or upload an inspection to begin tracking activity.</p>
+                <a href="/upload" class="btn btn-primary">New inspection</a>
+            </div>
+            {% endif %}
+        </div>
+    </section>
 </div>
-<script>
-  window.analyticsData = {{ analytics_data | tojson }};
-</script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="{{ url_for('static', path='js/analytics.js') }}"></script>
 {% endblock %}

@@ -7,6 +7,7 @@ from fastapi import Depends, FastAPI, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -605,16 +606,16 @@ async def analytics(request: Request, db: Session = Depends(get_db)):
 
     current_user = get_authenticated_user(request, db)
     project_count = apply_tenant_filter(db.query(Project), current_user).count()
-    inspection_count = apply_tenant_filter(db.query(Inspection), current_user).count()
-    approved_count = apply_tenant_filter(db.query(Inspection), current_user).filter(Inspection.status == "Approved").count()
-    pending_count = apply_tenant_filter(db.query(Inspection), current_user).filter(Inspection.status == "Pending").count()
+    inspection_query = apply_tenant_filter(db.query(Inspection), current_user)
+    inspection_count = inspection_query.count()
+    approved_count = inspection_query.filter(Inspection.status == "Approved").count()
+    pending_count = inspection_query.filter(Inspection.status == "Pending").count()
     open_ncrs = apply_tenant_filter(db.query(NCR), current_user).filter(NCR.status == "Open").count()
-    closed_ncrs = apply_tenant_filter(db.query(NCR), current_user).filter(NCR.status != "Open").count()
+    closed_ncrs = apply_tenant_filter(db.query(NCR), current_user).filter(NCR.status == "Closed").count()
     ai_reports = apply_tenant_filter(db.query(AIRequest), current_user).count()
     document_count = apply_tenant_filter(db.query(Document), current_user).count()
 
     pass_rate = round((approved_count / inspection_count * 100), 1) if inspection_count else 0.0
-    failure_rate = round(100 - pass_rate, 1) if inspection_count else 0.0
 
     recent_inspections = (
         apply_tenant_filter(db.query(Inspection), current_user)
@@ -622,6 +623,20 @@ async def analytics(request: Request, db: Session = Depends(get_db)):
         .limit(5)
         .all()
     )
+    status_rows = (
+        inspection_query.with_entities(Inspection.status, func.count(Inspection.id))
+        .group_by(Inspection.status)
+        .order_by(Inspection.status)
+        .all()
+    )
+    inspection_status_breakdown = [
+        {
+            "status": status or "Unspecified",
+            "count": count,
+            "percent": round(count / inspection_count * 100) if inspection_count else 0,
+        }
+        for status, count in status_rows
+    ]
 
     insights = []
     if recent_inspections:
@@ -630,37 +645,23 @@ async def analytics(request: Request, db: Session = Depends(get_db)):
     if open_ncrs:
         insights.append(f"There are {open_ncrs} unresolved NCRs in your workspace.")
     if project_count:
-        insights.append(f"You have {project_count} active projects under review.")
-
-    analytics_data = {
-        "inspection_trend": [max(5, min(20, inspection_count + i)) for i in range(6)],
-        "pass_fail": [int(pass_rate), int(failure_rate)],
-        "ncr_trend": [max(1, open_ncrs + i) for i in range(5)],
-        "ai_usage": [max(1, ai_reports + i) for i in range(5)],
-        "timeline": [min(100, 40 + (i * 15)) for i in range(4)],
-    }
+        insights.append(f"There are {project_count} projects in your workspace.")
 
     context = {
         "user": user,
-        "kpis": {
-            "active_projects": project_count,
-            "total_inspections": inspection_count,
-            "open_ncrs": open_ncrs,
-            "closed_ncrs": closed_ncrs,
-            "inspection_pass_rate": pass_rate,
-            "inspection_failure_rate": failure_rate,
-            "ai_reports_generated": ai_reports,
-            "team_productivity": round(min(100.0, 70 + (pass_rate * 0.2)), 1),
-            "avg_inspection_time": "18m",
-            "documents_generated": document_count,
-            "pending_actions": pending_count,
-            "monthly_revenue": "$0",
-        },
-        "insights": insights or ["No inspection activity recorded yet. Start a new inspection to populate analytics."],
-        "leaders": [
-            {"name": user.full_name, "metric": f"{inspection_count} inspections", "delta": "+0%"},
-            {"name": "Workspace", "metric": f"{project_count} projects", "delta": "+0%"},
+        "kpis": [
+            {"label": "Projects", "value": project_count, "icon": "bi-folder2-open"},
+            {"label": "Inspections", "value": inspection_count, "icon": "bi-clipboard-check"},
+            {"label": "Approved inspections", "value": approved_count, "icon": "bi-check2-circle"},
+            {"label": "Pending inspections", "value": pending_count, "icon": "bi-hourglass-split"},
+            {"label": "Open NCRs", "value": open_ncrs, "icon": "bi-exclamation-triangle"},
+            {"label": "Closed NCRs", "value": closed_ncrs, "icon": "bi-check-circle"},
+            {"label": "AI requests", "value": ai_reports, "icon": "bi-robot"},
+            {"label": "Documents", "value": document_count, "icon": "bi-file-earmark-text"},
         ],
-        "analytics_data": analytics_data,
+        "inspection_status_breakdown": inspection_status_breakdown,
+        "recent_inspections": recent_inspections,
+        "inspection_approval_rate": pass_rate,
+        "insights": insights or ["No inspection activity recorded yet. Start a new inspection to populate analytics."],
     }
     return templates.TemplateResponse(request=request, name="analytics.html", context=context)

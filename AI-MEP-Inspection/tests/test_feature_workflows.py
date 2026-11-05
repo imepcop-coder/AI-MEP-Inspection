@@ -8,7 +8,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.database.db import Base
-from app.main import app
+from app.main import analytics as analytics_page, app
 from app.models.company import Company
 from app.models.inspection import Inspection
 from app.models.notification import Notification
@@ -117,10 +117,17 @@ def test_dashboard_status_summary_counts_only_the_current_tenant():
 
         context = WorkspaceService(db).get_dashboard_context(user_a)
 
+        assert context["inspection_completion_percent"] == 50
         assert context["inspection_status_breakdown"] == [
             {"status": "Approved", "count": 1, "percent": 50},
             {"status": "Open", "count": 1, "percent": 50},
         ]
+        analytics_response = asyncio.run(analytics_page(_request("/analytics", user_a.id), db))
+        analytics_html = analytics_response.body.decode("utf-8")
+        assert "A-APPROVED" in analytics_html
+        assert "B-CLOSED" not in analytics_html
+        assert "1,325" not in analytics_html
+        assert "Predictive analytics" not in analytics_html
     finally:
         db.close()
         engine.dispose()

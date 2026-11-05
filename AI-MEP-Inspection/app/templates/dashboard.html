@@ -14,7 +14,7 @@
             <div class="col-lg-8">
                 <div class="eyebrow">Engineering Command Center</div>
                 <h1 class="display-6 fw-bold mb-2">Welcome back, {{ user.full_name }}</h1>
-                <p class="text-muted mb-0">Monitor projects, inspections, and AI workflows from a premium engineering workspace designed for enterprise teams.</p>
+                <p class="text-muted mb-0">A clear view of your projects, inspection workload, and engineering tools.</p>
             </div>
             <div class="col-lg-4">
                 <div class="hero-pill-grid d-flex flex-wrap gap-2 justify-content-lg-end">
@@ -149,17 +149,20 @@
                                 {% for inspection in inspections %}
                                 <tr>
                                     <td>{{ inspection.inspection_no }}</td>
-                                    <td>{{ inspection.inspector }}</td>
+                                    <td>{{ inspection.inspector or "—" }}</td>
                                     <td>
-                                        {% if inspection.status == "Approved" %}
-                                            <span class="badge bg-success">{{ inspection.status }}</span>
-                                        {% elif inspection.status == "Pending" %}
-                                            <span class="badge bg-warning text-dark">{{ inspection.status }}</span>
+                                        {% set inspection_status = (inspection.status or "Open")|lower %}
+                                        {% if inspection_status in ["approved", "completed", "closed"] %}
+                                            <span class="badge text-bg-success">{{ inspection.status }}</span>
+                                        {% elif inspection_status in ["pending", "under review", "in review"] %}
+                                            <span class="badge text-bg-warning">{{ inspection.status }}</span>
+                                        {% elif inspection_status in ["rejected", "overdue", "failed"] %}
+                                            <span class="badge text-bg-danger">{{ inspection.status }}</span>
                                         {% else %}
-                                            <span class="badge bg-danger">{{ inspection.status }}</span>
+                                            <span class="badge text-bg-primary">{{ inspection.status or "Open" }}</span>
                                         {% endif %}
                                     </td>
-                                    <td>{{ inspection.inspection_date }}</td>
+                                    <td>{{ inspection.inspection_date or "—" }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>
@@ -185,13 +188,13 @@
                         </div>
                     </div>
                     <div class="progress-section">
-                        <h6 class="mb-3">Inspection completion</h6>
+                        <h6 class="mb-3">Approved inspections</h6>
                         <div class="progress" style="height: 14px; border-radius: 12px;">
-                            <div class="progress-bar bg-primary" role="progressbar" style="width: 72%;" aria-valuenow="72" aria-valuemin="0" aria-valuemax="100"></div>
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: {{ inspection_completion_percent }}%;" aria-valuenow="{{ inspection_completion_percent }}" aria-valuemin="0" aria-valuemax="100"></div>
                         </div>
                         <div class="mt-3 d-flex justify-content-between text-muted small">
-                            <span>Completed</span>
-                            <span>72%</span>
+                            <span>Approved</span>
+                            <span>{{ inspection_completion_percent }}%</span>
                         </div>
                     </div>
                     <div class="mt-4">
