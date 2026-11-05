@@ -1,4 +1,3 @@
-groovy
 @Library('devsecops') _
 
 pipeline {
@@ -15,7 +14,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 checkout scm
